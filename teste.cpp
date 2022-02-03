@@ -47,11 +47,10 @@ static const int NP=128;
 static const int NQ=250;
 static const int NEX=1024;
 static const int NP2=150;
-
-int tttttt = 10;
-
-
-
+static const int NSEM=1000;
+static const int NPSFM=100;
+static const int NIDM=25;
+static const int NBV=5000;
 
 char LINHA[200];
 char APOIO[200];
@@ -431,6 +430,143 @@ typedef struct {
 }CGPP00;
 
 
+//novos commons
+
+typedef struct {
+	int *ISEED1, *ISEED2;
+}RSEED;
+
+typedef struct{
+	char *TITLE, *TITLE2;
+
+} CTITLE;
+
+typedef struct{
+	char *DATE23;
+
+} CDATE;
+
+typedef struct{
+	double *DSMAX, (*EABSB)[3];
+
+}CSPGEO;
+
+//Forçando interação, janelas de peso.
+typedef struct{
+	double (*WLOW)[NBV], (*WHIG)[NBV];
+	int (*LFORCE)[NBV];
+
+}CFORCI;
+
+//Divisão de raios-X
+typedef struct {
+	int *IXRSPL, *ILBA;
+	double *LXRSPL;
+}CXRSPL;
+
+//Definição de origem.
+// Particulas primarias
+
+typedef struct {
+
+	double *CTHL, *DCTH, *PHIL, *DPHI;
+	int *KPARP, *JOBEND, *LSCONE, *LGPOL, *LPSF;
+} CSOUR0;
+
+typedef struct{
+	double *E0, *EPMAX, *SP10, *SP20, *SP30;
+
+} CSOUR1;
+
+//Espectro de Energia
+typedef struct{
+	double *ESRC, *PSRC;
+	int *IASRC, *FSRC, *LSPEC;
+
+}CSOUR2;
+
+// Fonte estendida
+
+typedef struct {
+	double *SX0, *SY0, *SZ0, *SSX, *SSY, *SSZ;
+	int *IXSBOD, *LEXSRC, *LEXBD;
+
+} CSOUR3;
+
+//Arquivo de espaço de fase de entrada
+typedef struct{
+	double *WGMIN, *RWGMIN, *WGMAX, *RLREAD;
+	int *IPSFI, *NPSF, *NPSN, *NSPLIT, *KODEPS;
+} CSOUR4;
+
+typedef struct{
+	double *PSFI;
+
+}CSOUR5;
+
+// contadores discretos
+
+typedef struct{
+    double *PRIM ,*PRIM2 ,*DPRIM; //Numero de particulas IEXIT;
+	double (*SEC)[3], (*SEC2)[3], (*DSEC)[3]; // Geradores de particulas secundarias.
+	double *AVW, *AVW2, *DAVW; //Cosseno final do diretor polar.
+	double *AVA, *AVA2, *DAVA; // Angulo final polar
+	double *AVE, *AVE2, *DAVE; // Energia final
+}CNT0;
+
+// Energias depositadas em vários corpos.
+
+typedef struct{
+	double *TDEBO, *TDEBO2, *DEBO;
+
+}CNT1;
+
+//Distribuições contínuas.
+//Espectro de energia da fonte.
+
+typedef struct{
+	double *SHIST; //definicao
+	int *NSEB;
+}CNT2;
+
+typedef struct{
+	double (*SEDS)[3], (*SEDS2)[3], *DSDE, *RDSDE;
+	int *NSDE; 
+
+}CNT3;
+
+//Detectores (até diferentes detectores NIDM).
+typedef struct{
+	double *RLAST, *RWRITE;
+	int *IDCUT, (*KKDI)[NDIM], *IPSF, *NID, *NPSFO, *IPSFO;
+
+}CNT4;
+
+typedef struct{
+	double *DEDE;
+	int *KBDE, *NED;
+}CNT5;
+
+typedef struct{
+	double *LDOSEM;
+
+}CNT6;
+
+// Detalhes do trabalho
+
+//Arquivo dump
+typedef struct{
+	bool *LDUMP;
+	char *PFILED;
+}CDUMP;
+
+//controlador de tempo e contador de simulacoes.
+
+typedef struct{
+	double *TSIM, *TSEC, *TSECA, *TSECAD, *CPUT0, *DUMPP, *DSHN, *SHN;
+	int *N;
+
+}CNTRL;
 
 
 
@@ -502,6 +638,30 @@ void imprimirKDGHT(FILE* IW, int &KB);
    CGRA02 CGRA02_;
    CGRA03 CGRA03_;
    CGPP00 CGPP00_;
+   RSEED RSEED_;
+   CTITLE CTITLE_;
+   CDATE CDATE_;
+   CSPGEO CSPGEO_;
+   CFORCI CFORCI_;
+   CXRSPL CXRSPL_;
+   CSOUR0 CSOUR0_;
+   CSOUR2 CSOUR2_;
+   CSOUR3 CSOUR3_;
+   CSOUR4 CSOUR4_;
+   CSOUR5 CSOUR5_;
+   CNT0 CNT0_;
+   CNT1 CNT1_;
+   CNT2 CNT2_;
+   CNT3 CNT3_;
+   CNT4 CNT4_;
+   CNT5 CNT5_;
+   CNT6 CNT6_;
+   CDUMP CDUMP_;
+   CNTRL CNTRL_;
+
+
+
+
    
    
    
@@ -638,6 +798,53 @@ void transfcpeldb_(double (*XSP)[NEGP][NP],double  (*PSP)[NEGP][NP],double (*ASP
 void transfcelsep_(double *EELMAX, double *PELMAX, double (*RNDCED)[MAXMAT], double (*RNDCPD)[MAXMAT]);
 
 void transfcgpp00_(double *ZEQPP, double (*F0)[MAXMAT], double *BCB);
+
+void transfrseed_(int *ISEED1, int *ISEED2);
+
+void transfctitle_(char *TITLE, char *TITLE2);
+
+void transfcdate_(char *DATE23);
+
+void transfcspgeo_(double *DSMAX, double (*EABSB)[3]);
+
+void transfcforci_(double (*WLOW)[NBV], double(*WHIG)[NBV], int (*LFORCE)[NBV]);
+
+void transfcxrspl_(int *IXRSPL, int *ILBA, double *LXRSPL);
+
+void transfcsour0_(double *CTHL, double *DCTH, double *PHIL, double *DPHI, int *KPARP, int *JOBEND, int *LSCONE, int *LGPOL, int *LPSF);
+
+void transfcsour1_(double *E0, double *EPMAX, double *SP10, double *SP20, double *SP30);
+
+void transfcsour2_(double *ESRC, double *PSRC, int *IASRC, int *FSRC, int *LSPEC);
+
+void transfcsour3_(double *SX0, double *SY0, double *SZ0, double *SSX, double *SSY, double *SSZ, int *IXSBOD, int *LEXSRC, int *LEXBD);
+
+void transfcsour4_(double *WGMIN, double *RWGMIN, double *WGMAX, double *RLREAD, int *IPSFI, int *NPSF, int *NPSN, int *NSPLIT, int *KODEPS);
+
+void transfcsour5_(double *PSFI);
+
+void transfcnt0_(double *PRIM , double *PRIM2, double *DPRIM, double (*SEC)[3], double (*SEC2)[3], double (*DSEC)[3], 
+			    double *AVW, double *AVW2, double *DAVW, double *AVA, double *AVA2, double *DAVA, double *AVE, double *AVE2, double *DAVE);
+
+void transfcnt1_(double *TDEBO, double *TDEBO2, double *DEBO);
+
+void transfcnt2_(double *SHIST, int *NSEB);
+
+void transfcnt3_(double (*SEDS)[3], double (*SEDS2)[3], double *DSDE, double *RDSDE, int *NSDE);
+
+void transfcnt4_(double *RLAST, double *RWRITE, int *IDCUT, int (*KKDI)[NDIM], int *IPSF, int *NID, int *NPSFO, int *IPSFO);
+
+void transfcnt5_(double *DEDE, int *KBDE, int *NED);
+
+void transfcnt6_(double *LDOSEM);
+
+void transfcdump_(bool *LDUMP, char *PFILED);
+
+void transfcntrl_(double *TSIM, double *TSEC, double *TSECA, double *TSECAD, double *CPUT0, double *DUMPP, double *DSHN, double *SHN, int *N);
+
+
+
+
 
 
 
@@ -797,6 +1004,8 @@ void sort22_(double *X, double *Y, int N);
 void graati2_(double E, double &ECS, int *M);
 
 void gppa02_(int *M);
+
+void pmrdr2();
 
 }
 
@@ -1619,7 +1828,57 @@ void transfcgpp00_(double *ZEQPP, double (*F0)[MAXMAT], double *BCB){
 }
   
   
-  
+  //implementar todas as transfs abaixo
+  void transfrseed_(int *ISEED1, int *ISEED2);
+
+void transfctitle_(char *TITLE, char *TITLE2);
+
+void transfcdate_(char *DATE23);
+
+void transfcspgeo_(double *DSMAX, double (*EABSB)[3]);
+
+void transfcforci_(double (*WLOW)[NBV], double(*WHIG)[NBV], int (*LFORCE)[NBV]);
+
+void transfcxrspl_(int *IXRSPL, int *ILBA, double *LXRSPL);
+
+void transfcsour0_(double *CTHL, double *DCTH, double *PHIL, double *DPHI, int *KPARP, int *JOBEND, int *LSCONE, int *LGPOL, int *LPSF);
+
+void transfcsour1_(double *E0, double *EPMAX, double *SP10, double *SP20, double *SP30);
+
+void transfcsour2_(double *ESRC, double *PSRC, int *IASRC, int *FSRC, int *LSPEC);
+
+void transfcsour3_(double *SX0, double *SY0, double *SZ0, double *SSX, double *SSY, double *SSZ, int *IXSBOD, int *LEXSRC, int *LEXBD);
+
+void transfcsour4_(double *WGMIN, double *RWGMIN, double *WGMAX, double *RLREAD, int *IPSFI, int *NPSF, int *NPSN, int *NSPLIT, int *KODEPS);
+
+void transfcsour5_(double *PSFI);
+
+void transfcnt0_(double *PRIM , double *PRIM2, double *DPRIM, double (*SEC)[3], double (*SEC2)[3], double (*DSEC)[3], 
+			    double *AVW, double *AVW2, double *DAVW, double *AVA, double *AVA2, double *DAVA, double *AVE, double *AVE2, double *DAVE);
+
+void transfcnt1_(double *TDEBO, double *TDEBO2, double *DEBO);
+
+void transfcnt2_(double *SHIST, int *NSEB);
+
+void transfcnt3_(double (*SEDS)[3], double (*SEDS2)[3], double *DSDE, double *RDSDE, int *NSDE);
+
+void transfcnt4_(double *RLAST, double *RWRITE, int *IDCUT, int (*KKDI)[NDIM], int *IPSF, int *NID, int *NPSFO, int *IPSFO);
+
+void transfcnt5_(double *DEDE, int *KBDE, int *NED);
+
+void transfcnt6_(double *LDOSEM);
+
+void transfcdump_(bool *LDUMP, char *PFILED);
+
+void transfcntrl_(double *TSIM, double *TSEC, double *TSECA, double *TSECAD, double *CPUT0, double *DUMPP, double *DSHN, double *SHN, int *N);
+
+
+
+
+
+
+
+
   
   
   
@@ -13109,7 +13368,48 @@ Se��o .
 	CGPP00_.F0[1-1][*M-1]=4.0e0*log(CADATA_.RSCR[IZZ-1]);
 	CGPP00_.F0[2-1][*M-1]=CGPP00_.F0[1-1][*M-1]-4.0e0*FC;
 	
-//	printf("\n\nGPPA02\n\n");
+ //	printf("\n\nGPPA02\n\n");
+}
+
+void pmrdr2(){
+
+	//Lê o arquivo de entrada e inicializa PENELOPE e PENGEOM.
+
+
+	char PMFILE[MAXMAT][21];
+	char PFILE[21];
+	char PFILER[21];
+	char SPCDIO[21];
+	char SPCDEO[21];
+	char PSFDIO[21];
+	char SPCFSO[21];
+	char SPCAGE[21];
+	char BUFFER[121];
+	char BUF2[121];
+	char KWTITL[7] = "TITLE "; char KWKPAR[7] = "SKPAR "; char KWSENE[7] = "SENERG"; char KWSPEC[7] = "SPECTR"; 
+    char KWSPOL[7] = "SGPOL "; char KWSPOS[7] = "SPOSIT"; char KWSBOX[7] = "SBOX  "; char KWSBOD[7] = "SBODY "; 
+    char KWSCON[7] = "SCONE "; char KWSREC[7] = "SRECTA"; char KWPSFN[7] = "IPSFN "; char KWPSPL[7] = "IPSPLI"; 
+    char KWRRSP[7] = "WGTWIN"; char KWEMAX[7] = "EPMAX "; char KWMATF[7] = "MFNAME"; char KWSIMP[7] = "MSIMPA"; 
+    char KWGEOM[7] = "GEOMFN"; char KWGPAR[7] = "PARINP"; char KWSMAX[7] = "DSMAX "; char KWEABS[7] = "EABSB ";
+    char KWIFOR[7] = "IFORCE"; char KBRSPL[7] = "IBRSPL"; char KXRSPL[7] = "IXRSPL"; char KWNBE [7] = "NBE   ";
+    char KWNBAN[7] = "NBANGL"; char KWIDET[7] = "IMPDET"; char KWIPSF[7] = "IDPSF "; char KWISPC[7] = "IDSPC ";
+    char KWIFLN[7] = "IDFLNC"; char KWDIAL[7] = "IDAGEL"; char KWDIAF[7] = "IDAGEF"; char KWIBOD[7] = "IDBODY";
+    char KWIPAR[7] = "IDKPAR"; char KWEDET[7] = "ENDETC"; char KWESPC[7] = "EDSPC "; char KWEBOD[7] = "EDBODY";
+    char KGRDXX[7] = "GRIDX "; char KGRDYY[7] = "GRIDY "; char KGRDZZ[7] = "GRIDZ "; char KGRDRR[7] = "GRIDR ";
+    char KWRESU[7] = "RESUME"; char KWDUMP[7] = "DUMPTO"; char KWDMPP[7] = "DUMPP "; char KWRSEE[7] = "RSEED "; 
+    char KWNSIM[7] = "NSIMSH"; char KWTIME[7] = "TIME  "; char KWCOMM[7] = "      "; 
+
+
+    double PI=3.1415926535897932e0;
+	double DE2RA=PI/180.0e0;
+	double FSAFE=1.000000001e0;
+
+
+
+
+
+
+
 }
 
 
