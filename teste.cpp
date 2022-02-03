@@ -48,7 +48,7 @@ static const int NQ=250;
 static const int NEX=1024;
 static const int NP2=150;
 
-
+int tttttt = 10;
 
 
 
