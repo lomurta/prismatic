@@ -1055,6 +1055,53 @@ C	 CALL PINaT1(E,UK,WK,DELTA,WCCM,H0,H1,H2,S0,S1,S2,R0,R1,R2)
 	 
 	 CALL transfCPIN01(EI3,CPS3,BHA1,BHA2,BHA3,BHA4,MOM3)
 	 
+	 CALL transfrseed(ISEED1, ISEED2)
+	 
+	 CALL transfctitle(TITLE, TITLE2)
+	 
+	 CALL transfcdate(DATE23)
+	 
+	 CALL transfcspgeo(DSMAX, EABSB)
+	 
+	 CALL transfcforci(WLOW,WHIG,LFORCE)
+	 
+	 CALL transfcxrspl(IXRSPL,ILBA,LXRSPL)
+	 
+	 CALL transfcsour0(CTHL,DCTH,PHIL,DPHI,KPARP,
+     1  JOBEND,LSCONE,LGPOL,LPSF)
+	 
+	 CALL transfcsour1(E0,EPMAX,SP10,SP20,SP30)
+	 
+	 CALL transfcsour2(ESRC, PSRC,IASRC,FSRC,LSPEC)
+	 
+	 CALL transfcsour3(SX0,SY0,SZ0,SSX,SSY,SSZ,
+     1  IXSBOD,LEXSRC,LEXBD)
+	 
+	 CALL transfcsour4(WGMIN,RWGMIN,WGMAX,RLREAD,
+     1  IPSFI,NPSF,NPSN,NSPLIT,KODEPS)
+	 
+	 CALL transfcsour5(PSFI)
+	 
+	 CALL transfcnt0(PRIM,PRIM2,DPRIM,SEC,SEC2,DSEC,AVW,AVW2,
+     1  DAVW,AVA,AVA2,DAVA,AVE,AVE2,DAVE)
+	 
+	 CALL transfcnt1(TDEBO,TDEBO2,DEBO)
+	 
+	 CALL transfcnt2(SHIST,NSEB)
+	 
+	 CALL transfcnt3(SEDS,SEDS2,DSDE,RDSDE,NSDE)
+	 
+	 CALL transfcnt4(RLAST,RWRITE,IDCUT,KKDI,IPSF,NID,NPSFO,IPSFO)
+	 
+	 CALL transfcnt5(DEDE,KBDE,NED)
+	 
+	 CALL transfcnt6(LDOSEM)
+	 
+	 CALL transfcdump(LDUMP,PFILED)
+	 
+	 CALL transfcntrl(TSIM,TSEC,TSECA,TSECAD,CPUT0,DUMPP,DSHN,SHN,N)
+	 
+
 
 	 
 C
@@ -1128,7 +1175,7 @@ C                       SUBROUTINE PMRDR
 C  *********************************************************************
       SUBROUTINE PMRDR
 C
-C  Reads the input file and initialises PENELOPE and PENGEOM.
+C 
 C
 C
       USE PENELOPE_mod
@@ -6810,9 +6857,6 @@ C  ****  Elastic scattering of electrons and positrons.
      2  EJTL,FJL,A2,B2,C,D
 	  CLOSE(IWR)
 	  
-
-	  
-
 C  ****  Electron and positron radiative yields.
       OPEN(IWR,FILE='CBRYLD.txt')
 	  write(IWR,*) 'CBRYLD'
@@ -6927,6 +6971,131 @@ C  ****  Photon simulation tables.
 	  OPEN(IWR,FILE='CGPP00.txt')
 	  write(IWR,*) 'CGPP00'
 	  WRITE(IWR,'(7E14.5)') ZEQPP,F0,BCB
+	  CLOSE(IWR)
+	  
+	  OPEN(IWR,FILE='RSEED.txt')
+	  write(IWR,*) 'RSEED'
+	  WRITE(IWR,'(8I10)') ISEED1, ISEED2
+	  CLOSE(IWR)
+	  
+	  OPEN(IWR,FILE='CTITLE.txt')
+	  write(IWR,*) 'CTITLE'
+	  WRITE(IWR,*) TITLE
+	  WRITE(IWR,*) TITLE2
+	  CLOSE(IWR)
+	  
+	  OPEN(IWR,FILE='CDATE.txt')
+	  write(IWR,*) 'CDATE'
+	  WRITE(IWR,*) DATE23
+	  CLOSE(IWR)
+	  
+	  OPEN(IWR,FILE='CSPGEO.txt')
+	  write(IWR,*) 'CSPGEO'
+	  WRITE(IWR,'(8E14.5)') DSMAX, EABSB
+	  CLOSE(IWR)
+	  
+	  OPEN(IWR,FILE='CFORCI.txt')
+	  write(IWR,*) 'CFORCI'
+	  WRITE(IWR,'(8E14.5)') WLOW,WHIG
+	  WRITE(IWR,*) LFORCE
+	  CLOSE(IWR)
+	  
+	  OPEN(IWR,FILE='CXRSPL.txt')
+	  write(IWR,*) 'CXRSLP'
+	  WRITE(IWR,'(8I10)') IXRSPL,ILBA
+	  WRITE(IWR,*) LXRSPL
+	  CLOSE(IWR)
+	  
+	  OPEN(IWR,FILE='CSOUR0.txt')
+	  write(IWR,*) 'CSOUR0'
+	  WRITE(IWR,'(8E14.5)') CTHL,DCTH,PHIL,DPHI
+	  WRITE(IWR,'(8I10)') KPARP,JOBEND
+	  WRITE(IWR,*) LSCONE
+	  WRITE(IWR,*) LGPOL
+	  WRITE(IWR,*) LPSF
+	  CLOSE(IWR)
+	  
+	  OPEN(IWR,FILE='CSOUR1.txt')
+	  write(IWR,*) 'CSOUR1'
+	  WRITE(IWR,'(8E14.5)') E0,EPMAX,SP10,SP20,SP30
+	  CLOSE(IWR)
+	  
+	  OPEN(IWR,FILE='CSOUR2.txt')
+	  write(IWR,*) 'CSOUR2'
+	  WRITE(IWR,'(8E14.5)') ESRC,PSRC,FSRC
+	  WRITE(IWR,'(8I10)') IASRC
+	  WRITE(IWR,*) LSPEC
+	  CLOSE(IWR)
+	  
+	  OPEN(IWR,FILE='CSOUR3.txt')
+	  write(IWR,*) 'CSOUR3'
+	  WRITE(IWR,'(8E14.5)') SX0,SY0,SZ0,SSX,SSY,SSZ
+	  WRITE(IWR,'(8I10)') IXSBOD
+	  WRITE(IWR,*) LEXSRC
+	  WRITE(IWR,*) LEXBD
+	  CLOSE(IWR)
+	  
+	  OPEN(IWR,FILE='CSOUR4.txt')
+	  write(IWR,*) 'CSOUR4'
+	  WRITE(IWR,'(8E14.5)') GMIN,RWGMIN,WGMAX,RLREAD
+	  WRITE(IWR,'(8I10)') IPSFI,NPSF,NPSN,NSPLIT,KODEPS
+	  CLOSE(IWR)
+	  
+	  OPEN(IWR,FILE='CSOUR5.txt')
+	  write(IWR,*) 'CSOUR5'
+	  WRITE(IWR,*) PSFI
+	  CLOSE(IWR)
+	  
+	  OPEN(IWR,FILE='CNT0.txt')
+	  write(IWR,*) 'CNT0'
+	  WRITE(IWR,'(8E14.5)') PRIM,PRIM2,DPRIM,SEC,SEC2,DSEC,AVW,AVW2,
+     1  DAVW,AVA,AVA2,DAVA,AVE,AVE2,DAVE
+	  CLOSE(IWR)
+	  
+	  OPEN(IWR,FILE='CNT1.txt')
+	  write(IWR,*) 'CNT1'
+	  WRITE(IWR,'(8E14.5)') TDEBO,TDEBO2,DEBO
+	  CLOSE(IWR)
+	  
+	  OPEN(IWR,FILE='CNT2.txt')
+	  write(IWR,*) 'CNT2'
+	  WRITE(IWR,'(8E14.5)') SHIST
+	  WRITE(IWR,'(8I10)') NSEB
+	  CLOSE(IWR)
+	  
+	  OPEN(IWR,FILE='CNT3.txt')
+	  write(IWR,*) 'CNT3'
+	  WRITE(IWR,'(8E14.5)') SEDS,SEDS2,DSDE,RDSDE
+	  WRITE(IWR,'(8I10)') NSDE
+	  CLOSE(IWR)
+
+	  OPEN(IWR,FILE='CNT4.txt')
+	  write(IWR,*) 'CNT4'
+	  WRITE(IWR,'(8E14.5)') RLAST,RWRITE
+	  WRITE(IWR,'(8I10)') IDCUT,KKDI,IPSF,NID,NPSFO,IPSFO
+	  CLOSE(IWR)
+	  
+	  OPEN(IWR,FILE='CNT5.txt')
+	  write(IWR,*) 'CNT5'
+	  WRITE(IWR,'(8E14.5)') DEDE
+	  WRITE(IWR,'(8I10)') KBDE,NED
+	  CLOSE(IWR)
+	  
+	  OPEN(IWR,FILE='CNT6.txt')
+	  write(IWR,*) 'CNT6'
+	  WRITE(IWR,*) LDOSEM
+	  CLOSE(IWR)
+	  
+	  OPEN(IWR,FILE='CDUMP.txt')
+	  write(IWR,*) 'CDUMP'
+	  WRITE(IWR,*) LDUMP
+	  WRITE(IWR,*) PFILED
+	  CLOSE(IWR)
+	  
+	  OPEN(IWR,FILE='CNTRL.txt')
+	  write(IWR,*) 'CNTRL'
+	  WRITE(IWR,'(8E14.5)') TSIM,TSEC,TSECA,TSECAD,CPUT0,DUMPP,DSHN,SHN
+	  WRITE(IWR,'(8I10)') N
 	  CLOSE(IWR)
 	 
 

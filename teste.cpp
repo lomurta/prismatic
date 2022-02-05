@@ -461,7 +461,7 @@ typedef struct{
 //Divisão de raios-X
 typedef struct {
 	int *IXRSPL, *ILBA;
-	double *LXRSPL;
+	bool *LXRSPL;
 }CXRSPL;
 
 //Definição de origem.
@@ -470,7 +470,8 @@ typedef struct {
 typedef struct {
 
 	double *CTHL, *DCTH, *PHIL, *DPHI;
-	int *KPARP, *JOBEND, *LSCONE, *LGPOL, *LPSF;
+	int *KPARP, *JOBEND;
+	bool *LSCONE, *LGPOL, *LPSF;
 } CSOUR0;
 
 typedef struct{
@@ -480,8 +481,9 @@ typedef struct{
 
 //Espectro de Energia
 typedef struct{
-	double *ESRC, *PSRC;
-	int *IASRC, *FSRC, *LSPEC;
+	double *ESRC, *PSRC, *FSRC;
+	int *IASRC;
+	bool *LSPEC;
 
 }CSOUR2;
 
@@ -489,7 +491,8 @@ typedef struct{
 
 typedef struct {
 	double *SX0, *SY0, *SZ0, *SSX, *SSY, *SSZ;
-	int *IXSBOD, *LEXSRC, *LEXBD;
+	int *IXSBOD;
+	bool *LEXSRC, *LEXBD;
 
 } CSOUR3;
 
@@ -548,7 +551,7 @@ typedef struct{
 }CNT5;
 
 typedef struct{
-	double *LDOSEM;
+	bool *LDOSEM;
 
 }CNT6;
 
@@ -645,6 +648,7 @@ void imprimirKDGHT(FILE* IW, int &KB);
    CFORCI CFORCI_;
    CXRSPL CXRSPL_;
    CSOUR0 CSOUR0_;
+   CSOUR1 CSOUR1_;
    CSOUR2 CSOUR2_;
    CSOUR3 CSOUR3_;
    CSOUR4 CSOUR4_;
@@ -809,15 +813,15 @@ void transfcspgeo_(double *DSMAX, double (*EABSB)[3]);
 
 void transfcforci_(double (*WLOW)[NBV], double(*WHIG)[NBV], int (*LFORCE)[NBV]);
 
-void transfcxrspl_(int *IXRSPL, int *ILBA, double *LXRSPL);
+void transfcxrspl_(int *IXRSPL, int *ILBA, bool *LXRSPL);
 
-void transfcsour0_(double *CTHL, double *DCTH, double *PHIL, double *DPHI, int *KPARP, int *JOBEND, int *LSCONE, int *LGPOL, int *LPSF);
+void transfcsour0_(double *CTHL, double *DCTH, double *PHIL, double *DPHI, int *KPARP, int *JOBEND, bool *LSCONE, bool *LGPOL, bool *LPSF);
 
 void transfcsour1_(double *E0, double *EPMAX, double *SP10, double *SP20, double *SP30);
 
-void transfcsour2_(double *ESRC, double *PSRC, int *IASRC, int *FSRC, int *LSPEC);
+void transfcsour2_(double *ESRC, double *PSRC, int *IASRC, double *FSRC, bool *LSPEC);
 
-void transfcsour3_(double *SX0, double *SY0, double *SZ0, double *SSX, double *SSY, double *SSZ, int *IXSBOD, int *LEXSRC, int *LEXBD);
+void transfcsour3_(double *SX0, double *SY0, double *SZ0, double *SSX, double *SSY, double *SSZ, int *IXSBOD, bool *LEXSRC, bool *LEXBD);
 
 void transfcsour4_(double *WGMIN, double *RWGMIN, double *WGMAX, double *RLREAD, int *IPSFI, int *NPSF, int *NPSN, int *NSPLIT, int *KODEPS);
 
@@ -836,7 +840,7 @@ void transfcnt4_(double *RLAST, double *RWRITE, int *IDCUT, int (*KKDI)[NDIM], i
 
 void transfcnt5_(double *DEDE, int *KBDE, int *NED);
 
-void transfcnt6_(double *LDOSEM);
+void transfcnt6_(bool *LDOSEM);
 
 void transfcdump_(bool *LDUMP, char *PFILED);
 
@@ -1829,48 +1833,176 @@ void transfcgpp00_(double *ZEQPP, double (*F0)[MAXMAT], double *BCB){
   
   
   //implementar todas as transfs abaixo
-  void transfrseed_(int *ISEED1, int *ISEED2);
+  void transfrseed_(int *ISEED1, int *ISEED2){
+	  RSEED_.ISEED1 = ISEED1;
+	  RSEED_.ISEED2 = ISEED2;
+  }
 
-void transfctitle_(char *TITLE, char *TITLE2);
+void transfctitle_(char *TITLE, char *TITLE2){
+	CTITLE_.TITLE = TITLE;
+	CTITLE_.TITLE2 = TITLE2;
+}
 
-void transfcdate_(char *DATE23);
+void transfcdate_(char *DATE23){
+	CDATE_.DATE23 = DATE23;
+}
 
-void transfcspgeo_(double *DSMAX, double (*EABSB)[3]);
+void transfcspgeo_(double *DSMAX, double (*EABSB)[3]){
+	CSPGEO_.DSMAX = DSMAX; 
+	CSPGEO_.EABSB = EABSB;
+}
 
-void transfcforci_(double (*WLOW)[NBV], double(*WHIG)[NBV], int (*LFORCE)[NBV]);
+void transfcforci_(double (*WLOW)[NBV], double(*WHIG)[NBV], int (*LFORCE)[NBV]){
+	CFORCI_.WLOW = WLOW;
+	CFORCI_.WHIG = WHIG;
+	CFORCI_.LFORCE = LFORCE;
+}
 
-void transfcxrspl_(int *IXRSPL, int *ILBA, double *LXRSPL);
+void transfcxrspl_(int *IXRSPL, int *ILBA, bool *LXRSPL){
+	
+	CXRSPL_.IXRSPL = IXRSPL;
+	CXRSPL_.ILBA = ILBA;
+	CXRSPL_.LXRSPL = LXRSPL;
 
-void transfcsour0_(double *CTHL, double *DCTH, double *PHIL, double *DPHI, int *KPARP, int *JOBEND, int *LSCONE, int *LGPOL, int *LPSF);
+}
 
-void transfcsour1_(double *E0, double *EPMAX, double *SP10, double *SP20, double *SP30);
+void transfcsour0_(double *CTHL, double *DCTH, double *PHIL, double *DPHI, int *KPARP, int *JOBEND, bool *LSCONE, bool *LGPOL, bool *LPSF){
+   CSOUR0_.CTHL =   CTHL;
+   CSOUR0_.DCTH =   DCTH;
+   CSOUR0_.PHIL =   PHIL;
+   CSOUR0_.DPHI =   DPHI;
+   CSOUR0_.KPARP =  KPARP;
+   CSOUR0_.JOBEND = JOBEND;
+   CSOUR0_.LSCONE = LSCONE;
+   CSOUR0_.LGPOL =  LGPOL;
+   CSOUR0_.LPSF =   LPSF;
+ 	
+}
 
-void transfcsour2_(double *ESRC, double *PSRC, int *IASRC, int *FSRC, int *LSPEC);
+void transfcsour1_(double *E0, double *EPMAX, double *SP10, double *SP20, double *SP30){
+    CSOUR1_.E0    = E0;    
+	CSOUR1_.EPMAX = EPMAX;
+	CSOUR1_.SP10  = SP10; 
+	CSOUR1_.SP20  = SP20;
+	CSOUR1_.SP30  = SP30; 
 
-void transfcsour3_(double *SX0, double *SY0, double *SZ0, double *SSX, double *SSY, double *SSZ, int *IXSBOD, int *LEXSRC, int *LEXBD);
+}
 
-void transfcsour4_(double *WGMIN, double *RWGMIN, double *WGMAX, double *RLREAD, int *IPSFI, int *NPSF, int *NPSN, int *NSPLIT, int *KODEPS);
+void transfcsour2_(double *ESRC, double *PSRC, int *IASRC, double *FSRC, bool *LSPEC){
+	CSOUR2_.ESRC = ESRC; 
+	CSOUR2_.PSRC = PSRC;
+	CSOUR2_.IASRC = IASRC;
+	CSOUR2_.FSRC = FSRC;
+	CSOUR2_.LSPEC = LSPEC;
+}
 
-void transfcsour5_(double *PSFI);
+void transfcsour3_(double *SX0, double *SY0, double *SZ0, double *SSX, double *SSY, double *SSZ, int *IXSBOD, bool *LEXSRC, bool *LEXBD){
+    CSOUR3_.SX0 = SX0; 
+	CSOUR3_.SY0 = SY0; 
+	CSOUR3_.SZ0 = SZ0; 
+	CSOUR3_.SSX = SSX; 
+	CSOUR3_.SSY = SSY; 
+	CSOUR3_.SSZ = SSZ; 
+	CSOUR3_.IXSBOD = IXSBOD;
+	CSOUR3_.LEXSRC = LEXSRC;
+	CSOUR3_.LEXBD = LEXBD; 
+}
+
+void transfcsour4_(double *WGMIN, double *RWGMIN, double *WGMAX, double *RLREAD, int *IPSFI, int *NPSF, int *NPSN, int *NSPLIT, int *KODEPS){
+	CSOUR4_.WGMIN =   WGMIN;
+	CSOUR4_.RWGMIN =	RWGMIN;
+	CSOUR4_.WGMAX =	 WGMAX;
+	CSOUR4_.RLREAD =	RLREAD;
+	CSOUR4_.IPSFI =	IPSFI;
+	CSOUR4_.NPSF =	NPSF;
+	CSOUR4_.NPSN =	NPSN;
+	CSOUR4_.NSPLIT =	NSPLIT;
+	CSOUR4_.KODEPS =	KODEPS;
+
+}
+
+void transfcsour5_(double *PSFI){
+	CSOUR5_.PSFI = PSFI;
+
+}
 
 void transfcnt0_(double *PRIM , double *PRIM2, double *DPRIM, double (*SEC)[3], double (*SEC2)[3], double (*DSEC)[3], 
-			    double *AVW, double *AVW2, double *DAVW, double *AVA, double *AVA2, double *DAVA, double *AVE, double *AVE2, double *DAVE);
+			    double *AVW, double *AVW2, double *DAVW, double *AVA, double *AVA2, double *DAVA, double *AVE, double *AVE2, double *DAVE){
 
-void transfcnt1_(double *TDEBO, double *TDEBO2, double *DEBO);
+    CNT0_.PRIM =    PRIM;
+	CNT0_.PRIM2	= PRIM2;
+	CNT0_.DPRIM	= DPRIM;
+	CNT0_.SEC	= SEC;
+	CNT0_.SEC2	= SEC2;
+	CNT0_.DSEC	= DSEC;
+	CNT0_.AVW	= AVW;
+	CNT0_.AVW2	= AVW2;
+	CNT0_.DAVW	= DAVW;
+	CNT0_.AVA	= AVA;
+	CNT0_.AVA2	= AVA2;
+	CNT0_.DAVA	= DAVA;
+	CNT0_.AVE	= AVE;
+	CNT0_.AVE2	= AVE2;
+	CNT0_.DAVE	= DAVE;
 
-void transfcnt2_(double *SHIST, int *NSEB);
+}
 
-void transfcnt3_(double (*SEDS)[3], double (*SEDS2)[3], double *DSDE, double *RDSDE, int *NSDE);
+void transfcnt1_(double *TDEBO, double *TDEBO2, double *DEBO){
+	CNT1_.TDEBO = TDEBO;
+	CNT1_.TDEBO2 = TDEBO2;
+	CNT1_.DEBO = DEBO;
+}
 
-void transfcnt4_(double *RLAST, double *RWRITE, int *IDCUT, int (*KKDI)[NDIM], int *IPSF, int *NID, int *NPSFO, int *IPSFO);
+void transfcnt2_(double *SHIST, int *NSEB){
+	CNT2_.SHIST = SHIST; 
+	CNT2_.NSEB = NSEB;
+}
 
-void transfcnt5_(double *DEDE, int *KBDE, int *NED);
+void transfcnt3_(double (*SEDS)[3], double (*SEDS2)[3], double *DSDE, double *RDSDE, int *NSDE){
+	CNT3_.SEDS = SEDS;
+	CNT3_.SEDS2 = SEDS2;
+	CNT3_.DSDE = DSDE;
+	CNT3_.RDSDE = RDSDE;
+	CNT3_.NSDE =  NSDE;
+}
 
-void transfcnt6_(double *LDOSEM);
+void transfcnt4_(double *RLAST, double *RWRITE, int *IDCUT, int (*KKDI)[NDIM], int *IPSF, int *NID, int *NPSFO, int *IPSFO){
+	CNT4_.RLAST	= RLAST;
+	CNT4_.RWRITE =	RWRITE;
+	CNT4_.IDCUT	= IDCUT;
+	CNT4_.KKDI	= KKDI;
+	CNT4_.IPSF =	IPSF;
+	CNT4_.NID =	NID;
+	CNT4_.NPSFO	 = NPSFO;
+	CNT4_.IPSFO	= IPSFO;
+}
 
-void transfcdump_(bool *LDUMP, char *PFILED);
+void transfcnt5_(double *DEDE, int *KBDE, int *NED){
+	CNT5_.DEDE = DEDE;
+	CNT5_.KBDE = KBDE;
+	CNT5_.NED = NED;
+}
 
-void transfcntrl_(double *TSIM, double *TSEC, double *TSECA, double *TSECAD, double *CPUT0, double *DUMPP, double *DSHN, double *SHN, int *N);
+void transfcnt6_(bool *LDOSEM){
+	CNT6_.LDOSEM = LDOSEM;
+}
+
+void transfcdump_(bool *LDUMP, char *PFILED){
+	CDUMP_.LDUMP = LDUMP;
+	CDUMP_.PFILED = PFILED;
+}
+
+void transfcntrl_(double *TSIM, double *TSEC, double *TSECA, double *TSECAD, double *CPUT0, double *DUMPP, double *DSHN, double *SHN, int *N){
+	CNTRL_.TSIM	= TSIM;
+	CNTRL_.TSEC =	TSEC;
+	CNTRL_.TSECA =	TSECA;
+	CNTRL_.TSECAD =	TSECAD;
+	CNTRL_.CPUT0 =	CPUT0;
+	CNTRL_.DUMPP =	DUMPP;
+	CNTRL_.DSHN =	DSHN;
+	CNTRL_.SHN =	SHN;
+	CNTRL_.N =	N;
+}
 
 
 
