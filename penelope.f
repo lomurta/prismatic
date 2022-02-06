@@ -4750,7 +4750,7 @@ C
       COMMON/CPIN01/EI,CPS,BHA1,BHA2,BHA3,BHA4,MOM
       EXTERNAL PINaDS
 	  
-	  write(*,*) 'PINAT1 PENELOPE'
+c	  write(*,*) 'PINAT1 PENELOPE'
 C
       H0=0.0D0
       H1=0.0D0
@@ -10449,7 +10449,7 @@ C
       DIMENSION X(N),Y(N),A(N),B(N),C(N),D(N)
 C
 
-	  write(*,*) 'SPLINE PENELOPE'
+c	  write(*,*) 'SPLINE PENELOPE'
       IF(N.LT.4) THEN
         WRITE(6,10) N
    10   FORMAT(1X,'*** Error in SPLINE: interpolation cannot be ',
@@ -10534,7 +10534,7 @@ C
       DIMENSION X(N)
 C
 
-	  write(*,*) 'FINDI PENELOPE'
+c	  write(*,*) 'FINDI PENELOPE'
       IF(XC.GT.X(N)) THEN
         I=N
         RETURN

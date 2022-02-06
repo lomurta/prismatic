@@ -1009,7 +1009,7 @@ void graati2_(double E, double &ECS, int *M);
 
 void gppa02_(int *M);
 
-void pmrdr2();
+void pmrdr2_();
 
 }
 
@@ -13503,11 +13503,12 @@ Se��o .
  //	printf("\n\nGPPA02\n\n");
 }
 
-void pmrdr2(){
+void pmrdr2_(){
 
 	//Lê o arquivo de entrada e inicializa PENELOPE e PENGEOM.
 
-
+    char LINHA[100];
+	char KWORD[100];
 	char PMFILE[MAXMAT][21];
 	char PFILE[21];
 	char PFILER[21];
@@ -13536,12 +13537,89 @@ void pmrdr2(){
 	double DE2RA=PI/180.0e0;
 	double FSAFE=1.000000001e0;
 
+	static const int NPINPM=500;
+	double PARINP[NPINPM] = {};
+	static const int NSEM = 1000;
+	static const int NB = 5000;
+
+	FILE* IWR = fopen("penmain2.dat", "w");
+	if (IWR == NULL){
+		printf("Nao foi possivel abrir o arquivo penmain2.dat");
+		exit(0);
+	}
+
+	FILE* IRD = fopen("entrada.in", "r");
+	if (IRD == NULL){
+		printf("Nao foi possivel abrir o arquivo entrada.in");
+		exit(0);
+	}
+
+	for (int I = 1; I <= 3; I++){
+		CNT0_.PRIM[I-1]=0.0e0;
+        CNT0_.PRIM2[I-1]=0.0e0;
+		for (int K = 1; K <= 3; K++){
+			CNT0_.SEC[I-1][K-1]=0.0e0;
+            CNT0_.SEC2[I-1][K-1]=0.0e0;
+		}
+	}
+
+	for (int I = 1; I <= NSEM; I++){
+		CNT2_.SHIST[I-1]=0.0e0;
+		for (int K = 1; K <= 3; K++){
+			CNT3_.SEDS[I-1][K-1]=0.0e0;
+            CNT3_.SEDS2[I-1][K-1]=0.0e0;
+		}
+	}
+
+	for (int I = 1; I <= NB; I++){
+		CNT1_.TDEBO[I-1]=0.0e0;
+        CNT1_.TDEBO2[I-1]=0.0e0;
+        CSPGEO_.EABSB[I-1][1-1]=50.0e0;
+ 		CSPGEO_.EABSB[I-1][2-1]=50.0e0;
+        CSPGEO_.EABSB[I-1][3-1]=50.0e0;
+	}
+
+	*CSOUR0_.CTHL=0.0e0;
+    *CSOUR0_.DCTH=0.0e0;
+    *CSOUR0_.PHIL=0.0e0;
+    *CSOUR0_.DPHI=0.0e0;
+
+	for(int KB = 1; KB <= NB; KB++){
+		CSOUR3_.IXSBOD[KB-1]=0;
+	}
+
+	//Inicialização do contador de tempo.
+
+	//criar a chamada de uma funcao time para contar o tempo
+
+	//Lendo o arquivo de entrda .in
+
+	fprintf(IWR, "\n\n   *************************************************************\n");
+	fprintf(IWR, "   **   Program PENMAIN.  Input data and run-time messages.   **\n");
+	fprintf(IWR, "   *************************************************************\n\n");
+	
+    // Criar função para gerar uma data em c++
+
+	fprintf(IWR, "\n   Date and time: \n");
+
+	fgets(LINHA, sizeof(LINHA), IRD);
+	printf("LINHA %s", LINHA);
+	
+	extrairString(KWORD, LINHA, 0, 6);
+	if (!strcmp(KWORD, KWTITL)){
+		fprintf(IWR, "\n%s\n", KWORD);
+	} else{
+		fprintf(IWR, "\nThe input file must begin with the TITLE line\n");
+		printf("The input file must begin with the TITLE line\n");
+		exit(0);
+	}
 
 
 
 
+	fprintf(IWR, "------------------------------------------------------------------------\n");
 
-
+	printf("\nFIM PMRDR2\n");
 }
 
 

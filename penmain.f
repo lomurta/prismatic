@@ -1110,7 +1110,8 @@ C
 
 
 
-      CALL PMRDR
+c      CALL PMRDR
+	  CALL pmrdr2
 	  
 	  CALL TABELAS
 	  
@@ -1178,11 +1179,15 @@ C
 C 
 C
 C
+
+	  
       USE PENELOPE_mod
       USE TRACK_mod
       USE PENGEOM_mod
       USE PENVARED_mod
 C
+
+
       IMPLICIT DOUBLE PRECISION (A-H,O-Z), INTEGER*4 (I-N)
       CHARACTER LIT*2,WORD*4
       CHARACTER*20 PMFILE,PFILE,PFILER
@@ -6815,8 +6820,8 @@ C  ****  Compton scattering.
 
 	  OPEN(IWR,FILE='CGCO.txt')
 	  write(IWR,*) 'CGCO'
-	  WRITE(IWR,'(10E14.5)') FCO,UICO,FJ0,PTRSH,OSCCO
-	  WRITE(IWR,'(10I5)') KZCO,KSCO
+	  WRITE(IWR,'(10E14.5)') FCO,UICO,FJ0,PTRSH
+	  WRITE(IWR,'(10I5)') NOSCCO,KZCO,KSCO
 	  CLOSE(IWR)
 
 C  ****  Electron simulation tables.
