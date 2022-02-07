@@ -13589,7 +13589,7 @@ void pmrdr2_(){
 	}
 
 	//Inicialização do contador de tempo.
-
+///
 	//criar a chamada de uma funcao time para contar o tempo
 
 	//Lendo o arquivo de entrda .in
