@@ -571,6 +571,12 @@ typedef struct{
 
 }CNTRL;
 
+typedef struct{
+	double *CPCT, *CPST, *SPCT, *SPST, *SPHI, *CPHI, *STHE, *CTHE, *CAPER;
+
+
+}CGCONE;
+
 
 
 
@@ -662,6 +668,7 @@ void imprimirKDGHT(FILE* IW, int &KB);
    CNT6 CNT6_;
    CDUMP CDUMP_;
    CNTRL CNTRL_;
+   CGCONE CGCONE_;
 
 
 
@@ -846,7 +853,7 @@ void transfcdump_(bool *LDUMP, char *PFILED);
 
 void transfcntrl_(double *TSIM, double *TSEC, double *TSECA, double *TSECAD, double *CPUT0, double *DUMPP, double *DSHN, double *SHN, int *N);
 
-
+void transfcgcone_(double *CPCT, double *CPST, double *SPCT, double *SPST, double *SPHI, double *CPHI, double *STHE, double *CTHE, double *CAPER);
 
 
 
@@ -1010,6 +1017,8 @@ void graati2_(double E, double &ECS, int *M);
 void gppa02_(int *M);
 
 void pmrdr2_();
+
+void gcone02_(double THETA, double PHI, double ALPHA);
 
 }
 
@@ -2004,8 +2013,18 @@ void transfcntrl_(double *TSIM, double *TSEC, double *TSECA, double *TSECAD, dou
 	CNTRL_.N =	N;
 }
 
-
-
+//Parâmetros para direções de amostragem dentro de um cone.
+void transfcgcone_(double *CPCT, double *CPST, double *SPCT, double *SPST, double *SPHI, double *CPHI, double *STHE, double *CTHE, double *CAPER){
+    CGCONE_.CPCT = CPCT;
+	CGCONE_.CPST = CPST;
+	CGCONE_.SPCT = SPCT;
+	CGCONE_.SPST = SPST;
+	CGCONE_.SPHI = SPHI;
+	CGCONE_.CPHI = CPHI;
+	CGCONE_.STHE = STHE;
+	CGCONE_.CTHE = CTHE;
+	CGCONE_.CAPER = CAPER;
+}
 
 
 
@@ -5633,7 +5652,6 @@ bool comentario(char BLINE[]){
 
 
 void extrairString(char destino[], char origem[], int inicio, int qtde){
-	
 	
 	strncpy(destino, origem+inicio, qtde);
 	destino[qtde] = '\0';
@@ -13509,6 +13527,9 @@ void pmrdr2_(){
 
     char LINHA[100];
 	char KWORD[100];
+	char TITLE[100];
+	char APOIO[100];
+	char *PCH;
 	char PMFILE[MAXMAT][21];
 	char PFILE[21];
 	char PFILER[21];
@@ -13541,6 +13562,10 @@ void pmrdr2_(){
 	double PARINP[NPINPM] = {};
 	static const int NSEM = 1000;
 	static const int NB = 5000;
+
+	double SALPHA, SPHI, STHETA, THETLD,THETUD, PHILD,PHIUD;
+
+	int KBSMAX, ISEC, KB, ISOURC;
 
 	FILE* IWR = fopen("penmain2.dat", "w");
 	if (IWR == NULL){
@@ -13589,7 +13614,7 @@ void pmrdr2_(){
 	}
 
 	//Inicialização do contador de tempo.
-///
+
 	//criar a chamada de uma funcao time para contar o tempo
 
 	//Lendo o arquivo de entrda .in
@@ -13600,26 +13625,405 @@ void pmrdr2_(){
 	
     // Criar função para gerar uma data em c++
 
-	fprintf(IWR, "\n   Date and time: \n");
+	fprintf(IWR, "   Date and time: \n");
 
 	fgets(LINHA, sizeof(LINHA), IRD);
-	printf("LINHA %s", LINHA);
 	
 	extrairString(KWORD, LINHA, 0, 6);
+	extrairString(TITLE, LINHA, 7, 65);
 	if (!strcmp(KWORD, KWTITL)){
-		fprintf(IWR, "\n%s\n", KWORD);
+		fprintf(IWR, "\n   %s\n", TITLE);
 	} else{
 		fprintf(IWR, "\nThe input file must begin with the TITLE line\n");
 		printf("The input file must begin with the TITLE line\n");
 		exit(0);
 	}
+	fprintf(IWR, "   ------------------------------------------------------------------------\n");
+
+    *CSOUR0_.KPARP=1;
+    *CSOUR4_.NPSF=0;
+    *CSOUR4_.NPSN=0;
+    *CNT2_.NSEB=1;
+    *CSOUR4_.NSPLIT=1;
+    *CSOUR4_.RLREAD=0.0e0;
+    *CSOUR4_.RWGMIN=1.0e35;
+    KBSMAX=0;
+    ISEC=0;
+    *CDUMP_.LDUMP=false;
+    *CSOUR0_.LPSF=false;
+    *CSOUR2_.LSPEC=false;
+    *CSOUR0_.LGPOL=false;
+    *CSOUR3_.LEXSRC=false;
+    *CSOUR3_.LEXBD=false;
+    *CSOUR0_.LSCONE=true;
+    *CSOUR0_.JOBEND=0;
+
+	//Descrição da Fonte
+
+L11:;
+
+	fgets(LINHA, sizeof(LINHA), IRD);
+	extrairString(KWORD, LINHA, 0, 6);
+	extrairString(BUFFER, LINHA, 7, 127);
+	if (!strcmp(KWORD, KWCOMM))
+		goto L11;
+	if (!strcmp(KWORD, KWPSFN))
+		goto L21;
+
+	fprintf(IWR, "   >>>>>>>> Source definition.\n");
+
+	if (!strcmp(KWORD, KWKPAR)){
+		extrairString(APOIO, BUFFER, 0, 1);
+		*CSOUR0_.KPARP = atoi(APOIO);
+L12:;
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, 127);
+		if (!strcmp(KWORD, KWCOMM))
+			goto L12;
+		if (!strcmp(KWORD, KWPSFN))
+			goto L21;
+	}
+
+	if ((*CSOUR0_.KPARP < 0) || (*CSOUR0_.KPARP > 3)){
+		fprintf(IWR, "'KPARP = %d\n", *CSOUR0_.KPARP);
+		fprintf(IWR, "Incorrect particle type.\n");
+		printf("Incorrect particle type.\n");
+		exit(0);
+	}
+
+	if (*CSOUR0_.KPARP == 1)
+		fprintf(IWR, "\n   Primary particles: electrons\n");
+	if (*CSOUR0_.KPARP == 2)
+		fprintf(IWR, "\n   Primary particles: photons\n");
+	if (*CSOUR0_.KPARP == 3)
+		fprintf(IWR, "\n   Primary particles: positrons\n");
+	if (*CSOUR0_.KPARP == 0)
+		fprintf(IWR,"\n   Primary particles: set by the user subroutine SOURCE\n");
+
+	//Fonte Monoenergetica
+
+	if (!strcmp(KWORD, KWSENE)){
+		extrairString(APOIO, BUFFER, 7, 15);
+		*CSOUR1_.E0 = atof(APOIO);
+		fprintf(IWR, "Initial energy = %.6E", *CSOUR1_.E0);
+L13:;
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L13;
+		if (!strcmp(KWORD, KWPSFN))
+			goto L21;	
+	} else{
+			//Espectro de Energia Continuo
+		if (!strcmp(KWORD, KWSPEC)){
+			*CSOUR2_.LSPEC=true;
+            *CNT2_.NSEB=0;
+L14:;
+			*CNT2_.NSEB=*CNT2_.NSEB+1;
+			if (*CNT2_.NSEB > NSEM){
+				fprintf(IWR, "Source energy spectrum.\n");
+				fprintf(IWR, "The number of energy bins is too large.\n");
+				printf("The number of energy bins is too large.\n");
+				exit(0);
+			}
+
+			PCH = strtok(BUFFER, " ");
+			CSOUR2_.ESRC[*CNT2_.NSEB-1] = atof(PCH);
+			PCH = strtok(NULL, " ");
+			CSOUR2_.PSRC[*CNT2_.NSEB-1] = atof(PCH);
+			CSOUR2_.PSRC[*CNT2_.NSEB-1]=fmax(CSOUR2_.PSRC[*CNT2_.NSEB-1],0.0e0);
+L15:;
+			fgets(LINHA, sizeof(LINHA), IRD);
+			extrairString(KWORD, LINHA, 0, 6);
+			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			if (!strcmp(KWORD, KWCOMM))
+				goto L15;
+			if (!strcmp(KWORD, KWSPEC))
+				goto L14;
+			if (!strcmp(KWORD, KWPSFN))
+				goto L21;		
+		} else{
+			*CSOUR1_.E0=1.0e9;
+			if (*CSOUR0_.KPARP != 0)
+				fprintf(IWR, "%.6E", *CSOUR1_.E0);
+		}
+	}
+
+	if (*CSOUR2_.LSPEC){
+		if (*CNT2_.NSEB > 1){
+			sort22_(CSOUR2_.ESRC, CSOUR2_.PSRC, *CNT2_.NSEB);
+			fprintf(IWR, "\n   Spectrum:       I    E_low(eV)    E_high(eV)     P_sum(E)\n");
+			fprintf(IWR, "                -------------------------------------------------------\n");
+			for (int I = 1; I <= *CNT2_.NSEB-1; I++){
+				fprintf(IWR, "                %4d %.6E %.6E %.6E\n", I,CSOUR2_.ESRC[I-1],CSOUR2_.ESRC[I+1-1],CSOUR2_.PSRC[I-1]);
+			}
+			*CSOUR1_.E0=CSOUR2_.ESRC[*CNT2_.NSEB-1];
+            *CNT2_.NSEB =*CNT2_.NSEB -1;
+			irnd02_(CSOUR2_.PSRC,CSOUR2_.FSRC,CSOUR2_.IASRC,CNT2_.NSEB);
+ 
+		}else{
+			fprintf(IWR, "The source energy spectrum is not defined.\n");
+			printf("The source energy spectrum is not defined.\n");
+			exit(0);
+		}
+	}
+
+	if (*CSOUR1_.E0 < 50.0e0){
+		fprintf(IWR, "The initial energy E0 is too small\n");
+		printf("The initial energy E0 is too small\n");
+		exit(0);
+	}
+
+	*CSOUR1_.EPMAX=*CSOUR1_.E0;
+
+ /*
+ Os pósitrons eventualmente dão raios gama de aniquilação. O máximo
+A energia C dos fótons de aniquilação é .lt. 1,21*(E0+me*c**2).
+ */
+
+	if (*CSOUR0_.KPARP == 3)
+		*CSOUR1_.EPMAX=1.21e0*(*CSOUR1_.E0+5.12e5);
 
 
+//Efeitos de polarização de fótons (somente para fótons primários).
+
+	if (!strcmp(KWORD, KWSPOL)){
+		PCH = strtok(BUFFER, " ");
+		*CSOUR1_.SP10 = atof(PCH);
+		PCH = strtok(NULL, " ");
+		*CSOUR1_.SP20 = atof(PCH);
+		PCH = strtok(NULL, " ");
+		*CSOUR1_.SP30 = atof(PCH);
+L20:;
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L20;
+		if (!strcmp(KWORD, KWPSFN))
+			goto L21;
+
+		fprintf(IWR, "   Polarised primary photons. Stokes Parameters:\n");
+		fprintf(IWR, "P1 = %.6E (linear polarisation at 45 deg azimuth)\n", *CSOUR1_.SP10);
+		fprintf(IWR, "P2 = %.6E (circular polarisation)\n", *CSOUR1_.SP20);
+		fprintf(IWR, "P3 = %.6E (linear polarisation at zero azimuth)\n", *CSOUR1_.SP30);			
+	}
+
+	//Posição da fonte pontual.
+
+	if (!strcmp(KWORD, KWSPOS)){
+		PCH = strtok(BUFFER, " ");
+		*CSOUR3_.SX0 = atof(PCH);
+		PCH = strtok(NULL, " ");
+		*CSOUR3_.SY0 = atof(PCH);
+		PCH = strtok(NULL, " ");
+		*CSOUR3_.SZ0 = atof(PCH);
+L16:;
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L16;
+		if (!strcmp(KWORD, KWPSFN))
+			goto L21;
+	} else{
+		*CSOUR3_.SX0=0.0e0;
+        *CSOUR3_.SY0=0.0e0;
+        *CSOUR3_.SZ0=0.0e0;
+	}
+	fprintf(IWR, "\n\n   Coordinates of centre:     SX0 =  %.6E cm\n", *CSOUR3_.SX0);
+    fprintf(IWR, "                              SY0 =  %.6E cm\n", *CSOUR3_.SY0);
+	fprintf(IWR, "                              SZ0 =  %.6E cm\n", *CSOUR3_.SZ0);
+
+	// Fonte Extendida
+	if (!strcmp(KWORD, KWSBOX)){
+		*CSOUR3_.LEXSRC=true;
+		PCH = strtok(BUFFER, " ");
+		*CSOUR3_.SSX = atof(PCH);
+		PCH = strtok(NULL, " ");
+		*CSOUR3_.SSY = atof(PCH);
+		PCH = strtok(NULL, " ");
+		*CSOUR3_.SSZ = atof(PCH);
+		*CSOUR3_.SSX=fabs(*CSOUR3_.SSX);
+        *CSOUR3_.SSY=fabs(*CSOUR3_.SSY);
+        *CSOUR3_.SSZ=fabs(*CSOUR3_.SSZ);
+L17:;
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L17;
+		if (!strcmp(KWORD, KWPSFN))
+			goto L21;
+	} else{
+		*CSOUR3_.LEXSRC=false;
+		*CSOUR3_.SSX=0.0e0;
+        *CSOUR3_.SSY=0.0e0;
+        *CSOUR3_.SSZ=0.0e0;
+	}
+	if (*CSOUR3_.LEXSRC){
+		fprintf(IWR, "\n\n   Source size:               SSX = %.6E cm\n", *CSOUR3_.SSX);
+   		fprintf(IWR, "                              SSY =  %.6E cm\n", *CSOUR3_.SSY);
+		fprintf(IWR, "                              SSZ =  %.6E cm\n", *CSOUR3_.SSZ);
+	}
+
+	//Corpos ativos de uma fonte estendida (etiquetas internas do PENGEOM).
+L717:;
+	if (!strcmp(KWORD, KWSBOD)){
+		PCH = strtok(BUFFER, " ");
+		KB = atof(PCH);
+		if ((KB < 1) || (KB > NB)){
+			fprintf(IWR, "%s %s\n", KWORD, BUFFER);
+			fprintf(IWR, "Incorrect body label\n");
+			printf("Incorrect body label\n");
+			exit(0);
+		}
+		fprintf(IWR,"   Active body = %4d\n", KB);
+		CSOUR3_.IXSBOD[KB-1]=1;
+        *CSOUR3_.LEXBD=false;
+        KBSMAX=max(KBSMAX,KB);
+L766:;
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L766;
+		if (!strcmp(KWORD, KWSBOD))
+			goto L717;
+	}
+
+	//Distribuição angular de partículas primárias.
+
+	ISOURC=0;
+L777:;
+	if (!strcmp(KWORD, KWSCON)){
+		*CSOUR0_.LSCONE = true;
+		PCH = strtok(BUFFER, " ");
+		STHETA = atof(PCH);
+		PCH = strtok(NULL, " ");
+		SPHI = atof(PCH);
+		PCH = strtok(NULL, " ");
+		SALPHA = atof(PCH);
+
+		if ((STHETA < -1.0e-9) || (STHETA-180.0e0 > 1.0e-9)) {
+			fprintf(IWR, "%s %s\n", KWORD,BUFFER);
+			fprintf(IWR, "   THETA must be between 0 and 180 deg.\n");
+			printf("THETA must be between 0 and 180 deg.\n");
+			exit(0);
+		}
+		if ((SPHI < -1.0e-9) || (SPHI-360.0e0 > 1.0e-9)) {
+			fprintf(IWR, "%s %s\n", KWORD,BUFFER);
+			fprintf(IWR, "   PHI must be between 0 and 360 deg.\n");
+			printf("PHI must be between 0 and 360 deg.\n");
+			exit(0);
+		}
+		if ((SALPHA < -1.0e-9) || (SALPHA-180.0e0 > 1.0e-9)) {
+			fprintf(IWR, "%s %s\n", KWORD,BUFFER);
+			fprintf(IWR, "   ALPHA must be between 0 and 180 deg.\n");
+			printf("ALPHA must be between 0 and 180 deg.\n");
+			exit(0);
+		}
+
+		gcone02_(STHETA*DE2RA,SPHI*DE2RA,SALPHA*DE2RA);
+		ISOURC=1;
+
+L18:;
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L18;
+		if (!strcmp(KWORD, KWPSFN))
+			goto L721;
+		goto L777;
+	} else if (!strcmp(KWORD, KWSREC)){
+			*CSOUR0_.LSCONE=false;
+			PCH = strtok(BUFFER, " ");
+			THETLD = atof(PCH);
+			PCH = strtok(NULL, " ");
+			THETUD = atof(PCH);
+			PCH = strtok(NULL, " ");
+			PHILD = atof(PCH);
+			PCH = strtok(NULL, " ");
+			PHIUD = atof(PCH);
+
+			if ((fmin(THETLD,THETUD) < -1.0e-9) ||  (fmax(THETLD,THETUD)-180.0e0 > 1.0e-9)){
+				fprintf(IWR, "%s %s\n", KWORD,BUFFER);
+				fprintf(IWR,"   THETA must be between 0 and 180 deg.\n");
+				printf("THETA must be between 0 and 180 deg.\n");
+				exit(0);
+			}
+
+			if ((fmin(PHILD,PHIUD) < -1.0e-9) ||  (fmax(PHILD,PHIUD)-360.0e0 > 1.0e-9)){
+				fprintf(IWR, "%s %s\n", KWORD,BUFFER);
+				fprintf(IWR, "   PHI must be between 0 and 360 deg.\n");
+				printf("PHI must be between 0 and 360 deg.\n");
+				exit(0);
+			}
+
+			*CSOUR0_.CTHL=cos(THETLD*DE2RA);
+        	*CSOUR0_.DCTH=cos(THETUD*DE2RA)-*CSOUR0_.CTHL;
+        	*CSOUR0_.PHIL=PHILD*DE2RA;
+        	*CSOUR0_.DPHI=PHIUD*DE2RA-*CSOUR0_.PHIL;
+        	ISOURC=1;
+L19:;
+			fgets(LINHA, sizeof(LINHA), IRD);
+			extrairString(KWORD, LINHA, 0, 6);
+			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			if (!strcmp(KWORD, KWCOMM))
+				goto L19;
+			if (!strcmp(KWORD, KWPSFN))
+				goto L721;
+			goto L777;
+		} else if (ISOURC == 0){
+			*CSOUR0_.LSCONE=true;
+        	STHETA=0.0e0;
+        	SPHI=0.0e0;
+        	SALPHA=0.0e0;
+			gcone02_(STHETA*DE2RA,SPHI*DE2RA,SALPHA*DE2RA);
+		}
+	
+L721:;
+	if (*CSOUR0_.LSCONE){
+		fprintf(IWR, "   *** Conical beam:\n   Beam axis direction:     THETA = %.6E deg\n", STHETA);
+		fprintf(IWR, "                              PHI = %.6E deg\n", SPHI);
+		fprintf(IWR, "   Beam aperture:           ALPHA = %.6E deg\n", SALPHA);
+	} else{
+		fprintf(IWR, "   *** Rectangular beam:\n   Angular window: THETA = (%.6E , %.6E) deg\n", THETLD,THETUD);
+		fprintf(IWR, "                     PHI = (%.6E , %.6E) deg\n", PHILD,PHIUD);
+	}
+
+	//Variáveis ​​de estado de partículas lidas de um arquivo de espaço de fase
 
 
-	fprintf(IWR, "------------------------------------------------------------------------\n");
+L21:;
 
 	printf("\nFIM PMRDR2\n");
+	exit(0);
+}
+
+
+void gcone02_(double THETA, double PHI, double ALPHA){
+
+	/*
+	Esta sub-rotina define os parâmetros para amostragem de direções aleatórias
+    uniformemente dentro de um cone com eixo na direção (THETA,PHI) e
+    Abertura ALPHA (em rad).
+	*/
+
+	*CGCONE_.CPCT=cos(PHI)*cos(THETA);
+    *CGCONE_.CPST=sin(PHI)*sin(THETA);
+    *CGCONE_.SPCT=sin(PHI)*cos(THETA);
+    *CGCONE_.SPST=sin(PHI)*sin(THETA);
+    *CGCONE_.SPHI=sin(PHI);
+    *CGCONE_.CPHI=cos(PHI);
+    *CGCONE_.STHE=sin(THETA);
+    *CGCONE_.CTHE=cos(THETA);
+    *CGCONE_.CAPER=cos(ALPHA);	
+
+	printf("\n\nGCONE0\n\n");
 }
 
 
