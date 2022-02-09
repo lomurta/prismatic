@@ -503,7 +503,7 @@ typedef struct{
 } CSOUR4;
 
 typedef struct{
-	double *PSFI;
+	char (*PSFI)[20];
 
 }CSOUR5;
 
@@ -832,7 +832,7 @@ void transfcsour3_(double *SX0, double *SY0, double *SZ0, double *SSX, double *S
 
 void transfcsour4_(double *WGMIN, double *RWGMIN, double *WGMAX, double *RLREAD, int *IPSFI, int *NPSF, int *NPSN, int *NSPLIT, int *KODEPS);
 
-void transfcsour5_(double *PSFI);
+void transfcsour5_(char (*PSFI)[20]);
 
 void transfcnt0_(double *PRIM , double *PRIM2, double *DPRIM, double (*SEC)[3], double (*SEC2)[3], double (*DSEC)[3], 
 			    double *AVW, double *AVW2, double *DAVW, double *AVA, double *AVA2, double *DAVA, double *AVE, double *AVE2, double *DAVE);
@@ -1930,7 +1930,7 @@ void transfcsour4_(double *WGMIN, double *RWGMIN, double *WGMAX, double *RLREAD,
 
 }
 
-void transfcsour5_(double *PSFI){
+void transfcsour5_(char (*PSFI)[20]){
 	CSOUR5_.PSFI = PSFI;
 
 }
@@ -13999,6 +13999,97 @@ L721:;
 
 
 L21:;
+
+	if (!strcmp(KWORD, KWPSFN)){
+		if (*CSOUR0_.KPARP == 0) {
+			fprintf(IWR, "   With KPARP=0 (subroutine SOURCE activated)\n");
+			fprintf(IWR, "   we cannot read particles from a phase-space file.\n");
+			printf("Inconsistent definition of the primary source.\n");
+			exit(0);
+		}
+		*CSOUR4_.NPSF=*CSOUR4_.NPSF+1;
+		if (*CSOUR4_.NPSF == 1){
+			fprintf(IWR, "   ------------------------------------------------------------------------\n");
+			fprintf(IWR, "   >>>>>>  Input phase-space files.\n");
+		}
+		if (*CSOUR4_.NPSF > NPSFM){
+			fprintf(IWR, "   Too many phase-space files.\n");
+			printf("Too many phase-space files.\n");
+			exit(0);
+		}
+
+		PCH = strtok(BUFFER, " ");
+		strcpy(CSOUR5_.PSFI[*CSOUR4_.NPSF-1], PCH);
+		fprintf(IWR, "   Phase-space file # %4d : %s\n", *CSOUR4_.NPSF,CSOUR5_.PSFI[*CSOUR4_.NPSF-1]);
+		*CSOUR0_.LPSF=true;
+        *CSOUR2_.LSPEC=false;
+L22:;
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L22;
+		if (!strcmp(KWORD, KWPSFN))
+			goto L21;
+
+		if (!strcmp(KWORD, KWPSPL)){
+			PCH = strtok(BUFFER, " ");
+			*CSOUR4_.NSPLIT = atoi(PCH);
+			if ((*CSOUR4_.NSPLIT > 1) && (*CSOUR4_.NSPLIT <= 1000)){
+				fprintf(IWR, "   Particle splitting number = %3d\n", *CSOUR4_.NSPLIT);
+			} else{
+				*CSOUR4_.NSPLIT=min(1000,abs(*CSOUR4_.NSPLIT)); 
+				fprintf(IWR, "   Particle splitting number = %3d (modified)\n", *CSOUR4_.NSPLIT);
+			}
+L23:;
+			fgets(LINHA, sizeof(LINHA), IRD);
+			extrairString(KWORD, LINHA, 0, 6);
+			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			if (!strcmp(KWORD, KWCOMM))
+				goto L23;
+		}
+
+		if (!strcmp(KWORD, KWRRSP)){
+			PCH = strtok(BUFFER, " ");
+			*CSOUR4_.WGMIN = atof(PCH);
+			PCH = strtok(NULL, " ");
+			*CSOUR4_.WGMAX = atof(PCH);
+			*CSOUR4_.WGMIN=fabs(*CSOUR4_.WGMIN);
+            *CSOUR4_.WGMAX=fmin(fabs(*CSOUR4_.WGMAX),1.0e10);
+			if (*CSOUR4_.WGMIN > *CSOUR4_.WGMAX){
+				fprintf(IWR, "WGMIN = %e\n", *CSOUR4_.WGMIN);
+				fprintf(IWR, "WGMAX = %e\n", *CSOUR4_.WGMAX);
+				fprintf(IWR, "   Inconsistent window end points.\n");
+				printf("Inconsistent window end points.\n");
+				exit(0);
+			}
+			fprintf(IWR, "Initial weight window = ( %.6E, %.6E)\n", *CSOUR4_.WGMIN, *CSOUR4_.WGMAX);
+L24:;
+			fgets(LINHA, sizeof(LINHA), IRD);
+			extrairString(KWORD, LINHA, 0, 6);
+			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			if (!strcmp(KWORD, KWCOMM))
+				goto L24;
+		}
+		*CSOUR4_.RWGMIN=1.0e0 / *CSOUR4_.WGMIN;
+	}
+
+	if(*CSOUR0_.KPARP == 0){
+		//chamada da funçao SOURCE
+		*CNT3_.NSDE=400;
+        *CNT3_.DSDE=FSAFE * *CSOUR1_.EPMAX / (*CNT3_.NSDE);
+        *CNT3_.RDSDE=1.0e0 / *CNT3_.DSDE;
+	}
+
+	//Energia maxima de particulas
+
+
+
+
+
+
+
+
 
 	printf("\nFIM PMRDR2\n");
 	exit(0);
