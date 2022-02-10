@@ -454,7 +454,7 @@ typedef struct{
 //Forçando interação, janelas de peso.
 typedef struct{
 	double (*WLOW)[NBV], (*WHIG)[NBV];
-	int (*LFORCE)[NBV];
+	bool (*LFORCE)[NBV];
 
 }CFORCI;
 
@@ -818,7 +818,7 @@ void transfcdate_(char *DATE23);
 
 void transfcspgeo_(double *DSMAX, double (*EABSB)[3]);
 
-void transfcforci_(double (*WLOW)[NBV], double(*WHIG)[NBV], int (*LFORCE)[NBV]);
+void transfcforci_(double (*WLOW)[NBV], double(*WHIG)[NBV], bool (*LFORCE)[NBV]);
 
 void transfcxrspl_(int *IXRSPL, int *ILBA, bool *LXRSPL);
 
@@ -879,11 +879,11 @@ void stepsi2_(int &KB, double *S, int *IS, int &NSC);
 
 void steplb2_(int &KB, int &IERR);
 
-void geomin2_(double *PARINP, int *NPINP, int *NMATG, int *NBOD, int *IRD, int *IWR);
+void geomin2_(double *PARINP, int *NPINP, int *NMATG, int *NBOD, FILE *IRD, FILE *IWR);
 
 void rotshf2_(double &OMEGA, double &THETA, double &PHI, double &DX, double &DY, double &DZ, double &AXX, double &AXY, double &AXZ, double &AYY, double &AYZ, double &AZZ, double &AX, double &AY, double &AZ, double &A0);
 
-void peinit2_(double *EMAX, int *NMATER, int *IWR, int *INFO, char (*PMFILE)[20]);
+void peinit2_(double *EMAX, int *NMATER, FILE *IWR, int *INFO, char (*PMFILE)[21]);
 
 void egrid2_(double &EMINu, double *EMAXu);
 
@@ -1861,7 +1861,7 @@ void transfcspgeo_(double *DSMAX, double (*EABSB)[3]){
 	CSPGEO_.EABSB = EABSB;
 }
 
-void transfcforci_(double (*WLOW)[NBV], double(*WHIG)[NBV], int (*LFORCE)[NBV]){
+void transfcforci_(double (*WLOW)[NBV], double(*WHIG)[NBV], bool (*LFORCE)[NBV]){
 	CFORCI_.WLOW = WLOW;
 	CFORCI_.WHIG = WHIG;
 	CFORCI_.LFORCE = LFORCE;
@@ -2804,7 +2804,7 @@ void steplb2_( int &KB, int &IERR){
 
 
 
-void geomin2_(double *PARINP, int *NPINP, int *NMATG, int *NBOD, int *IRD, int *IWR){
+void geomin2_(double *PARINP, int *NPINP, int *NMATG, int *NBOD, FILE *IRD, FILE *IWR){
 	
 	/*
 	Lê o arquivo de definição de geometria e configura os arrays usados para rastrear partículas através do sistema.
@@ -3001,7 +3001,7 @@ void geomin2_(double *PARINP, int *NPINP, int *NMATG, int *NBOD, int *IRD, int *
 
 	
 	
-	FILE* IR = fopen("quadril.geo", "r");
+ /*	FILE* IR = fopen("quadril.geo", "r");
 	if (IR == NULL){
 		printf("Não foi possível abrir o arquivo de geometria");
 		exit(0);
@@ -3011,7 +3011,12 @@ void geomin2_(double *PARINP, int *NPINP, int *NMATG, int *NBOD, int *IRD, int *
 	if (IW == NULL){
 		printf("Não foi possível abrir o arquivo de geometria-res");
 		exit(0);
-	}
+	}*/
+
+	FILE* IR = IRD;
+	FILE* IW = IWR;
+
+
 	
 	for (int KS = 1; KS <= NS; KS++){
 		strcpy(ALIAS[KS -1], "    0");
@@ -5660,7 +5665,7 @@ void extrairString(char destino[], char origem[], int inicio, int qtde){
 
 void imprimirKSURF(FILE* IW, int &KB){
 	fprintf(IW, "KSURF =");
-	for (int i = 1; i <= NXG; i++){ 
+	for (int i = 1; i <= QTREE_.KSURF[NXG-1][KB-1]; i++){ 
 		if (QTREE_.KSURF[i-1][KB-1] != 0){
 			fprintf(IW, "%5d", QTREE_.KSURF[i-1][KB-1]);
 			if (i == 15)
@@ -5673,7 +5678,7 @@ void imprimirKSURF(FILE* IW, int &KB){
 
 void imprimirKFLAG(FILE* IW, int &KB){
 	fprintf(IW, "KFLAG =");
-	for (int i = 1; i <= NXG; i++){
+	for (int i = 1; i <= QTREE_.KSURF[NXG-1][KB-1]; i++){
 		if (QTREE_.KFLAG[i-1][KB-1] != 5){
 		   	fprintf(IW, "%5d", QTREE_.KFLAG[i-1][KB-1]);
 			if (i == 15)
@@ -5687,7 +5692,7 @@ void imprimirKFLAG(FILE* IW, int &KB){
 
 void imprimirKBODY(FILE* IW, int &KB){
 	fprintf(IW, "KBODY =");
-	for (int i = 1; i <= NXG; i++){
+	for (int i = 1; i <= QBODY_.KBODY[NXG-1][KB-1]; i++){
 		if (QBODY_.KBODY[i-1][KB-1] != 0){
 		   	fprintf(IW, "%5d", QBODY_.KBODY[i-1][KB-1]);
 			if (i == 15)
@@ -5700,7 +5705,7 @@ void imprimirKBODY(FILE* IW, int &KB){
 
 void imprimirKDGHT(FILE* IW, int &KB){
 	fprintf(IW, "KDGHT =");
-	for (int i = 1; i <= NXG; i++){
+	for (int i = 1; i <= QTREE_.KDGHT[NXG-1][KB-1]; i++){
 		if (QTREE_.KDGHT[i-1][KB-1] != 0){
 			fprintf(IW, "%5d", QTREE_.KDGHT[i-1][KB-1]);
 			if (i == 15)
@@ -5711,7 +5716,7 @@ void imprimirKDGHT(FILE* IW, int &KB){
 	
 }
 
-void peinit2_(double *EMAX, int *NMATER, int *IW, int *INFO, char (*PMFILE)[20]){
+void peinit2_(double *EMAX, int *NMATER, FILE *IWR, int *INFO, char (*PMFILE)[21]){
 	
 	
 /*Modulo Penelope.f
@@ -5799,11 +5804,11 @@ void peinit2_(double *EMAX, int *NMATER, int *IW, int *INFO, char (*PMFILE)[20])
 	char APOIO[80];
 	
 	
-	FILE* IWR = fopen("material2.dat", "w");
-	if (IWR == NULL){
-		printf("N�o foi possivel abrir o arquivo material2.dat");
-		exit(0);
-	}
+	//FILE* IWR = fopen("material2.dat", "w");
+ //	if (IWR == NULL){
+ //		printf("N�o foi possivel abrir o arquivo material2.dat");
+ //		exit(0);
+ //	}
 	fprintf(IWR, "\n **********************************\n");
 	fprintf(IWR, " **   PENELOPE  (version 2014)   **\n");
 	fprintf(IWR, " **********************************\n");
@@ -13529,6 +13534,7 @@ void pmrdr2_(){
 	char KWORD[100];
 	char TITLE[100];
 	char APOIO[100];
+	char LIT[3];
 	char *PCH;
 	char PMFILE[MAXMAT][21];
 	char PFILE[21];
@@ -13563,9 +13569,9 @@ void pmrdr2_(){
 	static const int NSEM = 1000;
 	static const int NB = 5000;
 
-	double SALPHA, SPHI, STHETA, THETLD,THETUD, PHILD,PHIUD;
+	double SALPHA, SPHI, STHETA, THETLD,THETUD, PHILD,PHIUD, EPMAXR, EAB1, EAB2, EAB3;
 
-	int KBSMAX, ISEC, KB, ISOURC;
+	int KBSMAX, ISEC, KB, ISOURC, NMATR, NPINP, IHEAD, IP, NMATG;
 
 	FILE* IWR = fopen("penmain2.dat", "w");
 	if (IWR == NULL){
@@ -13757,7 +13763,7 @@ L15:;
 			fprintf(IWR, "\n   Spectrum:       I    E_low(eV)    E_high(eV)     P_sum(E)\n");
 			fprintf(IWR, "                -------------------------------------------------------\n");
 			for (int I = 1; I <= *CNT2_.NSEB-1; I++){
-				fprintf(IWR, "                %4d %.6E %.6E %.6E\n", I,CSOUR2_.ESRC[I-1],CSOUR2_.ESRC[I+1-1],CSOUR2_.PSRC[I-1]);
+				fprintf(IWR, "                %4d  %.6E  %.6E  %.6E\n", I,CSOUR2_.ESRC[I-1],CSOUR2_.ESRC[I+1-1],CSOUR2_.PSRC[I-1]);
 			}
 			*CSOUR1_.E0=CSOUR2_.ESRC[*CNT2_.NSEB-1];
             *CNT2_.NSEB =*CNT2_.NSEB -1;
@@ -14075,13 +14081,388 @@ L24:;
 	}
 
 	if(*CSOUR0_.KPARP == 0){
-		//chamada da funçao SOURCE
+		//chamada da funçao SOURCE que cria um arquiv de phases
 		*CNT3_.NSDE=400;
         *CNT3_.DSDE=FSAFE * *CSOUR1_.EPMAX / (*CNT3_.NSDE);
         *CNT3_.RDSDE=1.0e0 / *CNT3_.DSDE;
 	}
 
 	//Energia maxima de particulas
+	if (!strcmp(KWORD, KWEMAX)){
+		PCH = strtok(BUFFER, " ");
+		EPMAXR = atof(PCH);
+		if (*CSOUR0_.KPARP != 0)
+			*CSOUR1_.EPMAX=EPMAXR;
+		fprintf(IWR, "\n   Maximum particle energy =  %.6E eV\n",*CSOUR1_.EPMAX);
+L25:;		
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L25;	
+	}else{
+		if (*CSOUR0_.LPSF){
+			*CSOUR1_.EPMAX=1.0e9;
+			fprintf(IWR, "   Maximum particle energy =  %.6E\n", *CSOUR1_.EPMAX);
+			fprintf(IWR,"   WARNING: You should have specified the maximum energy EPMAX.\n");
+		}
+		fprintf(IWR, "   Maximum particle energy =  %.6E\n", *CSOUR1_.EPMAX);
+			
+	}	
+
+	//Dados de materiais e parâmetros de simulação.	
+	fprintf(IWR, "\n\n   ---------------------------------------------------------------------------\n");
+	fprintf(IWR, "   >>>>>>  Material data and simulation parameters.\n");
+
+	//Parametros de Simulacao
+
+	for (int M = 1; M <= MAXMAT; M++){
+		PENELOPE_mod_.EABS[M-1][1-1]=0.010e0* *CSOUR1_.EPMAX;
+        PENELOPE_mod_.EABS[M-1][2-1]=0.001e0* *CSOUR1_.EPMAX;
+        PENELOPE_mod_.EABS[M-1][3-1]=0.010e0* *CSOUR1_.EPMAX;
+        PENELOPE_mod_.C1[M-1]=0.10e0;
+        PENELOPE_mod_.C2[M-1]=0.10e0;
+        PENELOPE_mod_.WCC[M-1]=PENELOPE_mod_.EABS[M-1][1-1];
+        PENELOPE_mod_.WCR[M-1]=PENELOPE_mod_.EABS[M-1][2-1];
+	}
+
+	for (int IB = 1; IB <= NB; IB++){
+		CSPGEO_.DSMAX[IB-1]=1.0e20;
+	}
+
+	NMATR =0;
+L31:;
+	if (!strcmp(KWORD, KWMATF)){
+		NMATR=NMATR+1;
+		PCH = strtok(BUFFER, " ");
+		strcpy(PMFILE[NMATR-1], PCH);
+L32:;
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L32;
+		if (!strcmp(KWORD, KWMATF))
+			goto L31;
+	}
+
+	if (!strcmp(KWORD, KWSIMP)){
+		PCH = strtok(BUFFER, " ");
+		PENELOPE_mod_.EABS[NMATR-1][1-1] = atof(PCH);
+		PCH = strtok(NULL, " ");
+		PENELOPE_mod_.EABS[NMATR-1][2-1] = atof(PCH);
+		PCH = strtok(NULL, " ");
+		PENELOPE_mod_.EABS[NMATR-1][3-1] = atof(PCH);
+		PCH = strtok(NULL, " ");
+		PENELOPE_mod_.C1[NMATR-1] = atof(PCH);
+		PCH = strtok(NULL, " ");
+		PENELOPE_mod_.C2[NMATR-1] = atof(PCH);
+		PCH = strtok(NULL, " ");
+		PENELOPE_mod_.WCC[NMATR-1] = atof(PCH);
+		PCH = strtok(NULL, " ");
+		PENELOPE_mod_.WCR[NMATR-1] = atof(PCH);
+L33:;
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L33;
+		if (!strcmp(KWORD, KWMATF))
+			goto L31;
+	}
+
+	if (NMATR > MAXMAT){
+		fprintf(IWR, "Wrong number of materials.\n");
+		fprintf(IWR, "NMAT = %4d is larger than MAXMAT = %4d",NMATR,MAXMAT );
+		printf("Wrong number of materials.");
+		exit(0);
+	}
+
+	for (int M = 1; M <= NMATR; M++){
+		if (M == 1)
+			strcpy(LIT, "st");
+		if (M == 2)
+			strcpy(LIT, "nd");
+		if (M == 3)
+			strcpy(LIT, "rd");
+		if (M > 3)
+			strcpy(LIT, "th");
+		fprintf(IWR,"\n   **** %2d %s material\n", M, LIT);
+		fprintf(IWR, "   Material data file: %s\n", PMFILE[M-1]);
+		if (PENELOPE_mod_.EABS[M-1][1-1] < 5.0e1)
+			PENELOPE_mod_.EABS[M-1][1-1]=5.0e1;
+		if (PENELOPE_mod_.EABS[M-2][1-1] < 5.0e1)
+			PENELOPE_mod_.EABS[M-2][1-1]=5.0e1;
+		if (PENELOPE_mod_.EABS[M-3][1-1] < 5.0e1)
+			PENELOPE_mod_.EABS[M-3][1-1]=5.0e1;
+		fprintf(IWR, "   Electron absorption energy = %.6E\n", PENELOPE_mod_.EABS[M-1][1-1]);
+		fprintf(IWR, "     Photon absorption energy = %.6E\n", PENELOPE_mod_.EABS[M-1][2-1]);
+		fprintf(IWR, "   Positron absorption energy = %.6E\n", PENELOPE_mod_.EABS[M-1][3-1]);
+		fprintf(IWR, "   Electron-positron simulation parameters:\n");
+		fprintf(IWR, "    C1 = %.6E,       C2 = %.6E\n", PENELOPE_mod_.C1[M-1], PENELOPE_mod_.C2[M-1]);
+		fprintf(IWR, "   Wcc = %.6E eV,   Wcr = %.6E eV\n", PENELOPE_mod_.WCC[M-1], PENELOPE_mod_.WCR[M-1]);
+
+	}
+
+	//Inicializando o PENELOPE
+
+	printf("  Initialising PENELOPE ...\n");
+
+	FILE* MATERIAL2 = fopen("material2.dat", "w");
+	if (MATERIAL2 == NULL){
+		printf("Nao foi possivel abrir o arquivo material2.dat");
+		exit(0);
+	}
+	int INFO = 3;
+
+	peinit2_(CSOUR1_.EPMAX, &NMATR, MATERIAL2, &INFO, PMFILE);
+	fclose(MATERIAL2);
+
+	// Definicão da Geometria
+
+	printf("'  Initialising PENGEOM ...\n");
+	if (!strcmp(KWORD, KWGEOM)){
+		PCH = strtok(BUFFER, " ");
+		strcpy(PFILE, PCH);
+		fprintf(IWR, "\n\n   ---------------------------------------------------------------------------\n");
+		fprintf(IWR, "   >>>>>>  Geometry definition.\n   PENGEOM''s geometry file: %s", PFILE);
+		FILE* GEOMETRIA = fopen(PFILE, "r");
+		if (GEOMETRIA == NULL){
+			fprintf(IWR, "Nao foi possivel abrir o arquivo %s\n", PFILE);
+			printf("Nao foi possivel abrir o arquivo %s\n", PFILE);
+			exit(0);
+		}
+
+		NPINP=0;
+        IHEAD=0;
+L34:;
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L34;
+		if (!strcmp(KWORD, KWGPAR)){
+			PCH = strtok(BUFFER, " ");
+			IP = atoi(PCH);
+			if (IP < 1){
+				fprintf(IWR, "IP = %4d\n", IP);
+				printf("The PARINP index must be positive.\n");
+				exit(0);
+			}
+			NPINP=max(NPINP,IP);
+			if (NPINP > NPINPM){
+				fprintf(IWR, "Too many modified parameters.\n");
+				fprintf(IWR, "NPINP = %4d,  must be less than %4d\n", NPINP,NPINPM);
+				printf("Too many modified parameters\n");
+				exit(0);	
+			}
+			PCH = strtok(NULL, " ");
+			PARINP[IP-1] = atof(PCH);
+			if (IHEAD == 0){
+				fprintf(IWR, "   Replaced parameters: PARINP(%4d) = %.6E", IP, PARINP[IP-1]);
+				IHEAD=1;
+			}else{
+				fprintf(IWR, "                        PARINP(%4d) = %.6E", IP, PARINP[IP-1]);
+			}
+			goto L34;
+		}
+		FILE* GEOMETRY2 = fopen("geometry2.rep", "w");
+		if (GEOMETRY2 == NULL){
+			fprintf(IWR, "Nao foi possivel abrir o arquivo geometry2.rep\n");
+			printf("Nao foi possivel abrir o arquivo geometry2.rep\n");
+			exit(0);
+		}
+
+		geomin2_(PARINP, &NPINP, &NMATG, PENGEOM_mod_.NBODY, GEOMETRIA, GEOMETRY2);
+		fclose(GEOMETRIA);
+		fclose(GEOMETRY2);
+
+		if (NMATG < 1){
+			fprintf(IWR, "NMATG must be greater than 0.\n");
+			printf("NMATG must be greater than 0.\n");
+		}
+
+		if (*PENGEOM_mod_.NBODY > NB){
+			fprintf(IWR, "      Too many bodies.\n");
+			printf("Too many bodies.\n");
+			exit(0);
+		}
+
+		if (NMATG > *PENELOPE_mod_.NMAT){
+			fprintf(IWR, "      Too many different materials.\n");
+			printf("Too many different materials.\n");
+			exit(0);
+		}
+
+		if (KBSMAX > *PENGEOM_mod_.NBODY){
+			fprintf(IWR,"      KBSMAX = %4d\n", KBSMAX);
+			fprintf(IWR,"      NBODY = %4d\n", *PENGEOM_mod_.NBODY);
+			fprintf(IWR,"      Some source bodies are undefined. STOP.\n");
+			printf("Some source bodies are undefined. STOP.\n");
+		}
+	} else{
+		fprintf(IWR, "%s %s\n", KWORD,BUFFER);
+		fprintf(IWR, "You have to specify a geometry file.\n");
+		printf("You have to specify a geometry file\n");
+	}
+
+
+	//Comprimentos máximos de passos de elétrons e pósitrons.
+
+	if (!strcmp(KWORD, KWSMAX)){
+L35_1:;
+		PCH = strtok(BUFFER, " ");
+		KB = atoi(PCH);
+		PCH = strtok(NULL, " ");
+		CSPGEO_.DSMAX[KB-1] = atof(PCH);
+		if ((KB < 1) || (KB > *PENGEOM_mod_.NBODY)){
+			fprintf(IWR, "%s %s",KWORD,BUFFER );
+			fprintf(IWR, "Incorrect body number.\n");
+			printf("Incorrect body number.\n");
+			exit(0);
+		}
+
+		if (CSPGEO_.DSMAX[KB-1] < 1.0e-7)
+			CSPGEO_.DSMAX[KB-1]=1.0e20;
+L35_2:;
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L35_2;
+		if (!strcmp(KWORD, KWSMAX))
+			goto L35_1;	
+	}
+
+     /*Energias de absorção local (útil para reduzir trabalho de simulação
+       em regiões de menor interesse).*/
+    
+	for (int IB = 1; IB <= *PENGEOM_mod_.NBODY; IB++){
+		int M=PENGEOM_mod_.MATER[IB-1];
+		if (M > 0){
+			CSPGEO_.EABSB[IB-1][1-1]=PENELOPE_mod_.EABS[M-1][1-1];
+            CSPGEO_.EABSB[IB-1][2-1]=PENELOPE_mod_.EABS[M-1][2-1];
+            CSPGEO_.EABSB[IB-1][3-1]=PENELOPE_mod_.EABS[M-1][3-1];
+		}
+	}
+
+	if (!strcmp(KWORD, KWEABS)){
+L36:;
+		PCH = strtok(BUFFER, " ");
+		KB = atoi(PCH);
+		PCH = strtok(NULL, " ");
+		EAB1 = atof(PCH);
+		PCH = strtok(NULL, " ");
+		EAB2 = atof(PCH);
+		PCH = strtok(NULL, " ");
+		EAB3 = atof(PCH);
+
+		if ((KB < 1) || (KB > *PENGEOM_mod_.NBODY)){
+			fprintf(IWR, "%s %s",KWORD,BUFFER );
+			fprintf(IWR, "Incorrect body number.\n");
+			printf("Incorrect body number.\n");
+			exit(0);
+		}
+
+		if (PENGEOM_mod_.MATER[KB-1] > 0){
+			CSPGEO_.EABSB[KB-1][1-1]=fmax(PENELOPE_mod_.EABS[KB-1][1-1], EAB1);
+            CSPGEO_.EABSB[KB-1][2-1]=fmax(PENELOPE_mod_.EABS[KB-1][2-1], EAB2);
+            CSPGEO_.EABSB[KB-1][3-1]=fmax(PENELOPE_mod_.EABS[KB-1][3-1], EAB3);
+		}
+L37:;
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L37;
+		if (!strcmp(KWORD, KWEABS))
+			goto L36;	
+	}
+
+	fprintf(IWR, "\n\n         Maximum allowed step lengths of electrons and positrons\n         and local absorption energies (non-void bodies)\n\n");
+	fprintf(IWR, "   Body    DSMAX(IB)     EABSB(1,IB)    EABSB(2,IB)    EABSB(3,IB)\n");
+	fprintf(IWR, "    IB        (cm)           (eV)           (eV)           (eV)\n");
+	for (int IB = 1; IB <= *PENGEOM_mod_.NBODY; IB++){
+		if (PENGEOM_mod_.MATER[IB-1] > 0)
+		    fprintf(IWR, "   %4d  %.6E  %.6E  %.6E  %.6E\n", IB,CSPGEO_.DSMAX[IB-1],
+				    PENELOPE_mod_.EABS[KB-1][1-1],PENELOPE_mod_.EABS[KB-1][2-1],PENELOPE_mod_.EABS[KB-1][3-1]);
+	}
+
+	//Reduções de Variancia (Não será implementado nessa versão do programa)
+
+	/*Forçando Interação
+	IFORCE : Ativa o forçamento de interações do tipo ICOL de partículas
+           KPAR no corpo KB. FORCER é o fator forçante, que deve
+           ser maior que a unidade. WLOW e WHIG são a parte inferior e superior
+           limites da janela de peso onde o forçamento de interação é
+           aplicado. Quando vários mecanismos de interação são forçados em
+           mesmo corpo, a janela de peso efetivo é igual a
+           a interseção das janelas para esses mecanismos.
+             PADRÃO: sem forçar interação
+
+           Se o caminho livre médio para interações reais do tipo ICOL é
+           MFP, o programa simulará interações deste tipo
+           (real ou forçado) com um caminho livre médio efetivo igual a
+           MFP/FORCER.
+
+           TRICK: um valor de entrada negativo de FORCER, -FN, é assumido como
+           significa que uma partícula com energia E=EPMAX deve interagir,
+           em média, +FN vezes no curso de sua desaceleração para
+           repouso, para elétrons e pósitrons, ou ao longo de uma média livre
+           caminho, para fótons. Isso é muito útil, por exemplo, para gerar
+           espectros de raios-x de amostras em massa.
+
+  		O efeito real do forçamento de interação na eficiência não é fácil
+  		prever. 
+	*/
+
+
+ /*
+     >>>>>>>> Divisão de Bremsstrahlung.
+
+  IBRSPL : Ativa a divisão bremsstrahlung no corpo KB para elétrons
+           e pósitrons com pesos na janela (WLOW,WHIG) onde
+           força de interação é aplicada. O inteiro IBRSPL é o
+           fator de divisão.
+             PADRÃO: sem divisão de bremsstrahlung
+
+           Observe que a divisão bremsstrahlung é aplicada em combinação
+           com forçamento de interação e, consequentemente, é ativado
+           apenas naqueles corpos onde o forçamento de interação está ativo.
+ */
+
+
+ /*
+    >>>>>>>> Divisão de raios-X.
+
+  IXRSPL : Divisão de raios X característicos emitidos no corpo KB, de
+           qualquer elemento. Cada raio x não dividido com ILB(2)=2 (ou seja, do
+           segunda geração) quando extraído da pilha secundária
+           é dividido em quanta IXRSPL. Os novos quanta, mais leves, são
+           direções aleatórias atribuídas distribuídas isotropicamente.
+             PADRÃO: sem divisão de raios-x
+
+ */
+
+
+   // Energia e distribuições angulares de partículas .
+
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -14097,6 +14478,8 @@ L24:;
 
 
 void gcone02_(double THETA, double PHI, double ALPHA){
+
+
 
 	/*
 	Esta sub-rotina define os parâmetros para amostragem de direções aleatórias
@@ -14115,6 +14498,19 @@ void gcone02_(double THETA, double PHI, double ALPHA){
     *CGCONE_.CAPER=cos(ALPHA);	
 
 	printf("\n\nGCONE0\n\n");
+}
+
+void fword2(){
+	/*
+	Esta sub-rotina extrai a Primeira PALAVRA (substring entre
+ apóstrofos) da string STRING, se contiver uma. COMPRIMENTO é o
+ comprimento da PALAVRA, excluindo os apóstrofos. TAIL é o resto
+ de STRING após remover a palavra e espaços em branco, vírgulas e
+ apóstrofos.
+	
+	*/
+
+
 }
 
 
