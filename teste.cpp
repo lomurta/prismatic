@@ -52,6 +52,10 @@ static const int NPSFM=100;
 static const int NIDM=25;
 static const int NBV=5000;
 
+static const int NBEM=1500;
+static const int NBTHM=1800;
+static const int NBPHM=180;
+
 char LINHA[200];
 char APOIO[200];
 
@@ -573,9 +577,16 @@ typedef struct{
 
 typedef struct{
 	double *CPCT, *CPST, *SPCT, *SPST, *SPHI, *CPHI, *STHE, *CTHE, *CAPER;
-
-
 }CGCONE;
+
+typedef struct{
+	double *EL, *EU, *THL, *THU, *BSE, *RBSE, *BSTH, *RBSTH, *BSPH, *RBSPH;
+	double (*PDE)[2][3], (*PDE2)[2][3], (*PDEP)[2][3];
+	double (*PDA)[NBTHM][3], (*PDA2)[NBTHM][3], (*PDAP)[NBTHM][3];
+	bool (*LPDE)[2][3], (*LPDA)[2][3];
+	int *NE, *NTH, *NPH;
+	bool *LLE, *LLTH;
+}CENANG;
 
 
 
@@ -669,13 +680,7 @@ void imprimirKDGHT(FILE* IW, int &KB);
    CDUMP CDUMP_;
    CNTRL CNTRL_;
    CGCONE CGCONE_;
-
-
-
-
-   
-   
-   
+   CENANG CENANG_;
 
 
 extern "C" {
@@ -855,6 +860,12 @@ void transfcntrl_(double *TSIM, double *TSEC, double *TSECA, double *TSECAD, dou
 
 void transfcgcone_(double *CPCT, double *CPST, double *SPCT, double *SPST, double *SPHI, double *CPHI, double *STHE, double *CTHE, double *CAPER);
 
+void transfcenang_(	double *EL, double *EU, double *THL, double *THU, double *BSE, double *RBSE, double *BSTH, double *RBSTH, double *BSPH, double *RBSPH,
+	double (*PDE)[2][3], double (*PDE2)[2][3], double (*PDEP)[2][3],
+	double (*PDA)[NBTHM][3], double (*PDA2)[NBTHM][3], double (*PDAP)[NBTHM][3],
+	bool (*LPDE)[2][3], bool (*LPDA)[2][3],
+	int *NE, int *NTH, int *NPH,
+	bool *LLE, bool *LLTH);
 
 
 
@@ -1019,6 +1030,8 @@ void gppa02_(int *M);
 void pmrdr2_();
 
 void gcone02_(double THETA, double PHI, double ALPHA);
+
+void enang02_(double &EMIN, double &EMAX, int &NBE, int &NBTH, int &NBPH, FILE *IWR);
 
 }
 
@@ -2027,13 +2040,39 @@ void transfcgcone_(double *CPCT, double *CPST, double *SPCT, double *SPST, doubl
 }
 
 
+void transfcenang_(	double *EL, double *EU, double *THL, double *THU, double *BSE, double *RBSE, double *BSTH, double *RBSTH, double *BSPH, double *RBSPH,
+	double (*PDE)[2][3], double (*PDE2)[2][3], double (*PDEP)[2][3],
+	double (*PDA)[NBTHM][3], double (*PDA2)[NBTHM][3], double (*PDAP)[NBTHM][3],
+	bool (*LPDE)[2][3], bool (*LPDA)[2][3],
+	int *NE, int *NTH, int *NPH,
+	bool *LLE, bool *LLTH){
 
+			CENANG_.EL =	EL;
+			CENANG_.EU =	EU;
+			CENANG_.THL =	THL;
+			CENANG_.THU	= THU;
+			CENANG_.BSE	= BSE;
+			CENANG_.RBSE	= RBSE;
+			CENANG_.BSTH	= BSTH;
+			CENANG_.RBSTH	= RBSTH;
+			CENANG_.BSPH	= BSPH;
+			CENANG_.RBSPH	= RBSPH;
+            CENANG_.PDE    = PDE;
+			CENANG_.PDE2	= PDE2;
+			CENANG_.PDEP	= PDEP;
+            CENANG_.PDA    = PDA;
+			CENANG_.PDA2	= PDA2;
+			CENANG_.PDAP	= PDAP;
+            CENANG_.LPDE    = LPDE;
+			CENANG_.LPDA	= LPDA;
+			CENANG_.NE	= NE;
+			CENANG_.NTH	= NTH;
+			CENANG_.NPH	= NPH;
+			CENANG_.LLE	= LLE;
+			CENANG_.LLTH	= LLTH;
 
+	}
 
-  
-  
-  
-  
   
       
 void fsurf2_(int& KS, double& A, double& B, double& C){
@@ -13569,9 +13608,9 @@ void pmrdr2_(){
 	static const int NSEM = 1000;
 	static const int NB = 5000;
 
-	double SALPHA, SPHI, STHETA, THETLD,THETUD, PHILD,PHIUD, EPMAXR, EAB1, EAB2, EAB3;
+	double SALPHA, SPHI, STHETA, THETLD,THETUD, PHILD,PHIUD, EPMAXR, EAB1, EAB2, EAB3, EMIN, EMAX;
 
-	int KBSMAX, ISEC, KB, ISOURC, NMATR, NPINP, IHEAD, IP, NMATG;
+	int KBSMAX, ISEC, KB, ISOURC, NMATR, NPINP, IHEAD, IP, NMATG, NBE, NBTH, NBPH;
 
 	FILE* IWR = fopen("penmain2.dat", "w");
 	if (IWR == NULL){
@@ -14429,9 +14468,6 @@ L37:;
            Observe que a divisão bremsstrahlung é aplicada em combinação
            com forçamento de interação e, consequentemente, é ativado
            apenas naqueles corpos onde o forçamento de interação está ativo.
- */
-
-
  /*
     >>>>>>>> Divisão de raios-X.
 
@@ -14447,29 +14483,79 @@ L37:;
 
    // Energia e distribuições angulares de partículas .
 
-   
+	fprintf(IWR, "\n   ------------------------------------------------------------------------\n");
+    fprintf(IWR, "   >>>>>>  Energy and angular distributions of emerging particles.\n");
+	if (!strcmp(KWORD, KWNBE)){
+		PCH = strtok(BUFFER, " ");
+		EMIN = atof(PCH);
+		PCH = strtok(NULL, " ");
+		EMAX = atof(PCH);
+		PCH = strtok(NULL, " ");
+		NBE = atoi(PCH);
+L51:;
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L51;
+	}else{
+		EMIN=0.0e0;
+        EMAX = *CSOUR1_.EPMAX;
+        NBE=100;
+	}
 
+	if (EMIN < 1.0e0)
+		EMIN=0.0e0;
+	if (EMAX < 1.0e0)
+		EMAX= *CSOUR1_.EPMAX;
 
+	if (NBE < 0){
+		EMIN=fmax(EMIN,1.0e0);
+		fprintf(IWR, "   E:       NBE = %3d,   EMIN = %.6E eV,   EMAX = %.6E eV\n", NBE,EMIN,EMAX);
+		fprintf(IWR, "            (logarithmic scale, bin width increases with E)\n");
+	}else if (NBE > 0){
+		fprintf(IWR, "   E:       NBE = %3d,   EMIN = %.6E eV,   EMAX = %.6E eV\n", NBE,EMIN,EMAX);
+		fprintf(IWR, "            (linear scale, uniform bin width)\n");
+	}
+	if (NBE == 0){
+		fprintf(IWR, "   NBE is equal to zero.\n");
+		printf("NBE equal to 0\n");
+		exit(0);
+	}
+	if (!strcmp(KWORD, KWNBAN)){
+		PCH = strtok(BUFFER, " ");
+		NBTH = atoi(PCH);
+		PCH = strtok(NULL, " ");
+		NBPH = atoi(PCH);
+L52:;
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L52;
+	} else{
+		NBTH=90;
+        NBPH=1;
+	}
+	if (NBTH == 0){
+		fprintf(IWR,"   NBTH is equal to zero.\n");
+		printf("NBTH equal to 0.\n");
+		exit(0);
+	}
+	if (NBTH > 0)
+		fprintf(IWR,"   Theta:  NBTH = %3d (linear scale)\n", NBTH);
+	else if (NBTH < 0)
+		fprintf(IWR,"   Theta:  NBTH = %3d (logarithmic scale)\n", NBTH);
 
+	fprintf(IWR, "   Phi:    NBPH = %3d", NBPH);
+	if (NBPH < 1){
+		fprintf(IWR,"   Wrong number of PHI bins.\n");
+		printf("Wrong number of PHI bins.\n");
+	}
 
+	enang02_(EMIN,EMAX,NBE,NBTH,NBPH, IWR);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	//Detectores de impacto
 
 
 	printf("\nFIM PMRDR2\n");
@@ -14500,20 +14586,104 @@ void gcone02_(double THETA, double PHI, double ALPHA){
 	printf("\n\nGCONE0\n\n");
 }
 
-void fword2(){
+void enang02_(double &EMIN, double &EMAX, int &NBE, int &NBTH, int &NBPH, FILE *IWR){
+
 	/*
-	Esta sub-rotina extrai a Primeira PALAVRA (substring entre
- apóstrofos) da string STRING, se contiver uma. COMPRIMENTO é o
- comprimento da PALAVRA, excluindo os apóstrofos. TAIL é o resto
- de STRING após remover a palavra e espaços em branco, vírgulas e
- apóstrofos.
-	
+	Calcula energia e distribuições angulares de partículas emergentes,
+    grava e carrega arquivos de despejo, acumula arquivos de despejo de diferentes
+    é executado e grava os resultados.
 	*/
 
+	static const int NBEM=1500;
+	static const int NBTHM=1800;
+	static const int NBPHM=180;
+	double PI = 3.1415926535897932e0;
+	double TWOPI=2.0e0*PI;
+	double RA2DE=180.0e0/PI;
+	double DE2RA=PI/180.0e0;
+	double FSAFE=1.000000001e0; //fator de segurança
 
+	if (abs(NBE) > NBEM){
+		fprintf(IWR, "ENANG: NBE is too large.\n");
+		fprintf(IWR, "ENANG: Set the parameter NBEM equal to %.d\n", abs(NBE));
+		printf("ENANG: NBE is too large.\n");
+		exit(0);
+	}
+
+	if (abs(NBTH) > NBTHM){
+		fprintf(IWR, "ENANG: NBTH is too large.\n");
+		fprintf(IWR, "ENANG: Set the parameter NBTHM equal to %.d\n", abs(NBTH));
+		printf("ENANG: NBTH is too large.\n");
+		exit(0);
+	}
+
+	if (abs(NBPH) > NBPHM){
+		fprintf(IWR, "ENANG: NBPH is too large.\n");
+		fprintf(IWR, "ENANG: Set the parameter NBPHM equal to %.d\n", abs(NBPH));
+		printf("ENANG: NBPH is too large.\n");
+		exit(0);
+	}
+
+	if (NBE < 0){
+		*CENANG_.LLE=1;
+        *CENANG_.EL=log(EMIN);
+        *CENANG_.EU=log(EMAX);
+        *CENANG_.NE=-NBE;
+	}else{
+		*CENANG_.LLE=0;
+        *CENANG_.EL=EMIN;
+        *CENANG_.EU=EMAX;
+        *CENANG_.NE=NBE;
+	}
+
+	*CENANG_.BSE=FSAFE*(*CENANG_.EU-*CENANG_.EL)/ *CENANG_.NE;
+    *CENANG_.RBSE=1.0e0/ *CENANG_.BSE;
+
+	if (NBTH < 0){
+		*CENANG_.LLTH=1;
+        *CENANG_.THL=log(1.0e-2);
+        *CENANG_.THU=log(180.0e0);
+        *CENANG_.NTH=-NBTH;
+	}else{
+		*CENANG_.LLTH=0;
+        *CENANG_.THL=0.0e0;
+        *CENANG_.THU=180.0e0;
+        *CENANG_.NTH=NBTH;
+	}
+
+	*CENANG_.BSTH=FSAFE*(*CENANG_.THU-*CENANG_.THL)/ *CENANG_.NTH;
+    *CENANG_.RBSTH=1.0e0/ *CENANG_.BSTH;
+
+	if (NBPH < 0)
+		*CENANG_.NPH=-NBPH;
+	else
+		*CENANG_.NPH=NBPH;
+
+	*CENANG_.BSPH=FSAFE*360.0e0/ *CENANG_.NPH;
+    *CENANG_.RBSPH=1.0e0/ *CENANG_.BSPH;
+
+	for (int I = 1; I <= 3; I++){
+		for (int J = 1; J <= 2; J++){
+			for (int K = 1; K <= NBEM; K++){
+				CENANG_.PDE[K-1][J-1][I-1]=0.0e0;
+                CENANG_.PDE2[K-1][J-1][I-1]=0.0e0;
+                CENANG_.PDEP[K-1][J-1][I-1]=0.0e0;
+                CENANG_.LPDE[K-1][J-1][I-1]=0;
+			}
+		}
+	}
+
+	for (int I = 1; I <= 3; I++){
+		for (int J = 1; J <= NBTHM; J++){
+			for (int K = 1; K <= NBPHM; K++){
+				CENANG_.PDA[K-1][J-1][I-1]=0.0e0;
+                CENANG_.PDA2[K-1][J-1][I-1]=0.0e0;
+                CENANG_.PDAP[K-1][J-1][I-1]=0.0e0;
+                CENANG_.LPDA[K-1][J-1][I-1]=0;
+			}
+		}
+	}
 }
-
-
 
 
 
