@@ -55,6 +55,7 @@ static const int NBV=5000;
 static const int NBEM=1500;
 static const int NBTHM=1800;
 static const int NBPHM=180;
+static const int NBEM2=1000;
 
 char LINHA[200];
 char APOIO[200];
@@ -589,6 +590,23 @@ typedef struct{
 }CENANG;
 
 
+typedef struct{
+	double *EL, *EU, *BSE, *RBSE;
+	double (*ET)[NIDM], *EDEP, *EDEP2, *EDEPP;
+    double  (*DIT)[NIDM], (*DIT2)[NIDM], (*DITP)[NIDM];
+    double  (*DIP)[NBEM2][NIDM], (*DIP2)[NBEM2][NIDM], (*DIPP)[NBEM2][NIDM];
+    double  (*FLT)[NIDM], (*FLT2)[NIDM], (*FLTP)[NIDM];
+    double  (*FLP)[NBEM2][NIDM], (*FLP2)[NBEM2][NIDM], (*FLPP)[NBEM2][NIDM];
+    double  *AGEL, *AGEU, *BAGE, *RBAGE, (*AGE)[NIDM];
+    double  (*AGE2)[NIDM],(*AGEP)[NIDM];
+	bool *LEDEP, (*LDIT)[NIDM], (*LDIP)[NBEM2][NIDM], (*LFLT)[NIDM], (*LFLP)[NBEM2][NIDM], (*LAGEA)[NIDM];
+	int *IDCUT, *NE;
+	bool *LLE, *LLAGE;
+    int *NAGE, *NID;
+
+}CIMDET;
+
+
 
 
 
@@ -681,6 +699,7 @@ void imprimirKDGHT(FILE* IW, int &KB);
    CNTRL CNTRL_;
    CGCONE CGCONE_;
    CENANG CENANG_;
+   CIMDET CIMDET_;
 
 
 extern "C" {
@@ -868,6 +887,20 @@ void transfcenang_(	double *EL, double *EU, double *THL, double *THU, double *BS
 	bool *LLE, bool *LLTH);
 
 
+void transfcimdet_(double *EL, double *EU, double *BSE, double *RBSE,
+	double (*ET)[NIDM], double *EDEP, double *EDEP2, double *EDEPP,
+    double  (*DIT)[NIDM], double (*DIT2)[NIDM], double (*DITP)[NIDM],
+    double  (*DIP)[NBEM2][NIDM], double (*DIP2)[NBEM2][NIDM], double (*DIPP)[NBEM2][NIDM],
+    double  (*FLT)[NIDM], double (*FLT2)[NIDM], double (*FLTP)[NIDM],
+    double  (*FLP)[NBEM2][NIDM], double (*FLP2)[NBEM2][NIDM], double (*FLPP)[NBEM2][NIDM],
+    double  *AGEL, double *AGEU, double *BAGE, double *RBAGE, double (*AGE)[NIDM],
+    double  (*AGE2)[NIDM], double (*AGEP)[NIDM],
+	bool *LEDEP, bool (*LDIT)[NIDM], bool (*LDIP)[NBEM2][NIDM], bool (*LFLT)[NIDM], bool (*LFLP)[NBEM2][NIDM], bool (*LAGEA)[NIDM],
+	int *IDCUT, int *NE,
+	bool *LLE, bool *LLAGE,
+    int *NAGE, int *NID);
+
+
 
 
 
@@ -1032,6 +1065,8 @@ void pmrdr2_();
 void gcone02_(double THETA, double PHI, double ALPHA);
 
 void enang02_(double &EMIN, double &EMAX, int &NBE, int &NBTH, int &NBPH, FILE *IWR);
+
+void imdet02_(double &EMIN, double &EMAX, int &NBE, double &AGEMIN, double &AGEMAX, int &NBAGE, int &ICUT, char *FNSPC, char *FNFLU, char *FNAGE, int &ID, FILE *IWR);
 
 }
 
@@ -2070,6 +2105,62 @@ void transfcenang_(	double *EL, double *EU, double *THL, double *THU, double *BS
 			CENANG_.NPH	= NPH;
 			CENANG_.LLE	= LLE;
 			CENANG_.LLTH	= LLTH;
+
+	}
+
+
+void transfcimdet_(double *EL, double *EU, double *BSE, double *RBSE,
+	double (*ET)[NIDM], double *EDEP, double *EDEP2, double *EDEPP,
+    double  (*DIT)[NIDM], double (*DIT2)[NIDM], double (*DITP)[NIDM],
+    double  (*DIP)[NBEM2][NIDM], double (*DIP2)[NBEM2][NIDM], double (*DIPP)[NBEM2][NIDM],
+    double  (*FLT)[NIDM], double (*FLT2)[NIDM], double (*FLTP)[NIDM],
+    double  (*FLP)[NBEM2][NIDM], double (*FLP2)[NBEM2][NIDM], double (*FLPP)[NBEM2][NIDM],
+    double  *AGEL, double *AGEU, double *BAGE, double *RBAGE, double (*AGE)[NIDM],
+    double  (*AGE2)[NIDM], double (*AGEP)[NIDM],
+	bool *LEDEP, bool (*LDIT)[NIDM], bool (*LDIP)[NBEM2][NIDM], bool (*LFLT)[NIDM], bool (*LFLP)[NBEM2][NIDM], bool (*LAGEA)[NIDM],
+	int *IDCUT, int *NE,
+	bool *LLE, bool *LLAGE,
+    int *NAGE, int *NID){
+
+	CIMDET_.EL =	EL; 	
+	CIMDET_.EU =	EU;
+	CIMDET_.BSE =	BSE;
+	CIMDET_.RBSE =	RBSE; 
+	CIMDET_.ET =	ET; 
+	CIMDET_.EDEP =	EDEP; 
+	CIMDET_.EDEP2 =	EDEP2; 
+	CIMDET_.EDEPP =	EDEPP; 
+	CIMDET_.DIT =	DIT; 
+	CIMDET_.DIT2 =	DIT2; 
+	CIMDET_.DITP =	DITP; 
+	CIMDET_.DIP =	DIP; 
+	CIMDET_.DIP2 =	DIP2; 
+	CIMDET_.DIPP =	DIPP; 
+	CIMDET_.FLT =	FLT; 
+	CIMDET_.FLT2 =	FLT2; 
+	CIMDET_.FLTP =	FLTP;
+	CIMDET_.FLP =	FLP; 
+	CIMDET_.FLP2 =	FLP2; 
+	CIMDET_.FLPP =	FLPP; 
+	CIMDET_.AGEL =	AGEL; 
+	CIMDET_.AGEU =	AGEU; 
+	CIMDET_.BAGE =	BAGE; 
+	CIMDET_.RBAGE =	RBAGE; 
+	CIMDET_.AGE =	AGE; 
+	CIMDET_.AGE2 =	AGE2; 
+	CIMDET_.AGEP =	AGEP; 
+	CIMDET_.LEDEP =	LEDEP; 
+	CIMDET_.LDIT =	LDIT; 
+	CIMDET_.LDIP =	LDIP; 
+	CIMDET_.LFLT =	LFLT; 
+	CIMDET_.LFLP =	LFLP; 
+	CIMDET_.LAGEA =	LAGEA; 
+	CIMDET_.IDCUT =	IDCUT; 
+	CIMDET_.NE =	NE; 
+	CIMDET_.LLE =	LLE; 
+	CIMDET_.LLAGE =	LLAGE;
+	CIMDET_.NAGE =	NAGE; 
+	CIMDET_.NID =	NID;
 
 	}
 
@@ -13608,9 +13699,9 @@ void pmrdr2_(){
 	static const int NSEM = 1000;
 	static const int NB = 5000;
 
-	double SALPHA, SPHI, STHETA, THETLD,THETUD, PHILD,PHIUD, EPMAXR, EAB1, EAB2, EAB3, EMIN, EMAX;
+	double SALPHA, SPHI, STHETA, THETLD,THETUD, PHILD,PHIUD, EPMAXR, EAB1, EAB2, EAB3, EMIN, EMAX,EDIL,EDIU, AGEU, AGEL;
 
-	int KBSMAX, ISEC, KB, ISOURC, NMATR, NPINP, IHEAD, IP, NMATG, NBE, NBTH, NBPH;
+	int KBSMAX, ISEC, KB, ISOURC, NMATR, NPINP, IHEAD, IP, NMATG, NBE, NBTH, NBPH, NDBOD,NDICH, NAGE,ITST, KPARD;
 
 	FILE* IWR = fopen("penmain2.dat", "w");
 	if (IWR == NULL){
@@ -14404,9 +14495,9 @@ L36:;
 		}
 
 		if (PENGEOM_mod_.MATER[KB-1] > 0){
-			CSPGEO_.EABSB[KB-1][1-1]=fmax(PENELOPE_mod_.EABS[KB-1][1-1], EAB1);
-            CSPGEO_.EABSB[KB-1][2-1]=fmax(PENELOPE_mod_.EABS[KB-1][2-1], EAB2);
-            CSPGEO_.EABSB[KB-1][3-1]=fmax(PENELOPE_mod_.EABS[KB-1][3-1], EAB3);
+			CSPGEO_.EABSB[KB-1][1-1]=fmax(CSPGEO_.EABSB[KB-1][1-1], EAB1);
+            CSPGEO_.EABSB[KB-1][2-1]=fmax(CSPGEO_.EABSB[KB-1][2-1], EAB2);
+            CSPGEO_.EABSB[KB-1][3-1]=fmax(CSPGEO_.EABSB[KB-1][3-1], EAB3);
 		}
 L37:;
 		fgets(LINHA, sizeof(LINHA), IRD);
@@ -14424,7 +14515,7 @@ L37:;
 	for (int IB = 1; IB <= *PENGEOM_mod_.NBODY; IB++){
 		if (PENGEOM_mod_.MATER[IB-1] > 0)
 		    fprintf(IWR, "   %4d  %.6E  %.6E  %.6E  %.6E\n", IB,CSPGEO_.DSMAX[IB-1],
-				    PENELOPE_mod_.EABS[KB-1][1-1],PENELOPE_mod_.EABS[KB-1][2-1],PENELOPE_mod_.EABS[KB-1][3-1]);
+				    CSPGEO_.EABSB[IB-1][1-1],CSPGEO_.EABSB[IB-1][2-1],CSPGEO_.EABSB[IB-1][3-1]);
 	}
 
 	//Reduções de Variancia (Não será implementado nessa versão do programa)
@@ -14557,6 +14648,401 @@ L52:;
 
 	//Detectores de impacto
 
+	for (int KD = 1; KD <= NIDM; KD++){
+		CNT4_.KKDI[1-1][KD-1]=0;
+        CNT4_.KKDI[2-1][KD-1]=0;
+        CNT4_.KKDI[3-1][KD-1]=0;
+	}
+
+	NDBOD=0;
+    *CNT4_.NPSFO=0;
+	*CNT4_.NID=0;
+L61:;
+	if (!strcmp(KWORD, KWIDET)){
+		*CNT4_.NID=*CNT4_.NID+1;
+        NDBOD=0;
+		fprintf(IWR,"   ------------------------------------------------------------------------\n");
+		fprintf(IWR, "   >>>>>>  Impact detector # %2d\n", *CNT4_.NID);
+		PCH = strtok(BUFFER, " ");
+		EDIL = atof(PCH);
+		PCH = strtok(NULL, " ");
+		EDIU = atof(PCH);
+		PCH = strtok(NULL, " ");
+		NDICH = atoi(PCH);
+		PCH = strtok(NULL, " ");
+		CNT4_.IPSF[*CNT4_.NID-1] = atoi(PCH);
+		PCH = strtok(NULL, " ");
+		CNT4_.IDCUT[*CNT4_.NID-1] = atoi(PCH);
+
+		if (NDICH == 0){
+			fprintf(IWR, "%s %s\n", KWORD,BUFFER);
+			fprintf(IWR, "Incorrect number of energy bins.\n");
+			printf("Incorrect number of energy bins.\n");
+			exit(0);
+		}
+
+		if (EDIL < 50.0e0)
+			EDIL=50.0e0;
+
+		if (EDIU < 50.0e0)
+			EDIU=50.0e0;
+
+		if (NDICH < 0){
+			EDIL=max(EDIL,50.0e0);
+			fprintf(IWR, "   Energy window = (%.5E, %.5E) eV\n",EDIL,EDIU );
+			fprintf(IWR, "   Number of energy bins = %4d   (logarithmic scale)\n", abs(NDICH));
+		}else{
+			EDIL=max(EDIL,50.0e0);
+			fprintf(IWR, "   Energy window = (%.5E, %.5E) eV\n",EDIL,EDIU );
+			fprintf(IWR, "   Number of energy bins = %4d   (linear scale)\n", NDICH);
+		}
+
+		if (EDIU < EDIL+1.0e0){
+			fprintf(IWR, "%s %s\n", KWORD,BUFFER );
+			fprintf(IWR, "Incorrect energy limits.\n");
+			printf("Incorrect energy limits.\n");
+			exit(0);
+		}
+
+		if ((CNT4_.IPSF[*CNT4_.NID-1] < 0) || (CNT4_.IPSF[*CNT4_.NID-1] > 1)){
+			fprintf(IWR, "%s %s\n", KWORD,BUFFER );
+			fprintf(IWR, "Wrong IPSF value.\n");
+			printf("Wrong IPSF value.\n");
+			exit(0);
+		}
+
+		if ((CNT4_.IDCUT[*CNT4_.NID-1] < 0) || (CNT4_.IDCUT[*CNT4_.NID-1] > 2)){
+			fprintf(IWR, "%s %s\n", KWORD,BUFFER );
+			fprintf(IWR, "Wrong IDCUT value.\n");
+			printf("Wrong IDCUT value.\n");
+			exit(0);
+		}
+
+L62:;
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L62;
+
+		if (!strcmp(KWORD, KWISPC)){
+			if (*CNT4_.NID == 0){
+				fprintf(IWR, "%s %s\n", KWORD,BUFFER );
+				fprintf(IWR, "No impact detector has been defined yet.\n");
+				printf("No impact detector has been defined yet.\n");
+				exit(0);
+			}
+			PCH = strtok(BUFFER, " ");
+			strcpy(SPCDIO, PCH);
+			fprintf(IWR, "   Output energy spectrum: %s\n", SPCDIO);
+L64:;
+			fgets(LINHA, sizeof(LINHA), IRD);
+			extrairString(KWORD, LINHA, 0, 6);
+			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			if (!strcmp(KWORD, KWCOMM))
+				goto L64;
+		}else {
+			sprintf(BUF2, "%d", 1000 + *CNT4_.NID);
+			sprintf(SPCDIO, "spc-impdet-%c%c.dat", BUF2[3], BUF2[4] );
+			fprintf(IWR, "   Output energy spectrum: %s\n", SPCDIO);	
+		}
+
+		if (!strcmp(KWORD, KWIPSF)){
+			if (*CNT4_.NID == 0){
+				fprintf(IWR, "%s %s\n", KWORD,BUFFER );
+				fprintf(IWR, "No impact detector has been defined yet.\n");
+				printf("No impact detector has been defined yet.\n");
+				exit(0);
+			}
+			PCH = strtok(BUFFER, " ");
+			strcpy(PSFDIO, PCH);
+			fprintf(IWR, "   Output phase-space file: %s\n", PSFDIO);
+			*CNT4_.NPSFO=*CNT4_.NPSFO+1;
+			if (*CNT4_.NPSFO > 1){
+				fprintf(IWR, "You cannot generate more than one PSF in a single run.\n");
+				printf("Only one PSF can be generated in a each run\n");
+				exit(0);
+			}else{
+				fprintf(IWR, "No phase-space file is generated.\n");
+			}
+L63:;
+			fgets(LINHA, sizeof(LINHA), IRD);
+			extrairString(KWORD, LINHA, 0, 6);
+			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			if (!strcmp(KWORD, KWCOMM))
+				goto L63;
+		}else{
+			if (CNT4_.IPSF[*CNT4_.NID-1] > 0){
+				sprintf(BUF2, "%d", 1000 + *CNT4_.NID);
+				sprintf(PSFDIO, "psf-impdet-%c%c.dat", BUF2[3], BUF2[4] );
+				fprintf(IWR, "   Output phase-space file: %s\n", PSFDIO);
+				*CNT4_.NPSFO=*CNT4_.NPSFO+1;
+				if (*CNT4_.NPSFO > 1){
+					fprintf(IWR, "You cannot generate more than one PSF in a single run.\n");
+					printf("Only one PSF can be generated in a each run\n");
+					exit(0);
+				}
+			}
+		}
+
+		if (abs(CNT4_.IDCUT[*CNT4_.NID-1]) == 0){
+			fprintf(IWR, "   Detected particles are absorbed\n");
+		}else{
+			fprintf(IWR, "   Particles are transported through this detector\n");
+		}
+
+		strcpy(SPCFSO, "none");
+
+		if (!strcmp(KWORD, KWIFLN)){
+			if (*CNT4_.NID == 0){
+				fprintf(IWR, "%s %s\n", KWORD,BUFFER );
+				fprintf(IWR, "No impact detector has been defined yet.\n");
+				printf("No impact detector has been defined yet.\n");
+				exit(0);
+			}
+			PCH = strtok(BUFFER, " ");
+			strcpy(SPCFSO, PCH);
+L83:;
+			fgets(LINHA, sizeof(LINHA), IRD);
+			extrairString(KWORD, LINHA, 0, 6);
+			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			if (!strcmp(KWORD, KWCOMM))
+				goto L83;
+
+			if (CNT4_.IDCUT[*CNT4_.NID-1] == 2){
+				fprintf(IWR, "Output fluence distribution: %s", SPCFSO);
+			}
+		}else{
+			if (CNT4_.IDCUT[*CNT4_.NID-1] == 2){
+				sprintf(BUF2, "%d", 1000 + *CNT4_.NID);
+				sprintf(SPCFSO, "fln-impdet-%c%c.dat", BUF2[3], BUF2[4] );
+				fprintf(IWR, "   Output fluence distribution: %s\n", SPCFSO);
+			}
+		}
+
+		AGEU=-1.0e6;
+        AGEL=0.0e0;
+        strcpy(SPCAGE,"none");
+        NAGE=0;
+
+		if (!strcmp(KWORD, KWDIAL)){
+			if (*CNT4_.NID == 0){
+				fprintf(IWR, "%s %s\n", KWORD,BUFFER );
+				fprintf(IWR, "No impact detector has been defined yet.\n");
+				printf("No impact detector has been defined yet.\n");
+				exit(0);
+			}
+			PCH = strtok(BUFFER, " ");
+			AGEL = atof(PCH);
+			PCH = strtok(NULL, " ");
+			AGEU = atof(PCH);
+			PCH = strtok(NULL, " ");
+			NAGE = atoi(PCH);
+
+			if (NAGE == 0){
+				fprintf(IWR, "%s %s\n", KWORD,BUFFER );
+				fprintf(IWR, "Incorrect number of age bins.\n");
+				printf("Incorrect number of age bins.\n");
+				exit(0);
+			}
+
+			AGEL=fmax(AGEL,0.0e0);
+			if (NAGE < 0){
+				AGEL=fmax(AGEL,1.0e-20);
+				fprintf(IWR, "   Particle age window = (%.5E, %.5E) seconds",AGEL,AGEU );
+				fprintf(IWR, "   Number of age bins = %.4d (logarithmic scale)", abs(NAGE));
+			}else{
+				fprintf(IWR, "   Particle age window = (%.5E, %.5E) seconds",AGEL,AGEU );
+				fprintf(IWR, "   Number of age bins = %.4d (linear scale)", NAGE);
+			}
+
+			if (AGEU < AGEL+1.0e-19){
+				fprintf(IWR, "%s %s\n", KWORD,BUFFER );
+				fprintf(IWR, "Incorrect age limits.\n");
+				printf("Incorrect age limits.\n");
+				exit(0);
+			}
+L84:;	
+			fgets(LINHA, sizeof(LINHA), IRD);
+			extrairString(KWORD, LINHA, 0, 6);
+			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			if (!strcmp(KWORD, KWCOMM))
+				goto L84;
+		}
+
+		if (!strcmp(KWORD, KWDIAF)){
+			if (*CNT4_.NID == 0){
+				fprintf(IWR, "%s %s\n", KWORD,BUFFER );
+				fprintf(IWR, "No impact detector has been defined yet.\n");
+				printf("No impact detector has been defined yet.\n");
+				exit(0);
+			}
+
+			if (AGEL < 0.0e0){
+				fprintf(IWR, "%s %s\n", KWORD,BUFFER );
+				fprintf(IWR, "Undefined age distribution limits.\n");
+				printf("Undefined age distribution limits.\n");
+				exit(0);
+			}
+			PCH = strtok(BUFFER, " ");
+			strcpy(SPCAGE, PCH);
+			fprintf(IWR, "Output age distribution: %s\n", SPCAGE);
+L85:;
+			
+			fgets(LINHA, sizeof(LINHA), IRD);
+			extrairString(KWORD, LINHA, 0, 6);
+			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			if (!strcmp(KWORD, KWCOMM))
+				goto L85;
+
+		}else{
+			if (AGEU > 0.0e0){
+				sprintf(BUF2, "%d", 1000 + *CNT4_.NID);
+				sprintf(SPCAGE, "age-impdet-%c%c.dat", BUF2[3], BUF2[4] );
+				fprintf(IWR, "  Output age distribution: %s\n", SPCAGE);
+			}
+		}
+
+L65:;
+
+		if (!strcmp(KWORD, KWIBOD)){
+			if (*CNT4_.NID == 0){
+				fprintf(IWR, "%s %s\n", KWORD,BUFFER );
+				fprintf(IWR, "No impact detector has been defined yet.\n");
+				printf("No impact detector has been defined yet.\n");
+				exit(0);
+			}
+			PCH = strtok(BUFFER, " ");
+			KB = atoi(PCH);
+
+			
+			if ((KB < 1) || (KB > *PENGEOM_mod_.NBODY)){
+				fprintf(IWR, "%s %s",KWORD,BUFFER );
+				fprintf(IWR, "Incorrect body number.\n");
+				printf("Incorrect body number.\n");
+				exit(0);
+			}
+
+			if (PENGEOM_mod_.KDET[KB-1] != 0){
+				fprintf(IWR, "%s %s\n", KWORD,BUFFER );
+				fprintf(IWR, "   A body cannot be part of two detectors.\n");
+				printf("   A body cannot be part of two detectors.\n");
+				exit(0);
+			}
+
+			fprintf(IWR, "   Active body = %4d\n", KB);
+			PENGEOM_mod_.KDET[KB-1]= *CNT4_.NID;
+          	NDBOD=NDBOD+1;
+L66:;
+			fgets(LINHA, sizeof(LINHA), IRD);
+			extrairString(KWORD, LINHA, 0, 6);
+			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			if (!strcmp(KWORD, KWCOMM))
+				goto L66;
+			if (!strcmp(KWORD, KWIBOD))
+				goto L65;
+			if (!strcmp(KWORD, KWIDET)){
+				if (NDBOD == 0){
+					fprintf(IWR, "This detector has no active bodies.\n");
+					printf("This detector has no active bodies.\n");
+				}
+				ITST=fmax(CNT4_.KKDI[1-1][*CNT4_.NID-1], fmax(CNT4_.KKDI[2-1][*CNT4_.NID-1], CNT4_.KKDI[3-1][*CNT4_.NID-1]));
+				if (ITST == 0){
+					CNT4_.KKDI[1-1][*CNT4_.NID-1] = 1;
+					CNT4_.KKDI[2-1][*CNT4_.NID-1] = 1;
+					CNT4_.KKDI[3-1][*CNT4_.NID-1] = 1;
+					fprintf(IWR, "   Detected particles = electrons, photons and positrons\n");
+				}
+
+				imdet02_(EDIL,EDIU,NDICH,AGEL,AGEU,NAGE,CNT4_.IDCUT[*CNT4_.NID-1],SPCDIO,SPCFSO,SPCAGE, *CNT4_.NID, IWR);
+				
+				goto L61;
+			}
+		}
+L67:;
+
+		if (!strcmp(KWORD, KWIPAR)){
+			if (*CNT4_.NID == 0){
+				fprintf(IWR, "%s %s\n", KWORD,BUFFER );
+				fprintf(IWR, "No impact detector has been defined yet.\n");
+				printf("No impact detector has been defined yet.\n");
+				exit(0);
+			}
+			if (NDBOD == 0){
+				fprintf(IWR, "This detector has no active bodies.\n");
+				printf("This detector has no active bodies.\n");
+				exit(0);
+			}
+			PCH = strtok(BUFFER, " ");
+			KPARD = atoi(PCH);
+
+			if (KPARD == 1){
+				CNT4_.KKDI[1-1][*CNT4_.NID-1]=1;
+				fprintf(IWR,"   Detected particles = electrons\n");
+			}else if (KPARD == 2){
+				CNT4_.KKDI[2-1][*CNT4_.NID-1]=2;
+				fprintf(IWR,"   Detected particles = photons\n");
+			}else if (KPARD == 3){
+				CNT4_.KKDI[3-1][*CNT4_.NID-1]=3;
+				fprintf(IWR,"   Detected particles = positrons\n");
+			}
+
+L68:;
+			fgets(LINHA, sizeof(LINHA), IRD);
+			extrairString(KWORD, LINHA, 0, 6);
+			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			if (!strcmp(KWORD, KWCOMM))
+				goto L68;
+			if (!strcmp(KWORD, KWIPAR))
+				goto L67;
+			if (!strcmp(KWORD, KWIBOD))
+				goto L65;
+			if (!strcmp(KWORD, KWIDET)){
+				if (NDBOD == 0){
+					fprintf(IWR, "This detector has no active bodies.\n");
+					printf("This detector has no active bodies.\n");
+				}
+				ITST=max(CNT4_.KKDI[1-1][*CNT4_.NID-1],max(CNT4_.KKDI[2-1][*CNT4_.NID-1],CNT4_.KKDI[3-1][*CNT4_.NID-1]));
+				if (ITST == 0){
+					CNT4_.KKDI[1-1][*CNT4_.NID-1]=1;
+					CNT4_.KKDI[2-1][*CNT4_.NID-1]=1;
+					CNT4_.KKDI[3-1][*CNT4_.NID-1]=1;
+					fprintf(IWR, "Detected particles = electrons, photons and positrons\n");
+				}
+
+				imdet02_(EDIL,EDIU,NDICH,AGEL,AGEU,NAGE,CNT4_.IDCUT[*CNT4_.NID-1],SPCDIO,SPCFSO,SPCAGE, *CNT4_.NID, IWR);
+				
+				goto L61;
+			}
+		}		
+	}
+
+	if (*CNT4_.NID > 0){
+		if (NDBOD == 0){
+			fprintf(IWR, "This detector has no active bodies.\n");
+			printf("This detector has no active bodies.\n");
+			exit(0);
+		}
+
+		ITST=max(CNT4_.KKDI[1-1][*CNT4_.NID-1],max(CNT4_.KKDI[2-1][*CNT4_.NID-1],CNT4_.KKDI[3-1][*CNT4_.NID-1]));
+		if (ITST == 0){
+			CNT4_.KKDI[1-1][*CNT4_.NID-1]=1;
+			CNT4_.KKDI[2-1][*CNT4_.NID-1]=1;
+			CNT4_.KKDI[3-1][*CNT4_.NID-1]=1;
+			fprintf(IWR, "Detected particles = electrons, photons and positrons\n");
+		}
+		imdet02_(EDIL,EDIU,NDICH,AGEL,AGEU,NAGE,CNT4_.IDCUT[*CNT4_.NID-1],SPCDIO,SPCFSO,SPCAGE, *CNT4_.NID, IWR);
+			
+	}
+
+	//Detectores de deposição de energia
+
+
+
+
+
+
+
 
 	printf("\nFIM PMRDR2\n");
 	exit(0);
@@ -14587,6 +15073,7 @@ void gcone02_(double THETA, double PHI, double ALPHA){
 }
 
 void enang02_(double &EMIN, double &EMAX, int &NBE, int &NBTH, int &NBPH, FILE *IWR){
+
 
 	/*
 	Calcula energia e distribuições angulares de partículas emergentes,
@@ -14687,6 +15174,137 @@ void enang02_(double &EMIN, double &EMAX, int &NBE, int &NBTH, int &NBPH, FILE *
 
 
 
+void imdet02_(double &EMIN, double &EMAX, int &NBE, double &AGEMIN, double &AGEMAX, int &NBAGE, int &ICUT, char *FNSPC, char *FNFLU, char *FNAGE, int &ID, FILE *IWR){
+
+	/*
+	Calcula espectros de detectores de impacto, grava e carrega arquivos de despejo,
+	 acumula arquivos de despejo de diferentes execuções e grava os resultados.
+	*/
+
+	double FSAFE=1.000000001e0;
+
+	static const int NIDM=25;
+	static const int NBEM=1000;
+	char SPCDIO[NDIM][20];
+	char SPCFLO[NDIM][20];
+	char SPCAGE[NDIM][20];
+
+	int NIDS = 0;
+
+	if (ID <= NIDS){
+		fprintf(IWR, " SIMDET: Detector already defined.\n");
+		printf("SIMDET: Detector already defined.\n");
+		exit(0);
+	}
+
+	NIDS=ID;
+    *CIMDET_.NID=ID;
+
+	if (*CIMDET_.NID > NIDM){
+		fprintf(IWR, "   NID = %4d\n",*CIMDET_.NID );
+		fprintf(IWR, "SIMDET: Too many detectors.\n");
+		printf("SIMDET: Too many detectors.\n");
+		exit(0);
+	}
+
+	strcpy(SPCDIO[ID-1], FNSPC);
+    strcpy(SPCFLO[ID-1],FNFLU);
+    strcpy(SPCAGE[ID-1],FNAGE);
+    CIMDET_.IDCUT[ID-1]=ICUT;
+
+	if (abs(NBE) > NBEM){
+		fprintf(IWR, "SIMDET: NB is too large.\n");
+		fprintf(IWR, "SIMDET: Set the parameter NBEM equal to %d\n",abs(NBE) );
+		printf("SIMDET: NB is too large.\n");
+		exit(0);
+	}
+
+	if (NBE < 0){
+		CIMDET_.LLE[ID-1]=1;
+        CIMDET_.EL[ID-1]=log(EMIN);
+        CIMDET_.EU[ID-1]=log(EMAX);
+        CIMDET_.NE[ID-1]=-NBE;
+	}else{
+		CIMDET_.LLE[ID-1]=0;
+        CIMDET_.EL[ID-1]=EMIN;
+        CIMDET_.EU[ID-1]=EMAX;
+        CIMDET_.NE[ID-1]=NBE;
+	}
+
+	CIMDET_.BSE[ID-1]=FSAFE*(CIMDET_.EU[ID-1]-CIMDET_.EL[ID-1])/(CIMDET_.NE[ID-1]);
+    CIMDET_.RBSE[ID-1]=1.0e0/CIMDET_.BSE[ID-1];
+
+	for (int J = 1; J <= CIMDET_.NE[ID-1]+1; J++){
+		if (CIMDET_.LLE[ID-1] == 1)
+			CIMDET_.ET[J-1][ID-1]=exp(CIMDET_.EL[ID-1]-+(J-1)*CIMDET_.BSE[ID-1]);
+		else
+		CIMDET_.ET[J-1][ID-1]=CIMDET_.EL[ID-1]+(J-1)*CIMDET_.BSE[ID-1];
+	}
+
+	CIMDET_.EDEP[ID-1]=0.0e0;
+    CIMDET_.EDEP2[ID-1]=0.0e0;
+    CIMDET_.EDEPP[ID-1]=0.0e0;
+    CIMDET_.LEDEP[ID-1]=0;
+
+	for (int J = 1;J <= NBEM; J++){
+		CIMDET_.DIT[J-1][ID-1]=0.0e0;
+        CIMDET_.DIT2[J-1][ID-1]=0.0e0;
+        CIMDET_.DITP[J-1][ID-1]=0.0e0;
+        CIMDET_.LDIT[J-1][ID-1]=0;
+		for (int K = 1; K <= 3; K++){
+			CIMDET_.DIP[K-1][J-1][ID-1]=0.0e0;
+            CIMDET_.DIP2[K-1][J-1][ID-1]=0.0e0;
+            CIMDET_.DIPP[K-1][J-1][ID-1]=0.0e0;
+            CIMDET_.LDIP[K-1][J-1][ID-1]=0;
+		}
+	}
+
+	for (int J = 1; J <= NBEM; J++){
+		CIMDET_.FLT[J-1][ID-1]=0.0e0;
+        CIMDET_.FLT2[J-1][ID-1]=0.0e0;
+        CIMDET_.FLTP[J-1][ID-1]=0.0e0;
+        CIMDET_.LFLT[J-1][ID-1]=0;
+		for (int K = 1; K <= 3; K++){
+			CIMDET_.FLP[K-1][J-1][ID-1]=0.0e0;
+            CIMDET_.FLP2[K-1][J-1][ID-1]=0.0e0;
+            CIMDET_.FLPP[K-1][J-1][ID-1]=0.0e0;
+            CIMDET_.LFLP[K-1][J-1][ID-1]=0;
+		}
+	}
+
+	if (NBAGE < 0){
+		CIMDET_.LLAGE[ID-1]=1;
+        CIMDET_.AGEL[ID-1]=log(AGEMIN);
+        CIMDET_.AGEU[ID-1]=log(AGEMAX);
+        CIMDET_.NAGE[ID-1]=-NBAGE;
+	}else if (NBAGE > 0){
+		CIMDET_.LLAGE[ID-1]=0;
+        CIMDET_.AGEL[ID-1]=AGEMIN;
+        CIMDET_.AGEU[ID-1]=AGEMAX;
+        CIMDET_.NAGE[ID-1]=NBAGE;
+	}else{
+		CIMDET_.LLAGE[ID-1]=0;
+        CIMDET_.NAGE[ID-1]=0;
+        CIMDET_.AGEL[ID-1]=0.0e0;
+        CIMDET_.AGEU[ID-1]=0.0e0;
+        CIMDET_.BAGE[ID-1]=0.0e0;
+        CIMDET_.RBAGE[ID-1]=0.0e0;
+	}
+
+	if (CIMDET_.NAGE[ID-1] > 0){
+		*TRACK_mod_.LAGE=true;
+        CIMDET_.BAGE[ID-1]=FSAFE*(CIMDET_.AGEU[ID-1]-CIMDET_.AGEL[ID-1])/(CIMDET_.NAGE[ID-1]);
+        CIMDET_.RBAGE[ID-1]=1.0e0/CIMDET_.BAGE[ID-1];
+		for (int J = 1; J <= NBEM; J++){
+			CIMDET_.AGE[J-1][ID-1]=0.0e0;
+            CIMDET_.AGE2[J-1][ID-1]=0.0e0;
+            CIMDET_.AGEP[J-1][ID-1]=0.0e0;
+            CIMDET_.LAGEA[J-1][ID-1]=0;
+		}
+	}
+
+
+}
 
 
 
