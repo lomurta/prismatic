@@ -57,6 +57,11 @@ static const int NBTHM=1800;
 static const int NBPHM=180;
 static const int NBEM2=1000;
 
+
+static const int NDXM=201;
+static const int NDYM=201;
+static const int NDZM=201;
+
 char LINHA[200];
 char APOIO[200];
 
@@ -612,6 +617,29 @@ typedef struct{
 	bool *LLE;
 }CENDET;
 
+typedef struct{
+	double (*DOSE)[NDYM][NDXM], (*DOSE2)[NDYM][NDXM], (*DOSEP)[NDYM][NDXM];
+	int (*LDOSE)[NDYM][NDXM], *KDOSE;
+} CDOSE1;
+
+typedef struct{
+	double *DDOSE, *DDOSE2, *DDOSEP;
+	int *LDDOSE;
+
+}CDOSE2;
+
+typedef struct{
+	double *DXL, *DXU, *BDOSE, *RBDOSE;
+	int *NDB;
+}CDOSE3;
+
+typedef struct{
+	double (*VMASS)[NDYM][NDXM];
+
+}CDOSE4;
+
+
+
 
 
 
@@ -707,6 +735,10 @@ void imprimirKDGHT(FILE* IW, int &KB);
    CENANG CENANG_;
    CIMDET CIMDET_;
    CENDET CENDET_;
+   CDOSE1 CDOSE1_;
+   CDOSE2 CDOSE2_;
+   CDOSE3 CDOSE3_;
+   CDOSE4 CDOSE4_;
 
 
 extern "C" {
@@ -910,8 +942,13 @@ void transfcimdet_(double *EL, double *EU, double *BSE, double *RBSE,
 void transfcendet_(double *EL, double *EU, double *BSE, double *RBSE, double *EDEP, double *EDEP2, double (*DET)[NIDM],
     int  *NE, int *NID, bool *LLE);
 
+void transfcdose1_(double (*DOSE)[NDYM][NDXM], double (*DOSE2)[NDYM][NDXM], double (*DOSEP)[NDYM][NDXM], int (*LDOSE)[NDYM][NDXM], int *KDOSE);
 
+void transfcdose2_(double *DDOSE, double *DDOSE2, double *DDOSEP, int *LDDOSE);
 
+void transfcdose3_(double *DXL, double *DXU, double *BDOSE, double *RBDOSE, int *NDB);
+
+void transfcdose4_(double (*VMASS)[NDYM][NDXM]);
 
 
 
@@ -1081,6 +1118,10 @@ void enang02_(double &EMIN, double &EMAX, int &NBE, int &NBTH, int &NBPH, FILE *
 void imdet02_(double &EMIN, double &EMAX, int &NBE, double &AGEMIN, double &AGEMAX, int &NBAGE, int &ICUT, char *FNSPC, char *FNFLU, char *FNAGE, int &ID, FILE *IWR);
 
 void endet02_(double &EMIN, double &EMAX, int &NB, char *FNSPC, int &ID, FILE *IWR);
+
+void dose02_(double &XL, double &XU,double &YL,double &YU,double &ZL,double &ZU, int &NBX, int &NBY, int &NBZ, int &IDOSE, FILE *IWR);
+
+
 }
 
 
@@ -2190,6 +2231,37 @@ void transfcendet_(double *EL, double *EU, double *BSE, double *RBSE, double *ED
 	CENDET_.NID = NID;
 	CENDET_.LLE = LLE;
 }  
+
+
+void transfcdose1_(double (*DOSE)[NDYM][NDXM], double (*DOSE2)[NDYM][NDXM], double (*DOSEP)[NDYM][NDXM], int (*LDOSE)[NDYM][NDXM], int *KDOSE){
+	CDOSE1_.DOSE = DOSE;
+	CDOSE1_.DOSE2 = DOSE2;
+	CDOSE1_.DOSEP = DOSEP;
+	CDOSE1_.LDOSE = LDOSE;
+	CDOSE1_.KDOSE = KDOSE;
+
+}
+
+void transfcdose2_(double *DDOSE, double *DDOSE2, double *DDOSEP, int *LDDOSE){
+	CDOSE2_.DDOSE = DDOSE;
+	CDOSE2_.DDOSE2 = DDOSE2;
+	CDOSE2_.DDOSEP = DDOSEP;
+	CDOSE2_.LDDOSE = LDDOSE;
+
+}
+
+void transfcdose3_(double *DXL, double *DXU, double *BDOSE, double *RBDOSE, int *NDB){
+	CDOSE3_.DXL = DXL;
+	CDOSE3_.DXU = DXU;
+	CDOSE3_.BDOSE = BDOSE;
+	CDOSE3_.RBDOSE = RBDOSE;
+	CDOSE3_.NDB = NDB;
+
+}
+
+void transfcdose4_(double (*VMASS)[NDYM][NDXM]){
+	CDOSE4_.VMASS = VMASS;
+}
 
 
 
@@ -13728,9 +13800,9 @@ void pmrdr2_(){
 	static const int NSEM = 1000;
 	static const int NB = 5000;
 
-	double SALPHA, SPHI, STHETA, THETLD,THETUD, PHILD,PHIUD, EPMAXR, EAB1, EAB2, EAB3, EMIN, EMAX,EDIL,EDIU, AGEU, AGEL, EDEL, EDEU;
+	double SALPHA, SPHI, STHETA, THETLD,THETUD, PHILD,PHIUD, EPMAXR, EAB1, EAB2, EAB3, EMIN, EMAX,EDIL,EDIU, AGEU, AGEL, EDEL, EDEU, XLD, XUD, YLD, YUD, ZLD, ZUD, SAVE;
 
-	int KBSMAX, ISEC, KB, ISOURC, NMATR, NPINP, IHEAD, IP, NMATG, NBE, NBTH, NBPH, NDBOD,NDICH, NAGE,ITST, KPARD, NDECH;
+	int KBSMAX, ISEC, KB, ISOURC, NMATR, NPINP, IHEAD, IP, NMATG, NBE, NBTH, NBPH, NDBOD,NDICH, NAGE,ITST, KPARD, NDECH, NBX, NBY, NBZ, IDOSE, NBR;
 
 	FILE* IWR = fopen("penmain2.dat", "w");
 	if (IWR == NULL){
@@ -15197,6 +15269,181 @@ L47:;
 
 	//Distribuição de dose
 
+    *CNT6_.LDOSEM=false;
+    NBX=0;
+    NBY=0;
+    NBZ=0;
+
+	if (!strcmp(KWORD, KGRDXX)){
+		*CNT6_.LDOSEM=true;
+        IDOSE=1;
+		fprintf(IWR,"\n\n   ------------------------------------------------------------------------\n");
+		fprintf(IWR, "   >>>>>>  Dose distribution in a box.\n");
+		PCH = strtok(BUFFER, " ");
+		XLD = atof(PCH);
+		PCH = strtok(NULL, " ");
+		XUD = atof(PCH);
+		PCH = strtok(NULL, " ");
+		NBX = atoi(PCH);
+
+		if (XLD > XUD){
+			SAVE=XLD;
+            XLD=XUD;
+            XUD=SAVE;
+		}
+		if (XUD < XLD+1.0e-6){
+			fprintf(IWR, "%s %s", KWORD,BUFFER);
+			fprintf(IWR," XU must be greater than XL+1.0E-6.\n");
+			printf("XU must be greater than XL+1.0E-6.\n");
+		}
+		NBX=max(1,NBX);
+		fprintf(IWR, "   XL = %.6E  cm,  XU = %.6E cm,  NDBX = %.3d\n", XLD,XUD,NBX);
+L70:;
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L70;
+	}
+
+
+	if (!strcmp(KWORD, KGRDYY)){
+		PCH = strtok(BUFFER, " ");
+		YLD = atof(PCH);
+		PCH = strtok(NULL, " ");
+		YUD = atof(PCH);
+		PCH = strtok(NULL, " ");
+		NBY = atoi(PCH);
+
+		if (YLD > YUD){
+			SAVE=YLD;
+            YLD=YUD;
+            YUD=SAVE;
+		}
+		if (NBX < 1){
+			fprintf(IWR, "%s %s", KWORD,BUFFER);
+			fprintf(IWR," Incorrect keyword.\n");
+			printf("Incorect keyword.\n");
+			exit(0);
+		}
+		if (YUD < YLD+1.0e-6){
+			fprintf(IWR, "%s %s", KWORD,BUFFER);
+			fprintf(IWR," YU must be greater than YL+1.0E-6.\n");
+			printf("YU must be greater than YL+1.0E-6.\n");
+			exit(0);
+		}
+		NBY=max(1,NBY);
+		fprintf(IWR, "   YL = %.6E  cm,  YU = %.6E cm,  NDBY = %.3d\n", YLD,YUD,NBY);
+L71:;
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L71;
+	}else{
+		if (NBX > 0){
+			fprintf(IWR, "%s %s", KWORD,BUFFER);
+			fprintf(IWR," Incorrect keyword.\n");
+			printf("Incorect keyword.\n");
+			exit(0);
+		}
+	}
+
+	if (!strcmp(KWORD, KGRDZZ)){
+		PCH = strtok(BUFFER, " ");
+		ZLD = atof(PCH);
+		PCH = strtok(NULL, " ");
+		ZUD = atof(PCH);
+		PCH = strtok(NULL, " ");
+		NBZ = atoi(PCH);
+
+		if (ZLD > ZUD){
+			SAVE=ZLD;
+            ZLD=ZUD;
+            ZUD=SAVE;
+		}
+		if (ZUD < ZLD+1.0e-6){
+			fprintf(IWR, "%s %s", KWORD,BUFFER);
+			fprintf(IWR," ZU must be greater than ZL+1.0E-6.\n");
+			printf("ZU must be greater than ZL+1.0E-6.\n");
+			exit(0);
+		}
+		NBZ=max(1,NBZ);
+		if (NBX > 0){
+			fprintf(IWR, "   ZL = %.6E  cm,  ZU = %.6E ' cm,  NDBZ = %.4d\n", ZLD,ZUD,NBZ);
+		}else{
+			*CNT6_.LDOSEM=true;
+         	IDOSE=2;
+			fprintf(IWR,"   ------------------------------------------------------------------------\n");
+			fprintf(IWR, "   >>>>>>  Dose distribution in a cylinder.\n");
+			fprintf(IWR, "   ZL = %.6E  cm,  ZU = %.6E cm,  NDBZ = %.3d\n", ZLD,ZUD,NBZ);
+		}
+L72:;
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L72;
+	}else{
+		if (NBX > 0){
+			fprintf(IWR, "%s %s", KWORD,BUFFER);
+			fprintf(IWR," Unrecognized keyword.\n");
+			printf("Unrecognized keyword.\n");
+			exit(0);
+		}
+	}
+
+	if (!strcmp(KWORD, KGRDRR)){
+		PCH = strtok(BUFFER, " ");
+		XUD = atof(PCH);
+		PCH = strtok(NULL, " ");
+		NBR = atof(PCH);
+
+		if (XUD < 1.0e-6){
+			fprintf(IWR, "%s %s", KWORD,BUFFER);
+			fprintf(IWR," RU must be greater than 1.0E-6.\n");
+			printf("RU must be greater than 1.0E-6.\n");
+			exit(0);
+		}
+
+		if ((NBX > 0) ||(NBY > 0)){
+			fprintf(IWR, "%s %s", KWORD,BUFFER);
+			fprintf(IWR," Incorrect keyword.\n");
+			printf("Incorrect keyword.\n");
+			exit(0);
+		}
+
+		NBX=max(1,NBR);
+        XLD=0.0e0;
+
+		if (NBZ > 0){
+			fprintf(IWR, "   RU = %.6E cm,  NDBR = %4d\n", XUD,NBX);
+			NBY=1;
+		}else{
+			*CNT6_.LDOSEM=true;
+          	IDOSE=3;
+			fprintf(IWR,"   ------------------------------------------------------------------------\n");
+			fprintf(IWR, "   >>>>>>  Dose distribution in a sphere.\n");
+			fprintf(IWR, "   RU = %.6E cm,  NDBR = %3d\n", XUD,NBX);
+			NBY=1;
+        	NBZ=1;
+		}
+L73:;
+
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L73;
+	}
+
+	if (*CNT6_.LDOSEM)
+		dose02_(XLD,XUD,YLD,YUD,ZLD,ZUD,NBX,NBY,NBZ,IDOSE, IWR);
+
+
+	//Caracteristicas do trabalho
+
+
 
 
 
@@ -15529,8 +15776,247 @@ void endet02_(double &EMIN, double &EMAX, int &NB, char *FNSPC, int &ID, FILE *I
 
 }
 
+void dose02_(double &XL, double &XU,double &YL,double &YU,double &ZL,double &ZU, int &NBX, int &NBY, int &NBZ, int &IDOSE, FILE *IWR){
+
+	/*
+	Registra a distribuição de dose dentro da caixa de dose, grava e carrega
+ 	despeja arquivos, acumula arquivos de despejo de diferentes execuções e grava
+	Resultados .
+	*/
+
+	static const int NDXM = 201;
+	static const int NDYM = 201;
+	static const int NDZM = 201;
+
+	double FSAFE = 1.000000001e0;
+	double PI = 3.1415926535897932e0;
+
+	int NCS = 5;
+	double RNCS=1.0e0/5.0e0;
+
+	double DX, DY, DZ, VOXEL, FNORM, DDX, DDY, DDZ, UO, VO, DENT, DR, DDR, TMASS,VOLUM;
+
+	//Inicialização: massas médias de voxel, contadores de dose.
+
+	if ((IDOSE < 1) || (IDOSE > 3)){
+		fprintf(IWR, "(IDOSE = %6d\n", IDOSE);
+		fprintf(IWR, "IDOSE should be 1, 2, or 3.\n");
+		printf("SDOSE: IDOSE should be 1, 2, or 3.\n");
+		exit(0);
+	}
+
+	*CDOSE1_.KDOSE=IDOSE;
+
+	if ((NBX < 0) || (NBX > NDXM)){
+		fprintf(IWR, "NBX = %6d\n", NBX);
+		fprintf(IWR, "NBX must be .GT.0. and .LT. %4d\n", NDXM);
+		fprintf(IWR, "Increase the value of the parameter NDXM\n");
+		printf("SDOSE: NBX must be .GT.0. and .LE.NDXM");
+		exit(0);
+	}
+
+	if ((NBY < 0) || (NBY > NDYM)){
+		fprintf(IWR, "NBY = %6d\n", NBY);
+		fprintf(IWR, "NBY must be .GT.0. and .LT. %4d\n", NDYM);
+		fprintf(IWR, "Increase the value of the parameter NDYM\n");
+		printf("SDOSE: NBY must be .GT.0. and .LE.NDYM");
+		exit(0);
+	}
+
+	if ((NBZ < 0) || (NBZ > NDZM)){
+		fprintf(IWR, "NBZ = %6d\n", NBZ);
+		fprintf(IWR, "NBZ must be .GT.0. and .LT. %4d\n", NDZM);
+		fprintf(IWR, "Increase the value of the parameter NDZM\n");
+		printf("SDOSE: NBZ must be .GT.0. and .LE.NDZM");
+		exit(0);
+	}
+
+	CDOSE3_.DXL[1-1]=XL;
+    CDOSE3_.DXU[1-1]=XU;
+    CDOSE3_.DXL[2-1]=YL;
+    CDOSE3_.DXU[2-1]=YU;
+    CDOSE3_.DXL[3-1]=ZL;
+    CDOSE3_.DXU[3-1]=ZU;
+
+	if (*CDOSE1_.KDOSE == 1){
+		CDOSE3_.NDB[1-1]=2*(NBX/2)+1;
+        CDOSE3_.NDB[2-1]=2*(NBY/2)+1;
+        CDOSE3_.NDB[3-1]=2*(NBZ/2)+1;
+	}else if (*CDOSE1_.KDOSE == 2){
+		CDOSE3_.DXL[1-1]=0;
+		CDOSE3_.DXL[2-1]=0.0e0;
+        CDOSE3_.DXU[2-1]=1.0e0;
+        CDOSE3_.NDB[1-1]=NBX;
+        CDOSE3_.NDB[2-1]=1;
+        CDOSE3_.NDB[3-1]=NBZ;
+	}else{
+		CDOSE3_.DXL[1-1]=0.0e0;
+        CDOSE3_.DXL[2-1]=0.0e0;
+        CDOSE3_.DXU[2-1]=1.0e0;
+        CDOSE3_.DXL[3-1]=0.0e0;
+        CDOSE3_.DXU[3-1]=1.0e0;
+        CDOSE3_.NDB[1-1]=NBX;
+        CDOSE3_.NDB[2-1]=1;
+        CDOSE3_.NDB[3-1]=1;
+	}
+
+	for (int I = 1; I <= 3; I++){
+		CDOSE3_.BDOSE[I-1]=FSAFE*(CDOSE3_.DXU[I-1]-CDOSE3_.DXL[I-1])/(CDOSE3_.NDB[I-1]);
+	}
+
+	//Contadores de Dose
+
+	for (int K = 1; K <= NDZM; K++){
+		for (int J = 1; J <= NDYM; J++){
+			for (int I =1; I <= NDXM; I++){
+				CDOSE1_.DOSE[K-1][J-1][I-1]=0.0e0;
+                CDOSE1_.DOSE2[K-1][J-1][I-1]=0.0e0;
+                CDOSE1_.DOSEP[K-1][J-1][I-1]=0.0e0;
+                CDOSE1_.LDOSE[K-1][J-1][I-1]=0;
+                CDOSE4_.VMASS[K-1][J-1][I-1]=0.0e0;
+			}
+		}
+		CDOSE2_.DDOSE[K-1]=0.0e0;
+        CDOSE2_.DDOSE2[K-1]=0.0e0;
+        CDOSE2_.DDOSEP[K-1]=0.0e0;
+        CDOSE2_.LDDOSE[K-1]=0;
+	}
+
+	//Massas de Voxels
+
+	//Dose em uma Caixa
+
+	if (*CDOSE1_.KDOSE == 1){
+		DX =CDOSE3_.BDOSE[1-1];
+		DY=CDOSE3_.BDOSE[2-1];
+		DZ=CDOSE3_.BDOSE[3-1];
+        VOXEL =DX*DY*DZ;
+        FNORM=VOXEL*pow(RNCS,3);
+        DDX=RNCS*DX; DDY=RNCS*DY; DDZ=RNCS*DZ;
+		for (int K = 1; K <= CDOSE3_.NDB[3-1]; K++){
+			for (int J = 1; J <= CDOSE3_.NDB[2-1]; J++){
+				for (int I = 1; I <= CDOSE3_.NDB[1-1]; I++){
+					UO=1.0e0;
+					VO=1.0e0;
+                	*TRACK_mod_.X=CDOSE3_.DXL[1-1]+(I-1)*DX+0.5e0*DDX;
+                	*TRACK_mod_.Y=CDOSE3_.DXL[2-1]+(J-1)*DY+0.5e0*DDY;
+               	 	*TRACK_mod_.Z=CDOSE3_.DXL[3-1]+(K-1)*DZ+0.5e0*DDZ;
+					locate2_();
+					if (*TRACK_mod_.MAT == 0)
+						DENT=0.0e0;
+					else	
+						DENT=PENELOPE_mod_.DEN[*TRACK_mod_.MAT-1];
+
+					for (int J3 = 1; J3 <= NCS; J3++){
+						for (int J2 = 1; J2 <= NCS; J2++){
+							for (int J1 = 1; J1 <= NCS-1; J1++){
+								*TRACK_mod_.U=UO;
+								*TRACK_mod_.V=0.0e0;
+								*TRACK_mod_.W=0.0e0;
+                      			*TRACK_mod_.X= *TRACK_mod_.X + DDX * *TRACK_mod_.U;
+							    locate2_();
+								if (*TRACK_mod_.MAT > 0)
+									DENT=DENT+PENELOPE_mod_.DEN[*TRACK_mod_.MAT-1];
+							}
+							UO=-UO;
+							if (J2 < NCS){
+								*TRACK_mod_.U=0.0e0;
+								*TRACK_mod_.V=VO;
+								*TRACK_mod_.W=0.0e0;
+                      			*TRACK_mod_.Y=*TRACK_mod_.Y + DDY * *TRACK_mod_.V;
+								locate2_();
+								if (*TRACK_mod_.MAT > 0)
+									DENT=DENT+PENELOPE_mod_.DEN[*TRACK_mod_.MAT-1];
+							}
+						}
+						VO=-VO;
+						if (J3 < NCS){
+							*TRACK_mod_.U=0.0e0; 
+							*TRACK_mod_.V=0.0e0; 
+							*TRACK_mod_.W=1.0e0;
+                    		*TRACK_mod_.Z=*TRACK_mod_.Z + DDZ * *TRACK_mod_.W;
+							locate2_();
+							if (*TRACK_mod_.MAT > 0)
+									DENT=DENT+PENELOPE_mod_.DEN[*TRACK_mod_.MAT-1];
+						}
+
+					}
+					CDOSE4_.VMASS[K-1][J-1][I-1]=DENT*FNORM;
+				}
+			}
+		}
+
+		for (int K = 1; K <= CDOSE3_.NDB[3-1]; K++){
+			for (int J = 1; J <= CDOSE3_.NDB[2-1]; J++){
+				for (int I = 1; I <= CDOSE3_.NDB[1-1]; I++){
+					if (CDOSE4_.VMASS[K-1][J-1][I-1] > 1.0e-35)
+						CDOSE4_.VMASS[K-1][J-1][I-1]=1.0e0/CDOSE4_.VMASS[K-1][J-1][I-1];
+					else
+						CDOSE4_.VMASS[K-1][J-1][I-1]=0.0e0;
+				}
+			}
+		}
 
 
+	} else if (*CDOSE1_.KDOSE == 2){ //Dose em um Cilindro
+		int J = 1;
+		DR=CDOSE3_.BDOSE[1-1];
+		DZ=CDOSE3_.BDOSE[3-1];
+        DDR=RNCS*DR; 
+		DDZ=RNCS*DZ;
+		*TRACK_mod_.U=1.0e0; 
+		*TRACK_mod_.V=0.0e0; 
+		*TRACK_mod_.W=0.0e0;
+		for (int K = 1; K <= CDOSE3_.NDB[3-1]; K++){
+			for (int I = 1; I <= CDOSE3_.NDB[1-1]; I++){
+				TMASS=0.0e0;
+				for (int J3 = 1; J3 <= NCS; J3++){
+					for (int J1 = 1; J1 <= NCS; J1++){
+						*TRACK_mod_.X=(I-1)*DR+((J1)-0.5e0)*DDR;
+                  		*TRACK_mod_.Y=0.0e0;
+                  		*TRACK_mod_.Z=CDOSE3_.DXL[3-1]+(K-1)*DZ+((J3)-0.5e0)*DDZ;
+					    locate2_();
+						if (*TRACK_mod_.MAT != 0){
+							VOLUM=2.0e0*PI* *TRACK_mod_.X *DDR*DDZ;
+                    		TMASS=TMASS+PENELOPE_mod_.DEN[*TRACK_mod_.MAT-1]*VOLUM;
+						}
+					}
+				}
+				CDOSE4_.VMASS[K-1][J-1][I-1]=TMASS;
+				if (CDOSE4_.VMASS[K-1][J-1][I-1] > 1.0e-35)
+					CDOSE4_.VMASS[K-1][J-1][I-1]=1.0e0/CDOSE4_.VMASS[K-1][J-1][I-1];
+				else
+					CDOSE4_.VMASS[K-1][J-1][I-1]=0.0e0;
+			}
+		}
+	}else{//Dose em uma esfera.
+		int J = 1;
+		int K = 1;
+		DR=CDOSE3_.BDOSE[1-1];
+        DDR=RNCS*DR;
+        *TRACK_mod_.U=0.0e0; 
+		*TRACK_mod_.V=0.0e0; 
+		*TRACK_mod_.W=1.0e0;
+		for (int I = 1; I <= CDOSE3_.NDB[1-1]; I++){
+			TMASS=0.0e0;
+			for (int J1 = 1; J1 <= NCS; J++){
+				*TRACK_mod_.X=(I-1)*DR+((J1)-0.5e0)*DDR;
+                *TRACK_mod_.Y=0.0e0;
+                *TRACK_mod_.Z=0.0e0;
+			    locate2_();
+				if (*TRACK_mod_.MAT != 0){
+					VOLUM=3.0e0*pow(*TRACK_mod_.X,2)+0.25e0*pow(DDR,2);
+                    TMASS=TMASS+PENELOPE_mod_.DEN[*TRACK_mod_.MAT-1]*VOLUM;
+				}
+			}
+			CDOSE4_.VMASS[K-1][J-1][I-1]=TMASS*(4.0e0*PI/3.0e0)*DDR;
+			if (CDOSE4_.VMASS[K-1][J-1][I-1] > 1.0e-35)
+					CDOSE4_.VMASS[K-1][J-1][I-1]=1.0e0/CDOSE4_.VMASS[K-1][J-1][I-1];
+				else
+					CDOSE4_.VMASS[K-1][J-1][I-1]=0.0e0;
+		}
+	} 
+}
 
 
 
