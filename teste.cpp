@@ -606,6 +606,12 @@ typedef struct{
 
 }CIMDET;
 
+typedef struct{
+	double *EL, *EU, *BSE, *RBSE, *EDEP, *EDEP2, (*DET)[NIDM];
+    int  *NE, *NID;
+	bool *LLE;
+}CENDET;
+
 
 
 
@@ -700,6 +706,7 @@ void imprimirKDGHT(FILE* IW, int &KB);
    CGCONE CGCONE_;
    CENANG CENANG_;
    CIMDET CIMDET_;
+   CENDET CENDET_;
 
 
 extern "C" {
@@ -900,6 +907,11 @@ void transfcimdet_(double *EL, double *EU, double *BSE, double *RBSE,
 	bool *LLE, bool *LLAGE,
     int *NAGE, int *NID);
 
+void transfcendet_(double *EL, double *EU, double *BSE, double *RBSE, double *EDEP, double *EDEP2, double (*DET)[NIDM],
+    int  *NE, int *NID, bool *LLE);
+
+
+
 
 
 
@@ -1068,6 +1080,7 @@ void enang02_(double &EMIN, double &EMAX, int &NBE, int &NBTH, int &NBPH, FILE *
 
 void imdet02_(double &EMIN, double &EMAX, int &NBE, double &AGEMIN, double &AGEMAX, int &NBAGE, int &ICUT, char *FNSPC, char *FNFLU, char *FNAGE, int &ID, FILE *IWR);
 
+void endet02_(double &EMIN, double &EMAX, int &NB, char *FNSPC, int &ID, FILE *IWR);
 }
 
 
@@ -2164,7 +2177,23 @@ void transfcimdet_(double *EL, double *EU, double *BSE, double *RBSE,
 
 	}
 
-  
+void transfcendet_(double *EL, double *EU, double *BSE, double *RBSE, double *EDEP, double *EDEP2, double (*DET)[NIDM],
+    int  *NE, int *NID, bool *LLE){
+	CENDET_.EL = EL;
+	CENDET_.EU = EU;
+	CENDET_.BSE = BSE;
+	CENDET_.RBSE = RBSE;
+	CENDET_.EDEP = EDEP;
+	CENDET_.EDEP2 = EDEP2;
+	CENDET_.DET = DET;
+	CENDET_.NE = NE;
+	CENDET_.NID = NID;
+	CENDET_.LLE = LLE;
+}  
+
+
+
+
       
 void fsurf2_(int& KS, double& A, double& B, double& C){
 	
@@ -13699,9 +13728,9 @@ void pmrdr2_(){
 	static const int NSEM = 1000;
 	static const int NB = 5000;
 
-	double SALPHA, SPHI, STHETA, THETLD,THETUD, PHILD,PHIUD, EPMAXR, EAB1, EAB2, EAB3, EMIN, EMAX,EDIL,EDIU, AGEU, AGEL;
+	double SALPHA, SPHI, STHETA, THETLD,THETUD, PHILD,PHIUD, EPMAXR, EAB1, EAB2, EAB3, EMIN, EMAX,EDIL,EDIU, AGEU, AGEL, EDEL, EDEU;
 
-	int KBSMAX, ISEC, KB, ISOURC, NMATR, NPINP, IHEAD, IP, NMATG, NBE, NBTH, NBPH, NDBOD,NDICH, NAGE,ITST, KPARD;
+	int KBSMAX, ISEC, KB, ISOURC, NMATR, NPINP, IHEAD, IP, NMATG, NBE, NBTH, NBPH, NDBOD,NDICH, NAGE,ITST, KPARD, NDECH;
 
 	FILE* IWR = fopen("penmain2.dat", "w");
 	if (IWR == NULL){
@@ -15037,6 +15066,139 @@ L68:;
 
 	//Detectores de deposição de energia
 
+	for (int KB = 1; KB <= *PENGEOM_mod_.NBODY; KB++){
+		CNT5_.KBDE[KB-1]=0;
+	}
+
+	NDBOD=0;
+    *CNT5_.NED=0;
+L43:;
+	if (!strcmp(KWORD, KWEDET)){
+		if (*CNT5_.NED > 0){
+			if (NDBOD == 0){
+				fprintf(IWR, "This detector has no active bodies.\n");
+				printf("This detector has no active bodies.\n");
+				exit(0);
+			}
+		}
+		*CNT5_.NED=*CNT5_.NED+1;
+        NDBOD=0;
+		fprintf(IWR,"   ---------------------------------------------------------------------------\n");
+		fprintf(IWR, "   '>>>>>>  Energy-deposition detector # %2d", *CNT5_.NED);
+		PCH = strtok(BUFFER, " ");
+		EDEL = atof(PCH);
+		PCH = strtok(NULL, " ");
+		EDEU = atof(PCH);
+		PCH = strtok(NULL, " ");
+		NDECH = atoi(PCH);
+
+		if (NDECH == 0){
+			fprintf(IWR, "Incorrect number of energy bins.\n");
+			printf("Incorrect number of energy bins.\n");
+			exit(0);
+		}
+
+		if (EDEL < 1.0e0)
+			EDEL=0.0e0;
+		if (EDEU < 1.0e0)
+			EDEU=*CSOUR1_.EPMAX;
+
+		if (NDECH < 0){
+			EDEL=max(EDEL,1.0e0);
+			fprintf(IWR, "   'Energy window = (%.5E, %.5E) seconds",EDEL,EDEU );
+			fprintf(IWR, "   Number of age bins = %.4d (logarithmic scale)", abs(NDECH));
+		}else{
+			fprintf(IWR, "   'Energy window = (%.5E, %.5E) seconds",EDEL,EDEU );
+			fprintf(IWR, "   Number of age bins = %.4d (linear scale)", NDECH);
+		}
+
+		if (EDEU < EDEL+1.0e0){
+			fprintf(IWR, "Incorrect energy limits.\n");
+			printf("Incorrect energy limits.\n");
+			exit(0);
+		}
+
+L44:;
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L44;
+		if (!strcmp(KWORD, KWESPC)){
+			PCH = strtok(BUFFER, " ");
+			strcpy(SPCDEO, PCH);
+			fprintf(IWR,"Output spectrum: %s\n",SPCDEO );
+L45:;
+			fgets(LINHA, sizeof(LINHA), IRD);
+			extrairString(KWORD, LINHA, 0, 6);
+			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			if (!strcmp(KWORD, KWCOMM))
+				goto L45;
+		}else{
+			sprintf(BUF2, "%d", 1000 + *CNT5_.NED);
+			sprintf(SPCDEO, "spc-impdet-%c%c.dat", BUF2[3], BUF2[4] );
+			fprintf(IWR, "   Output energy spectrum: %s\n", SPCDEO);
+		}
+
+L46:;
+		if (!strcmp(KWORD, KWEBOD)){
+			PCH = strtok(BUFFER, " ");
+			KB = atoi(PCH);
+			if ((KB < 1) || (KB > *PENGEOM_mod_.NBODY)){
+				fprintf(IWR, "%s %s\n", KWORD, BUFFER);
+				fprintf(IWR, "Incorrect body label\n");
+				printf("Incorrect body label\n");
+				exit(0);
+			}
+			if (CNT5_.KBDE[KB-1] != 0){
+				fprintf(IWR, "%s %s\n", KWORD, BUFFER);
+				fprintf(IWR, "A body cannot be part of two detectors.\n");
+				printf("A body cannot be part of two detectors.\n");
+				exit(0);
+			}
+
+			if (PENGEOM_mod_.MATER[KB-1] == 0){
+				fprintf(IWR, "%s %s\n", KWORD, BUFFER);
+				fprintf(IWR, "A void body cannot be part of a detector.\n");
+				printf("A void body cannot be part of a detector.\n");
+				exit(0);
+			}
+			fprintf(IWR, "Active body = %4d", KB);
+			if ((CFORCI_.LFORCE[1-1][KB-1]) || (CFORCI_.LFORCE[2-1][KB-1]) || (CFORCI_.LFORCE[3-1][KB-1])){
+				fprintf(IWR, "   #  WARNING: Spectrum may be strongly  biased\n");
+				fprintf(IWR, "              when interaction forcing is used!\n");
+			}
+
+			CNT5_.KBDE[KB-1]=*CNT5_.NED;
+        	NDBOD=NDBOD+1;
+		}
+L47:;
+		fgets(LINHA, sizeof(LINHA), IRD);
+		extrairString(KWORD, LINHA, 0, 6);
+		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		if (!strcmp(KWORD, KWCOMM))
+			goto L47;
+		if (!strcmp(KWORD, KWEBOD))
+			goto L46;
+		if (!strcmp(KWORD, KWEDET)){
+			endet02_(EDEL,EDEU,NDECH,SPCDEO,*CNT5_.NED, IWR);
+			goto L43;
+		}
+	}
+
+	if (*CNT5_.NED > 0){
+		if (NDBOD == 0){
+			fprintf(IWR, "This detector has no active bodies.\n");
+			printf("This detector has no active bodies.\n");
+			exit(0);
+		}
+		endet02_(EDEL,EDEU,NDECH,SPCDEO,*CNT5_.NED, IWR);
+	}
+
+	//Distribuição de dose
+
+
+
 
 
 
@@ -15172,8 +15334,6 @@ void enang02_(double &EMIN, double &EMAX, int &NBE, int &NBTH, int &NBPH, FILE *
 	}
 }
 
-
-
 void imdet02_(double &EMIN, double &EMAX, int &NBE, double &AGEMIN, double &AGEMAX, int &NBAGE, int &ICUT, char *FNSPC, char *FNFLU, char *FNAGE, int &ID, FILE *IWR){
 
 	/*
@@ -15306,7 +15466,68 @@ void imdet02_(double &EMIN, double &EMAX, int &NBE, double &AGEMIN, double &AGEM
 
 }
 
+void endet02_(double &EMIN, double &EMAX, int &NB, char *FNSPC, int &ID, FILE *IWR){
 
+	/*Registra espectros de detectores de deposição de energia, grava e carrega
+	 despeja arquivos, acumula arquivos de despejo de diferentes execuções e grava
+	Resultados .*/
+
+	double FSAFE=1.000000001e0;
+
+	static const int NIDM=25;
+	static const int NBEM=1000;
+	char SPCDEO[NDIM][20];
+
+
+	int NIDS = 0;
+
+	if (ID <= NIDS){
+		fprintf(IWR, " SENDET: Detector already defined.\n");
+		printf("SENDET: Detector already defined.\n");
+		exit(0);
+	}
+
+	NIDS=ID;
+    *CENDET_.NID=ID;
+
+	if (*CENDET_.NID > NIDM){
+		fprintf(IWR, "   NID = %4d\n",*CENDET_.NID );
+		fprintf(IWR, "SENDET: Too many detectors.\n");
+		printf("SENDET: Too many detectors.\n");
+		exit(0);
+	}
+
+	strcpy(SPCDEO[ID-1], FNSPC);
+
+	if (abs(NB) > NBEM){
+		fprintf(IWR, "SENDET: NB is too large.\n");
+		fprintf(IWR, "SENDET: Set the parameter NBEM equal to %d\n",abs(NB) );
+		printf("SENDET: NB is too large.\n");
+		exit(0);
+	}
+
+	if (NB < 0){
+		CENDET_.LLE[ID-1]=1;
+        CENDET_.EL[ID-1]=log(EMIN);
+        CENDET_.EU[ID-1]=log(EMAX);
+        CENDET_.NE[ID-1]=-NB;
+	}else{
+		CENDET_.LLE[ID-1]=0;
+        CENDET_.EL[ID-1]=EMIN;
+        CENDET_.EU[ID-1]=EMAX;
+        CENDET_.NE[ID-1]=NB;
+	}
+
+	CENDET_.BSE[ID-1]=FSAFE*(CENDET_.EU[ID-1]-CENDET_.EL[ID-1])/(CENDET_.NE[ID-1]);
+    CENDET_.RBSE[ID-1]=1.0e0/CENDET_.BSE[ID-1];
+    CENDET_.EDEP[ID-1]=0.0e0;
+    CENDET_.EDEP2[ID-1]=0.0e0;
+
+	for (int J = 1; J <= NBEM; J++){
+		CENDET_.DET[J-1][ID-1]=0.0e0;
+	}
+
+}
 
 
 
