@@ -6,6 +6,11 @@
 #include <math.h>
 #include <algorithm>
 #include <stdint.h>
+//#include <chrono>
+#include <time.h>
+#include <iostream>
+#include <fstream>
+#include <string>
 
 using namespace std;
  //***
@@ -64,6 +69,10 @@ static const int NDZM=201;
 
 char LINHA[200];
 char APOIO[200];
+
+char SPCDIO[NDIM][20];
+char SPCFLO[NDIM][20];
+char SPCAGE[NDIM][20];
 
 
 
@@ -1122,6 +1131,10 @@ void endet02_(double &EMIN, double &EMAX, int &NB, char *FNSPC, int &ID, FILE *I
 void dose02_(double &XL, double &XU,double &YL,double &YU,double &ZL,double &ZU, int &NBX, int &NBY, int &NBZ, int &IDOSE, FILE *IWR);
 
 void rand02_(int N);
+
+void enangr2_(ifstream &IRD, FILE *IWDUMP);
+
+void imdetr2_(ifstream &IRD, FILE *IWDUMP);
 }
 
 
@@ -6604,7 +6617,7 @@ void pematr2_(int *M, FILE *IRD, FILE *IWR, int *INFO){
 		exit(0);
 	}
 	
-	char LNAME[] = " PENELOPE (v. 2014)  Material data file ...............";
+	char LNAME[58] = " PENELOPE (v. 2014)  Material data file ...............";
 	
 	fgets(LINHA, sizeof(LINHA), IRD);
 	
@@ -13800,9 +13813,11 @@ void pmrdr2_(){
 	static const int NSEM = 1000;
 	static const int NB = 5000;
 
-	double SALPHA, SPHI, STHETA, THETLD,THETUD, PHILD,PHIUD, EPMAXR, EAB1, EAB2, EAB3, EMIN, EMAX,EDIL,EDIU, AGEU, AGEL, EDEL, EDEU, XLD, XUD, YLD, YUD, ZLD, ZUD, SAVE,TIMEA;
+	double SALPHA, SPHI, STHETA, THETLD,THETUD, PHILD,PHIUD, EPMAXR, EAB1, EAB2, EAB3, EMIN, EMAX,EDIL,EDIU, AGEU, AGEL, EDEL, EDEU, XLD, XUD, YLD, YUD, ZLD, ZUD, SAVE,TIMEA, SHNA, CPUTA;
 
 	int KBSMAX, ISEC, KB, ISOURC, NMATR, NPINP, IHEAD, IP, NMATG, NBE, NBTH, NBPH, NDBOD,NDICH, NAGE,ITST, KPARD, NDECH, NBX, NBY, NBZ, IDOSE, NBR, IRESUM;
+
+	clock_t start, end;
 
 	FILE* IWR = fopen("penmain2.dat", "w");
 	if (IWR == NULL){
@@ -13851,6 +13866,11 @@ void pmrdr2_(){
 	}
 
 	//Inicialização do contador de tempo.
+//	auto begin = std::chrono::high_resolution_clock::now();
+	start = clock();
+
+
+
 
 	//criar a chamada de uma funcao time para contar o tempo
 
@@ -13864,10 +13884,19 @@ void pmrdr2_(){
 
 	fprintf(IWR, "   Date and time: \n");
 
+
+
 	fgets(LINHA, sizeof(LINHA), IRD);
+
+    extrairString(KWORD, LINHA, 0, 6);
+
+	PCH = strtok(LINHA, " ");
+	PCH = strtok(NULL, " ");
+	strcpy(TITLE, PCH);
 	
-	extrairString(KWORD, LINHA, 0, 6);
-	extrairString(TITLE, LINHA, 7, 65);
+
+//	extrairString(TITLE, LINHA, 7, 65);
+	
 	if (!strcmp(KWORD, KWTITL)){
 		fprintf(IWR, "\n   %s\n", TITLE);
 	} else{
@@ -15541,21 +15570,376 @@ L78:;
 		TIMEA=100.0e0;
 	fprintf(IWR, "   Computation time available = %.6E sec\n", TIMEA);
 
+//	auto end = std::chrono::high_resolution_clock::now();
+  //  auto TSECIN = std::chrono::duration_cast<std::chrono::seconds>(end - begin);
 
-	double TSECIN;
+	//double TSECIN;
 	//timer2_(TSECIN); analisar como chamar uma função para controlar o tempo de execucao
+
+//	*CNTRL_.TSECA=TIMEA+TSECIN.count();
+  //  *CNTRL_.TSECAD=TSECIN.count();
+
+	end = clock();
+	double tempo = (double)(end - start) / CLOCKS_PER_SEC;
+	double TSECIN = tempo;
 
 	*CNTRL_.TSECA=TIMEA+TSECIN;
     *CNTRL_.TSECAD=TSECIN;
+
+	//printf("TEMPO DE EXECUCAO: %f\n",*CNTRL_.TSECAD );
+	
 
 	fprintf(IWR, "\n   -----------------------------------------------------------------------------\n");
 
 	//Se 'RESUME' estiver ativo, leia o gerado anteriormente
 
 
+	SHNA=0.0e0;
+    CPUTA=0.0e0;
+
+    *CNTRL_.N=0;
+
+    *CNT4_.RLAST=0.0e0;
+    *CNT4_.RWRITE=0.0e0;
+
+	char TITLE2[100];
+	char LINHADUMP[50];
+	double aux;
+	string line;
+	
+
+
+//	printf("PFILER: %s\n", PFILER);
+	if (IRESUM == 1){
+		FILE* IRDUMP = fopen("dump2.dmp", "r");
+		if (IRDUMP == NULL){
+			printf("Não foi possível abrir o arquivo %s\n", PFILER);
+			exit(0);
+		}
+
+		FILE* IWDUMP = fopen("iwdump.dmp", "w");
+		if (IWDUMP == NULL){
+			printf("Não foi possível abrir o arquivo %s\n", PFILER);
+			exit(0);
+		}
+
+		ifstream inFILE;
+		inFILE.open("dump2.dmp");
+	    string line;
+
+		getline(inFILE, line);
+
+	    char *sArray = (char *) malloc((line.length()+1) * sizeof(char));
+		
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		SHNA = atof(PCH);
+		PCH = strtok(NULL, " ");
+        CPUTA = atof(PCH);
+		fprintf(IWDUMP, "	%f		%f\n", SHNA, CPUTA);
+
+        getline(inFILE, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		strcpy(TITLE2, PCH);
+		fprintf(IWDUMP, "%s\n", TITLE2);
+		if (strcmp(TITLE2, TITLE)){
+			fprintf(IWR, "The dump file is corrupted (the TITLE does not match).\n");
+			printf("The dump file is corrupted (the TITLE does not match).\n");
+			exit(0);
+		}
+
+		getline(inFILE, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		*RSEED_.ISEED1 = atoi(PCH);
+		PCH = strtok(NULL, " ");
+		*RSEED_.ISEED1 = atoi(PCH);
+		fprintf(IWDUMP, "	%d		%d\n", *RSEED_.ISEED1, *RSEED_.ISEED2);
+
+		getline(inFILE, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		*CSOUR4_.NPSN = atoi(PCH);
+		PCH = strtok(NULL, " ");
+		*CSOUR4_.RLREAD = atof(PCH);
+		fprintf(IWDUMP, "	%d		%f\n", *CSOUR4_.NPSN , *CSOUR4_.RLREAD);
+
+		getline(inFILE, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		*CSOUR0_.KPARP = atoi(PCH);
+		fprintf(IWDUMP, "	%d\n", *CSOUR0_.KPARP);
+
+		if (*CSOUR0_.KPARP == 0){
+			getline(inFILE, line);
+			sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+			strcpy(sArray, line.c_str());
+			PCH = strtok(sArray, " ");
+			*CNT3_.NSDE = atoi(PCH);
+			PCH = strtok(NULL, " ");
+			*CNT3_.DSDE = atof(PCH);
+			PCH = strtok(NULL, " ");
+			*CNT3_.RDSDE = atof(PCH);
+			fprintf(IWDUMP, "	%d		%.10f		%.10f\n", *CNT3_.NSDE, *CNT3_.DSDE,*CNT3_.RDSDE );
+
+
+			getline(inFILE, line);
+			sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+			strcpy(sArray, line.c_str());
+			PCH = strtok(sArray, " ");
+			for  (int I = 1; I <= *CNT3_.NSDE; I++){
+				for (int K = 1; K <= 3; K++){
+					CNT3_.SEDS[I-1][K-1] = atof(PCH);
+					fprintf(IWDUMP, " %.10f		", CNT3_.SEDS[I-1][K-1] );
+					PCH = strtok(NULL, " ");
+				}
+			}
+			fprintf(IWDUMP, "\n");
+
+			getline(inFILE, line);
+			sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+			strcpy(sArray, line.c_str());
+			PCH = strtok(sArray, " ");
+			for  (int I = 1; I <= *CNT3_.NSDE; I++){
+				for (int K = 1; K <= 3; K++){
+					CNT3_.SEDS2[I-1][K-1] = atof(PCH);
+					fprintf(IWDUMP, " %.10f		", CNT3_.SEDS2[I-1][K-1] );
+					PCH = strtok(NULL, " ");
+				}
+			}
+			fprintf(IWDUMP, "\n");
+		} else{
+			getline(inFILE, line);
+			sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+			strcpy(sArray, line.c_str());
+			PCH = strtok(sArray, " ");
+			*CNT2_.NSEB = atoi(PCH);
+			fprintf(IWDUMP, "	%d\n", *CNT2_.NSEB);
+
+			getline(inFILE, line);
+			sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+			strcpy(sArray, line.c_str());
+			PCH = strtok(sArray, " ");
+			for (int I = 1; I <= *CNT2_.NSEB+1; I++){
+				CSOUR2_.ESRC[I-1] = atof(PCH);
+				fprintf(IWDUMP, " %.10f		",  CSOUR2_.ESRC[I-1]);
+				PCH = strtok(NULL, " ");
+			}
+			fprintf(IWDUMP, "\n");
+
+			getline(inFILE, line);
+			sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+			strcpy(sArray, line.c_str());
+			PCH = strtok(sArray, " ");
+			for (int I = 1; I <= *CNT2_.NSEB+1; I++){
+				CSOUR2_.PSRC[I-1] = atof(PCH);
+				fprintf(IWDUMP, " %.10E		",  CSOUR2_.PSRC[I-1]);
+				PCH = strtok(NULL, " ");
+			}
+			fprintf(IWDUMP, "\n");
+
+			getline(inFILE, line);
+			sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+			strcpy(sArray, line.c_str());
+			PCH = strtok(sArray, " ");
+			for (int I = 1; I <= *CNT2_.NSEB+1; I++){
+				CNT2_.SHIST[I-1] = atof(PCH);
+				fprintf(IWDUMP, " %.10f		",  CNT2_.SHIST[I-1]);
+				PCH = strtok(NULL, " ");
+			}
+			fprintf(IWDUMP, "\n");
+		}
+
+		getline(inFILE, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		for (int I = 1; I <= 3; I++){
+			CNT0_.PRIM[I-1] = atof(PCH);
+			fprintf(IWDUMP, " %.10f		",  CNT0_.PRIM[I-1]);
+			PCH = strtok(NULL, " ");
+		}
+		fprintf(IWDUMP, "\n");
+
+		getline(inFILE, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		for (int I = 1; I <= 3; I++){
+			CNT0_.PRIM2[I-1] = atof(PCH);
+			fprintf(IWDUMP, " %.10f		",  CNT0_.PRIM2[I-1]);
+			PCH = strtok(NULL, " ");
+		}
+		fprintf(IWDUMP, "\n");
+
+		getline(inFILE, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		for (int I = 1; I <= 3; I++){
+			for (int K = 1; K <= 3; K++){
+				CNT0_.SEC[I-1][K-1] = atof(PCH);
+				fprintf(IWDUMP, " %.10f		",  CNT0_.SEC[I-1][K-1]);
+				PCH = strtok(NULL, " ");
+			}
+		}
+		fprintf(IWDUMP, "\n");
+
+		getline(inFILE, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		for (int I = 1; I <= 3; I++){
+			for (int K = 1; K <= 3; K++){
+				CNT0_.SEC2[I-1][K-1] = atof(PCH);
+				fprintf(IWDUMP, " %.10f		",  CNT0_.SEC2[I-1][K-1]);
+				PCH = strtok(NULL, " ");
+			}
+		}
+		fprintf(IWDUMP, "\n");
+
+		getline(inFILE, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		for (int I = 1; I <= 2; I++){
+			CNT0_.AVW[I-1] = atof(PCH);
+			fprintf(IWDUMP, " %.10f		",  CNT0_.AVW[I-1]);
+			PCH = strtok(NULL, " ");
+		}
+		fprintf(IWDUMP, "\n");
+
+		getline(inFILE, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		for (int I = 1; I <= 2; I++){
+			CNT0_.AVW2[I-1] = atof(PCH);
+			fprintf(IWDUMP, " %.10f		",  CNT0_.AVW2[I-1]);
+			PCH = strtok(NULL, " ");
+		}
+		fprintf(IWDUMP, "\n");
+
+		getline(inFILE, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		for (int I = 1; I <= 2; I++){
+			CNT0_.AVA[I-1] = atof(PCH);
+			fprintf(IWDUMP, " %.10f		",  CNT0_.AVA[I-1]);
+			PCH = strtok(NULL, " ");
+		}
+		fprintf(IWDUMP, "\n");
+
+		getline(inFILE, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		for (int I = 1; I <= 2; I++){
+			CNT0_.AVA2[I-1] = atof(PCH);
+			fprintf(IWDUMP, " %.10f		",  CNT0_.AVA2[I-1]);
+			PCH = strtok(NULL, " ");
+		}
+		fprintf(IWDUMP, "\n");
+
+		getline(inFILE, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		for (int I = 1; I <= 2; I++){
+			CNT0_.AVE[I-1] = atof(PCH);
+			fprintf(IWDUMP, " %.10f		",  CNT0_.AVE[I-1]);
+			PCH = strtok(NULL, " ");
+		}
+		fprintf(IWDUMP, "\n");
+
+		getline(inFILE, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		for (int I = 1; I <= 2; I++){
+			CNT0_.AVE2[I-1] = atof(PCH);
+			fprintf(IWDUMP, " %.10f		",  CNT0_.AVE2[I-1]);
+			PCH = strtok(NULL, " ");
+		}
+		fprintf(IWDUMP, "\n");
+
+		getline(inFILE, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		*PENGEOM_mod_.NBODY = atoi(PCH);
+		fprintf(IWDUMP, "		 %d\n",  *PENGEOM_mod_.NBODY);
+
+		getline(inFILE, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		for (int I = 1; I <= *PENGEOM_mod_.NBODY; I++){
+			CNT1_.TDEBO[I-1] = atof(PCH);
+			fprintf(IWDUMP, " %.10f		",  CNT1_.TDEBO[I-1]);
+			PCH = strtok(NULL, " ");
+		}
+		fprintf(IWDUMP, "\n");
+
+		getline(inFILE, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		for (int I = 1; I <= *PENGEOM_mod_.NBODY; I++){
+			CNT1_.TDEBO2[I-1] = atof(PCH);
+			fprintf(IWDUMP, " %.10f		",  CNT1_.TDEBO2[I-1]);
+			PCH = strtok(NULL, " ");
+		}
+		fprintf(IWDUMP, "\n");
+
+		enangr2_(inFILE, IWDUMP); //Energia e distribuições angulares
+
+		getline(inFILE, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		*CNT4_.NID = atoi(PCH);
+		PCH = strtok(NULL, " ");
+		*CNT5_.NED = atoi(PCH);
+		PCH = strtok(NULL, " ");
+		*CNT6_.LDOSEM = atoi(PCH);
+		fprintf(IWDUMP, "		 %d			%d			%d\n",  *CNT4_.NID, *CNT5_.NED ,*CNT6_.LDOSEM );
+
+		if (*CNT4_.NID > 0){
+			getline(inFILE, line);
+			sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+			strcpy(sArray, line.c_str());
+			PCH = strtok(sArray, " ");
+			*CNT4_.RLAST = atof(PCH);
+			PCH = strtok(NULL, " ");
+			*CNT4_.RWRITE = atof(PCH);
+			imdetr2_(inFILE, IWDUMP); //Detectores de Impacto
+		}
 
 
 
+
+
+	inFILE.close();
+
+	fclose(IWDUMP);
+	fclose(IRDUMP);
+
+	}
+
+
+
+
+
+
+
+	
 
 	printf("\nFIM PMRDR2\n");
 	exit(0);
@@ -15696,9 +16080,7 @@ void imdet02_(double &EMIN, double &EMAX, int &NBE, double &AGEMIN, double &AGEM
 
 	static const int NIDM=25;
 	static const int NBEM=1000;
-	char SPCDIO[NDIM][20];
-	char SPCFLO[NDIM][20];
-	char SPCAGE[NDIM][20];
+
 
 	int NIDS = 0;
 
@@ -17163,9 +17545,389 @@ void rand02_(int N){
 	  }
 }
 	  
+void enangr2_(ifstream &IRD, FILE *IWDUMP){
+
+	string line;
+	char *PCH;
+
+	getline(IRD, line);
+	char *sArray = (char *) malloc((line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	*CENANG_.NE = atoi(PCH);
+	PCH = strtok(NULL, " ");
+	*CENANG_.EL = atof(PCH);
+	PCH = strtok(NULL, " ");
+	*CENANG_.EU = atof(PCH);
+	PCH = strtok(NULL, " ");
+	*CENANG_.BSE = atof(PCH);
+	PCH = strtok(NULL, " ");
+	*CENANG_.RBSE = atof(PCH);
+	PCH = strtok(NULL, " ");
+	*CENANG_.LLE = atoi(PCH);
+	fprintf(IWDUMP, "		 %d		%.10f		%.10f		%.10f		%.10E		%d\n", *CENANG_.NE, *CENANG_.EL, *CENANG_.EU, *CENANG_.BSE, *CENANG_.RBSE, *CENANG_.LLE);
+
+	getline(IRD, line);
+	sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	for (int K = 1; K <= *CENANG_.NE; K++){
+		for (int J = 1; J <= 2; J ++){
+			for (int I = 1; I <= 3; I++){
+				CENANG_.PDE[I-1][J-1][K-1] = atof(PCH);
+				fprintf(IWDUMP, "		%f", CENANG_.PDE[I-1][J-1][K-1]);
+				PCH = strtok(NULL, " ");
+			}
+		}
+	}
+	fprintf(IWDUMP, "\n");
+
+	getline(IRD, line);
+	sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	for (int K = 1; K <= *CENANG_.NE; K++){
+		for (int J = 1; J <= 2; J ++){
+			for (int I = 1; I <= 3; I++){
+				CENANG_.PDE2[I-1][J-1][K-1] = atof(PCH);
+				fprintf(IWDUMP, "		%f", CENANG_.PDE2[I-1][J-1][K-1]);
+				PCH = strtok(NULL, " ");
+			}
+		}
+	}
+	fprintf(IWDUMP, "\n");
+
+	getline(IRD, line);
+	sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	*CENANG_.NTH = atoi(PCH);
+	PCH = strtok(NULL, " ");
+	*CENANG_.THL = atof(PCH);
+	PCH = strtok(NULL, " ");
+	*CENANG_.THU = atof(PCH);
+	PCH = strtok(NULL, " ");
+	*CENANG_.BSTH = atof(PCH);
+	PCH = strtok(NULL, " ");
+	*CENANG_.RBSTH = atof(PCH);
+	PCH = strtok(NULL, " ");
+	*CENANG_.NPH = atoi(PCH);
+	PCH = strtok(NULL, " ");
+	*CENANG_.BSPH = atof(PCH);
+	PCH = strtok(NULL, " ");
+	*CENANG_.RBSPH = atof(PCH);
+	PCH = strtok(NULL, " ");
+	*CENANG_.LLTH = atoi(PCH);
+	fprintf(IWDUMP, "		 %d		%.10f		%.10f		%.10f		%.10f		%d		%.10f		%.10f		%d\n", 
+		    *CENANG_.NTH, *CENANG_.THL, *CENANG_.THU, *CENANG_.BSTH, *CENANG_.RBSTH, *CENANG_.NPH, *CENANG_.BSPH, *CENANG_.RBSPH, *CENANG_.LLTH);
 
 
+	getline(IRD, line);
+	sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	for (int K = 1; K <= *CENANG_.NPH; K++){
+		for (int J = 1; J <= *CENANG_.NTH; J ++){
+			for (int I = 1; I <= 3; I++){
+				CENANG_.PDA[I-1][J-1][K-1] = atof(PCH);
+				fprintf(IWDUMP, "		%f", CENANG_.PDA[I-1][J-1][K-1]);
+				PCH = strtok(NULL, " ");
+			}
+		}
+	}
+	fprintf(IWDUMP, "\n");
 
+	getline(IRD, line);
+	sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	for (int K = 1; K <= *CENANG_.NPH; K++){
+		for (int J = 1; J <= *CENANG_.NTH; J ++){
+			for (int I = 1; I <= 3; I++){
+				CENANG_.PDA2[I-1][J-1][K-1] = atof(PCH);
+				fprintf(IWDUMP, "		%f", CENANG_.PDA2[I-1][J-1][K-1]);
+				PCH = strtok(NULL, " ");
+			}
+		}
+	}
+	fprintf(IWDUMP, "\n");
+
+	for (int I = 1; I <= 3; I++){
+		for (int J = 1; J <=2; J++){
+			for (int K = 1; K <= *CENANG_.NE; K++){
+				CENANG_.PDEP[K-1][J-1][I-1]=0.0e0;
+              	CENANG_.LPDE[K-1][J-1][I-1]=0;
+			}
+		}
+	}
+
+	for (int I = 1; I <= 3; I++){
+		for (int J = 1; J <= *CENANG_.NTH; J++){
+			for (int K = 1; K <= *CENANG_.NPH; K++){
+				CENANG_.PDAP[K-1][J-1][I-1]=0.0e0;
+             	CENANG_.LPDA[K-1][J-1][I-1]=0;
+			}
+		}
+	}
+
+}
+
+void imdetr2_(ifstream &IRD, FILE *IWDUMP){
+
+	char *PCH;
+	string line;
+
+
+	getline(IRD, line);
+	char *sArray = (char *) malloc((line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	*CIMDET_.NID = atoi(PCH);
+	fprintf(IWDUMP, "	%d\n", *CIMDET_.NID);
+
+	getline(IRD, line);
+	sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	for (int I = 1; I <= *CIMDET_.NID; I++){
+		CIMDET_.EDEP[I-1] = atof(PCH);
+		fprintf(IWDUMP, "		%f", CIMDET_.EDEP[I-1]);
+		PCH = strtok(NULL, " ");
+	}
+	fprintf(IWDUMP, "\n");
+
+	getline(IRD, line);
+	sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	for (int I = 1; I <= *CIMDET_.NID; I++){
+		CIMDET_.EDEP2[I-1] = atof(PCH);
+		fprintf(IWDUMP, "		%f", CIMDET_.EDEP2[I-1]);
+		PCH = strtok(NULL, " ");
+	}
+	fprintf(IWDUMP, "\n");
+
+	getline(IRD, line);
+	sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	for (int I = 1; I <= *CIMDET_.NID; I++){
+		CIMDET_.IDCUT[I-1] = atoi(PCH);
+		fprintf(IWDUMP, "		%d", CIMDET_.IDCUT[I-1]);
+		PCH = strtok(NULL, " ");
+	}
+	fprintf(IWDUMP, "\n");
+
+	for (int I = 1; I <= *CIMDET_.NID; I++){
+		getline(IRD, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		strcpy(SPCDIO[I-1], PCH);
+		fprintf(IWDUMP, "	%s\n", SPCDIO[I-1]);
+
+		getline(IRD, line);
+		char *sArray = (char *) malloc((line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		CIMDET_.NE[I-1] = atoi(PCH);
+		PCH = strtok(NULL, " ");
+		CIMDET_.EL[I-1] = atof(PCH);
+		PCH = strtok(NULL, " ");
+		CIMDET_.EU[I-1] = atof(PCH);
+		PCH = strtok(NULL, " ");
+		CIMDET_.BSE[I-1] = atof(PCH);
+		PCH = strtok(NULL, " ");
+		CIMDET_.RBSE[I-1] = atof(PCH);
+		PCH = strtok(NULL, " ");
+		*CIMDET_.LLE = atoi(PCH);
+		fprintf(IWDUMP, "		 %d		%.10f		%.10f		%.10f		%.10E		%d\n", CIMDET_.NE[I-1], CIMDET_.EL[I-1], CIMDET_.EU[I-1], CIMDET_.BSE[I-1], CIMDET_.RBSE[I-1], CIMDET_.LLE[I-1]);
+
+		getline(IRD, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		for (int J = 1; I <= CIMDET_.NE[I-1]; I++){
+			CIMDET_.DIT[J-1][I-1] = atof(PCH);
+			fprintf(IWDUMP, "		%.10f", CIMDET_.DIT[J-1][I-1]);
+			PCH = strtok(NULL, " ");
+		}
+		fprintf(IWDUMP, "\n");
+
+		getline(IRD, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		for (int J = 1; I <= CIMDET_.NE[I-1]; I++){
+			CIMDET_.DIT2[J-1][I-1] = atof(PCH);
+			fprintf(IWDUMP, "		%.10f", CIMDET_.DIT2[J-1][I-1]);
+			PCH = strtok(NULL, " ");
+		}
+		fprintf(IWDUMP, "\n");
+
+		getline(IRD, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		for (int J = 1; I <= CIMDET_.NE[I-1]; I++){
+			for (int K = 1; K <= 3; K++){
+				CIMDET_.DIP[K-1][J-1][I-1] = atof(PCH);
+				fprintf(IWDUMP, "		%.10f", CIMDET_.DIP[K-1][J-1][I-1]);
+				PCH = strtok(NULL, " ");
+			}
+		}
+		fprintf(IWDUMP, "\n");
+
+		getline(IRD, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		for (int J = 1; I <= CIMDET_.NE[I-1]; I++){
+			for (int K = 1; K <= 3; K++){
+				CIMDET_.DIP2[K-1][J-1][I-1] = atof(PCH);
+				fprintf(IWDUMP, "		%.10f", CIMDET_.DIP2[K-1][J-1][I-1]);
+				PCH = strtok(NULL, " ");
+			}
+		}
+		fprintf(IWDUMP, "\n");
+
+		if (CIMDET_.IDCUT[I-1] == 2){
+			getline(IRD, line);
+			sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+			strcpy(sArray, line.c_str());
+			PCH = strtok(sArray, " ");
+			strcpy(SPCFLO[I-1], PCH);
+			fprintf(IWDUMP, "	%s\n", SPCFLO[I-1]);
+
+			getline(IRD, line);
+			sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+			strcpy(sArray, line.c_str());
+			PCH = strtok(sArray, " ");
+			for (int J = 1; I <= CIMDET_.NE[I-1]; I++){
+				CIMDET_.FLT[J-1][I-1] = atof(PCH);
+				fprintf(IWDUMP, "		%.10f", CIMDET_.FLT[J-1][I-1]);
+				PCH = strtok(NULL, " ");
+			}
+			fprintf(IWDUMP, "\n");
+
+			getline(IRD, line);
+			sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+			strcpy(sArray, line.c_str());
+			PCH = strtok(sArray, " ");
+			for (int J = 1; I <= CIMDET_.NE[I-1]; I++){
+				CIMDET_.FLT2[J-1][I-1] = atof(PCH);
+				fprintf(IWDUMP, "		%.10f", CIMDET_.FLT2[J-1][I-1]);
+				PCH = strtok(NULL, " ");
+			}
+			fprintf(IWDUMP, "\n");
+
+			getline(IRD, line);
+			sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+			strcpy(sArray, line.c_str());
+			PCH = strtok(sArray, " ");
+			for (int J = 1; I <= CIMDET_.NE[I-1]; I++){
+				for (int K = 1; K <= 3; K++){
+					CIMDET_.FLP[K-1][J-1][I-1] = atof(PCH);
+					fprintf(IWDUMP, "		%.10f", CIMDET_.FLP[K-1][J-1][I-1]);
+					PCH = strtok(NULL, " ");
+				}
+			}
+			fprintf(IWDUMP, "\n");
+
+			getline(IRD, line);
+			sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+			strcpy(sArray, line.c_str());
+			PCH = strtok(sArray, " ");
+			for (int J = 1; I <= CIMDET_.NE[I-1]; I++){
+				for (int K = 1; K <= 3; K++){
+					CIMDET_.FLP2[K-1][J-1][I-1] = atof(PCH);
+					fprintf(IWDUMP, "		%.10f", CIMDET_.FLP2[K-1][J-1][I-1]);
+					PCH = strtok(NULL, " ");
+				}
+			}
+			fprintf(IWDUMP, "\n");
+		}
+		
+
+		getline(IRD, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		CIMDET_.NAGE[I-1] = atoi(PCH);
+		PCH = strtok(NULL, " ");
+		CIMDET_.AGEL[I-1] = atof(PCH);
+		PCH = strtok(NULL, " ");
+		CIMDET_.AGEU[I-1] = atof(PCH);
+		PCH = strtok(NULL, " ");
+		CIMDET_.BAGE[I-1] = atof(PCH);
+		PCH = strtok(NULL, " ");
+		CIMDET_.RBAGE[I-1] = atof(PCH);
+		PCH = strtok(NULL, " ");
+		*CIMDET_.LLAGE = atoi(PCH);
+		fprintf(IWDUMP, "		 %d		%.10f		%.10f		%.10f		%.10E		%d\n", CIMDET_.NAGE[I-1], CIMDET_.AGEL[I-1], CIMDET_.AGEU[I-1], CIMDET_.BAGE[I-1], CIMDET_.RBAGE[I-1], CIMDET_.LLAGE[I-1]);
+
+		if (CIMDET_.NAGE[I-1] > 0){
+			getline(IRD, line);
+			sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+			strcpy(sArray, line.c_str());
+			PCH = strtok(sArray, " ");
+			strcpy(SPCAGE[I-1], PCH);
+			fprintf(IWDUMP, "	%s\n", SPCAGE[I-1]);
+
+			getline(IRD, line);
+			sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+			strcpy(sArray, line.c_str());
+			PCH = strtok(sArray, " ");
+			for (int J = 1; I <= CIMDET_.NAGE[I-1]; I++){
+				CIMDET_.AGE[J-1][I-1] = atof(PCH);
+				fprintf(IWDUMP, "		%.10f", CIMDET_.AGE[J-1][I-1]);
+				PCH = strtok(NULL, " ");
+			}
+			fprintf(IWDUMP, "\n");
+
+			getline(IRD, line);
+			sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+			strcpy(sArray, line.c_str());
+			PCH = strtok(sArray, " ");
+			for (int J = 1; I <= CIMDET_.NAGE[I-1]; I++){
+				CIMDET_.AGE2[J-1][I-1] = atof(PCH);
+				fprintf(IWDUMP, "		%.10f", CIMDET_.AGE2[J-1][I-1]);
+				PCH = strtok(NULL, " ");
+			}
+			fprintf(IWDUMP, "\n");
+		}
+	}
+	for (int I = 1; I <= *CIMDET_.NID; I++){
+		CIMDET_.EDEPP[I-1]=0.0e0;
+        CIMDET_.LEDEP[I-1]=0;
+		for (int J = 1; CIMDET_.NE[I-1]; J++){
+			CIMDET_.DITP[J-1][I-1]=0.0e0;
+            CIMDET_.LDIT[J-1][I-1]=0;
+			for (int K = 1; K <= 3; K++){
+				CIMDET_.DIPP[K-1][J-1][I-1]=0.0e0;
+              	CIMDET_.LDIP[K-1][J-1][I-1]=0;
+			}
+		}
+	}
+
+	for (int I = 1; *CIMDET_.NID; I++){
+		for (int J = 1; CIMDET_.NE[I-1]; J++){
+			CIMDET_.FLTP[J-1][I-1]=0.0e0;
+            CIMDET_.LFLT[J-1][I-1]=0;
+			for (int K = 1; K <= 3; K++){
+				 CIMDET_.FLPP[K-1][J-1][I-1]=0.0e0;
+                 CIMDET_.LFLP[K-1][J-1][I-1]=0;
+			}
+		}
+	}
+
+	for (int I = 1; *CIMDET_.NID; I++){
+		for (int J = 1; CIMDET_.NAGE[I-1]; J++){
+			CIMDET_.AGEP[J-1][I-1]=0.0e0;
+            CIMDET_.LAGEA[J-1][I-1]=0;
+		}
+	}
+}
 
 
 
