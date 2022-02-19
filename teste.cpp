@@ -73,6 +73,7 @@ char APOIO[200];
 char SPCDIO[NDIM][20];
 char SPCFLO[NDIM][20];
 char SPCAGE[NDIM][20];
+char SPCDEO[NDIM][20];
 
 
 
@@ -1135,6 +1136,12 @@ void rand02_(int N);
 void enangr2_(ifstream &IRD, FILE *IWDUMP);
 
 void imdetr2_(ifstream &IRD, FILE *IWDUMP);
+
+void endetr2_(ifstream &IRD, FILE *IWDUMP);
+
+void doser2_(ifstream &IRD, FILE *IWDUMP);
+
+
 }
 
 
@@ -15611,22 +15618,19 @@ L78:;
 
 //	printf("PFILER: %s\n", PFILER);
 	if (IRESUM == 1){
-		FILE* IRDUMP = fopen("dump2.dmp", "r");
-		if (IRDUMP == NULL){
-			printf("Não foi possível abrir o arquivo %s\n", PFILER);
-			exit(0);
-		}
 
 		FILE* IWDUMP = fopen("iwdump.dmp", "w");
 		if (IWDUMP == NULL){
-			printf("Não foi possível abrir o arquivo %s\n", PFILER);
+			printf("Não foi possível abrir o arquivo %s\n", "iwdump.dmp");
 			exit(0);
 		}
 
 		ifstream inFILE;
-		inFILE.open("dump2.dmp");
 	    string line;
 
+	
+
+		inFILE.open(PFILER);
 		getline(inFILE, line);
 
 	    char *sArray = (char *) malloc((line.length()+1) * sizeof(char));
@@ -15637,6 +15641,8 @@ L78:;
 		PCH = strtok(NULL, " ");
         CPUTA = atof(PCH);
 		fprintf(IWDUMP, "	%f		%f\n", SHNA, CPUTA);
+		if (SHNA == 0.0e0)
+			goto L91;
 
         getline(inFILE, line);
 		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
@@ -15908,8 +15914,14 @@ L78:;
 		PCH = strtok(NULL, " ");
 		*CNT5_.NED = atoi(PCH);
 		PCH = strtok(NULL, " ");
-		*CNT6_.LDOSEM = atoi(PCH);
-		fprintf(IWDUMP, "		 %d			%d			%d\n",  *CNT4_.NID, *CNT5_.NED ,*CNT6_.LDOSEM );
+		strcpy(APOIO, PCH);
+		if (!strcmp("T", APOIO)){
+			*CNT6_.LDOSEM = true;
+		}
+		else {
+			*CNT6_.LDOSEM = false;
+		}
+		fprintf(IWDUMP, "		 %d			%d			%d\n",  *CNT4_.NID, *CNT5_.NED ,*CNT6_.LDOSEM);
 
 		if (*CNT4_.NID > 0){
 			getline(inFILE, line);
@@ -15922,24 +15934,46 @@ L78:;
 			imdetr2_(inFILE, IWDUMP); //Detectores de Impacto
 		}
 
+		if (*CNT5_.NED > 0){
+			endetr2_(inFILE, IWDUMP); //Detectores de deposição de energia
+		}
+
+		if (*CNT6_.LDOSEM){
+			doser2_(inFILE, IWDUMP);
+		}
+		inFILE.close();
+		fclose(IWDUMP);
+
+		fprintf(IWR, "   Simulation has been resumed from dump file: %s\n", PFILER);
+		goto L92;
 
 
-
-
-	inFILE.close();
-
-	fclose(IWDUMP);
-	fclose(IRDUMP);
-
-	}
-
-
-
-
-
-
-
+L90:;
+		fprintf(IWR, "   The dump file is empty or corrupted.\n");
+		printf("The dump file is empty or corrupted.\n");
+		exit(0);
 	
+L91:;
+		fprintf(IWR, "   WARNING: Could not resume from dump file...\n");
+		inFILE.close();
+		IRESUM = 0;
+	}
+L92:;
+
+ //Na sequencia é feito a leitura dos dados referentes ao arquivo Phase-Espace. Porém, esta
+ //versão nao contepla a utilização desse arquivo.
+
+ //Inicializar  Constantes
+
+	*CNTRL_.SHN=SHNA;  //Contador de simulações partículas do arquivo de despejo
+    *CNTRL_.N=fmod(*CNTRL_.SHN,2.0e9)+0.5e0;
+    *CNTRL_.TSIM=CPUTA;
+
+    end = clock();
+
+    //*CNTRL_.CPUT0=CPUTIM();
+
+	*CNTRL_.CPUT0= (double)(end - start) / CLOCKS_PER_SEC;
 
 	printf("\nFIM PMRDR2\n");
 	exit(0);
@@ -16209,7 +16243,6 @@ void endet02_(double &EMIN, double &EMAX, int &NB, char *FNSPC, int &ID, FILE *I
 
 	static const int NIDM=25;
 	static const int NBEM=1000;
-	char SPCDEO[NDIM][20];
 
 
 	int NIDS = 0;
@@ -17929,7 +17962,209 @@ void imdetr2_(ifstream &IRD, FILE *IWDUMP){
 	}
 }
 
+void endetr2_(ifstream &IRD, FILE *IWDUMP){
 
+	char *PCH;
+	string line;
+
+
+	getline(IRD, line);
+	char *sArray = (char *) malloc((line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	*CENDET_.NID = atoi(PCH);
+	fprintf(IWDUMP, "	%d\n", *CENDET_.NID);
+
+	getline(IRD, line);
+	sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	for (int I = 1; I <= *CENDET_.NID; I++){
+		CENDET_.EDEP[I-1] = atof(PCH);
+		fprintf(IWDUMP, "		%f", CENDET_.EDEP[I-1]);
+		PCH = strtok(NULL, " ");
+	}
+	fprintf(IWDUMP, "\n");
+
+	getline(IRD, line);
+	sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	for (int I = 1; I <= *CENDET_.NID; I++){
+		CENDET_.EDEP2[I-1] = atof(PCH);
+		fprintf(IWDUMP, "		%f", CENDET_.EDEP2[I-1]);
+		PCH = strtok(NULL, " ");
+	}
+	fprintf(IWDUMP, "\n");
+
+	for (int I = 1; I <= *CENDET_.NID; I++){
+		getline(IRD, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		strcpy(SPCDEO[I-1], PCH);
+		fprintf(IWDUMP, "	%s\n", SPCDEO[I-1]);
+
+		getline(IRD, line);
+		char *sArray = (char *) malloc((line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		CENDET_.NE[I-1] = atoi(PCH);
+		PCH = strtok(NULL, " ");
+		CENDET_.EL[I-1] = atof(PCH);
+		PCH = strtok(NULL, " ");
+		CENDET_.EU[I-1] = atof(PCH);
+		PCH = strtok(NULL, " ");
+		CENDET_.BSE[I-1] = atof(PCH);
+		PCH = strtok(NULL, " ");
+		CENDET_.RBSE[I-1] = atof(PCH);
+		PCH = strtok(NULL, " ");
+		*CENDET_.LLE = atoi(PCH);
+		fprintf(IWDUMP, "		 %d		%.10f		%.10f		%.10f		%.10E		%d\n", CENDET_.NE[I-1], CENDET_.EL[I-1], CENDET_.EU[I-1], CENDET_.BSE[I-1], CENDET_.RBSE[I-1], CENDET_.LLE[I-1]);
+
+		getline(IRD, line);
+		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+		strcpy(sArray, line.c_str());
+		PCH = strtok(sArray, " ");
+		for (int J = 1; I <= CENDET_.NE[I-1]; I++){
+			CENDET_.DET[J-1][I-1] = atof(PCH);
+			fprintf(IWDUMP, "		%.10f", CENDET_.DET[J-1][I-1]);
+			PCH = strtok(NULL, " ");
+		}
+		fprintf(IWDUMP, "\n");
+	}
+}
+
+void doser2_(ifstream &IRD, FILE *IWDUMP){
+
+	char *PCH;
+	string line;
+
+
+	getline(IRD, line);
+	char *sArray = (char *) malloc((line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	for (int I = 1; I <= 3; I++){
+		CDOSE3_.NDB[I-1] = atoi(PCH);
+		fprintf(IWDUMP, "		%d", CDOSE3_.NDB[I-1]);
+		PCH = strtok(NULL, " ");
+	}
+	fprintf(IWDUMP, "\n");
+
+	getline(IRD, line);
+	sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	for (int I = 1; I <= 3; I++){
+		CDOSE3_.DXL[I-1] = atof(PCH);
+		fprintf(IWDUMP, "		%.10f", CDOSE3_.DXL[I-1]);
+		PCH = strtok(NULL, " ");
+	}
+	fprintf(IWDUMP, "\n");
+
+	getline(IRD, line);
+	sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	for (int I = 1; I <= 3; I++){
+		CDOSE3_.DXU[I-1] = atof(PCH);
+		fprintf(IWDUMP, "		%.10f", CDOSE3_.DXU[I-1]);
+		PCH = strtok(NULL, " ");
+	}
+	fprintf(IWDUMP, "\n");
+
+	getline(IRD, line);
+	sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	for (int I = 1; I <= 3; I++){
+		CDOSE3_.BDOSE[I-1] = atof(PCH);
+		fprintf(IWDUMP, "		%.10f", CDOSE3_.BDOSE[I-1]);
+		PCH = strtok(NULL, " ");
+	}
+	for (int I = 1; I <= 3; I++){
+		CDOSE3_.RBDOSE[I-1] = atof(PCH);
+		fprintf(IWDUMP, "		%.10f", CDOSE3_.RBDOSE[I-1]);
+		PCH = strtok(NULL, " ");
+	}
+	fprintf(IWDUMP, "\n");
+
+	getline(IRD, line);
+	sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	*CDOSE1_.KDOSE = atoi(PCH);
+	fprintf(IWDUMP, "		%.d\n", *CDOSE1_.KDOSE);
+
+	getline(IRD, line);
+	sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	for (int I3 = 1; I3 <= CDOSE3_.NDB[3-1]; I3++){
+		for (int I2 = 1; I2 <= CDOSE3_.NDB[2-1]; I2++){
+			for (int I1 = 1; I1 <= CDOSE3_.NDB[1-1]; I1++){
+				CDOSE4_.VMASS[I3-1][I2-1][I1-1] = atof(PCH);
+				fprintf(IWDUMP, "		%.10f", CDOSE4_.VMASS[I3-1][I2-1][I1-1]);
+				PCH = strtok(NULL, " ");
+			}
+		}
+	}
+	fprintf(IWDUMP, "\n");
+
+	getline(IRD, line);
+	sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	for (int I3 = 1; I3 <= CDOSE3_.NDB[3-1]; I3++){
+		for (int I2 = 1; I2 <= CDOSE3_.NDB[2-1]; I2++){
+			for (int I1 = 1; I1 <= CDOSE3_.NDB[1-1]; I1++){
+				CDOSE1_.DOSE[I3-1][I2-1][I1-1] = atof(PCH);
+				fprintf(IWDUMP, "		%.10f", CDOSE1_.DOSE[I3-1][I2-1][I1-1]);
+				PCH = strtok(NULL, " ");
+			}
+		}
+	}
+	fprintf(IWDUMP, "\n");
+
+	getline(IRD, line);
+	sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	for (int I3 = 1; I3 <= CDOSE3_.NDB[3-1]; I3++){
+		for (int I2 = 1; I2 <= CDOSE3_.NDB[2-1]; I2++){
+			for (int I1 = 1; I1 <= CDOSE3_.NDB[1-1]; I1++){
+				CDOSE1_.DOSE2[I3-1][I2-1][I1-1] = atof(PCH);
+				fprintf(IWDUMP, "		%.10f", CDOSE1_.DOSE2[I3-1][I2-1][I1-1]);
+				PCH = strtok(NULL, " ");
+			}
+		}
+	}
+	fprintf(IWDUMP, "\n");
+
+	getline(IRD, line);
+	sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	for (int I3 = 1; I3 <= CDOSE3_.NDB[3-1]; I3++){
+		CDOSE2_.DDOSE[I3-1] = atof(PCH);
+		fprintf(IWDUMP, "		%.10f", CDOSE2_.DDOSE[I3-1]);
+		PCH = strtok(NULL, " ");
+	}
+	fprintf(IWDUMP, "\n");
+
+	getline(IRD, line);
+	sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
+	strcpy(sArray, line.c_str());
+	PCH = strtok(sArray, " ");
+	for (int I3 = 1; I3 <= CDOSE3_.NDB[3-1]; I3++){
+		CDOSE2_.DDOSE2[I3-1] = atof(PCH);
+		fprintf(IWDUMP, "		%.10f", CDOSE2_.DDOSE2[I3-1]);
+		PCH = strtok(NULL, " ");
+	}
+	fprintf(IWDUMP, "\n");
+
+}
 
 
 
