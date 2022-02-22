@@ -939,6 +939,8 @@ C  ****  Photon simulation tables.
 	 
       COMMON/CDOSE4/VMASS(NDXM,NDYM,NDZM)
 	  
+	  COMMON/RSEED/ISEED1,ISEED2
+	  
 	 
 C
       
@@ -1004,13 +1006,13 @@ C	 CALL RELAX0
 	 
 	 CALL transfCESIN(XSEIN, XSESI, ISIE)
 	 
-	 CALL transfCESIAC(ESIAC, IESI, NESI);
+	 CALL transfCESIAC(ESIAC, IESI, NESI)
 	 
 	 CALL transfCPINAC(PINAC, IPIN, NPIN)
 	 
 	 CALL transfCPSIAC(PSIAC, IPSI, NPSI)
 	 
-	 CALL transfCPSIN(XSPIN, XSPSI, ISIP)
+	 CALL transfcpsin(XSPIN, XSPSI, ISIP)
 	 
 	 CALL transfCGCO(FCO,UICO ,FJ0,
      1  PTRSH ,KZCO ,KSCO ,
@@ -1143,11 +1145,11 @@ C	 CALL PINaT1(E,UK,WK,DELTA,WCCM,H0,H1,H2,S0,S1,S2,R0,R1,R2)
 	 
 	 CALL transfcgcone(CPCT,CPST,SPCT,SPST,SPHI,CPHI,STHE,CTHE,CAPER)
 	 
-	 CALL transfcenang(EL1,EU1,THL,THU,BSEC,RBS1,BSTH,RBSTH,
+	  CALL transfcenang(EL1,EU1,THL,THU,BSEC,RBS1,BSTH,RBSTH,
      1  BSPH,RBSPH,PDE,PDE2,PDEP,
-     2  SETOT,CSTPE,RSTPE,
-     3  PDA,PDA2,PDAP,
-     4  LPDE,LPDA,NE1,NTH,NPH,LLE,LLTH)
+     1  PDA,PDA2,PDAP,
+     1  LPDE,LPDA,NE1,NTH,NPH,LLE,LLTH)
+	 
 	 
 	  CALL transfcimdet(EL2,EU2,BSE2,RBSE2,
      1  ET2,EDEP,EDEP2,EDEPP,
@@ -1824,6 +1826,8 @@ C
           WRITE(26,'(''File '',A20,'' could not be opened.'')') PFILE
           STOP 'Geometry file could not be opened.'
         ENDIF
+		
+		
 C
         NPINP=0
         IHEAD=0
@@ -1858,6 +1862,7 @@ C
 C
         OPEN(16,FILE='geometry.rep')
         CALL GEOMIN(PARINP,NPINP,NMATG,NBODY,15,16)
+C		write(*,*) 'AQUI'
         CLOSE(15)
         CLOSE(16)
         IF(NMATG.LT.1) THEN
@@ -4073,6 +4078,7 @@ C
       STHE=SIN(THETA)
       CTHE=COS(THETA)
       CAPER=COS(ALPHA)
+c	  write(*,*) 'CAPER ', CAPER
       RETURN
       END
 
@@ -6707,6 +6713,9 @@ C  ****  Photon simulation tables.
      2  PDA(3,NBTHM,NBPHM),PDA2(3,NBTHM,NBPHM),PDAP(3,NBTHM,NBPHM),
      4  LPDE(3,2,NBEM),LPDA(3,NBTHM,NBPHM),NE1,NTH,NPH,LLE,LLTH
 	 
+	  COMMON/CENDET/EL4(NIDM),EU4(NIDM),BSE4(NIDM),RBSE4(NIDM),
+     1  EDEP4(NIDM),EDEP24(NIDM),DET(NIDM,NBEM2),
+     1  NE4(NIDM),LLE4(NIDM),NID4
 	 
 	  COMMON/CIMDET/EL2(NIDM),EU2(NIDM),BSE2(NIDM),RBSE2(NIDM),
      1  ET2(NIDM,NBEM2+1),EDEP(NIDM),EDEP2(NIDM),EDEPP(NIDM),
@@ -6729,6 +6738,8 @@ C  ****  Photon simulation tables.
       COMMON/CDOSE3/DXL(3),DXU(3),BDOSE(3),RBDOSE(3),NDB(3)
 	 
       COMMON/CDOSE4/VMASS(NDXM,NDYM,NDZM)
+	  
+	  COMMON/RSEED/ISEED1,ISEED2
 	 
 	 
 	  
@@ -6923,8 +6934,8 @@ C  ****  Positron inelastic coll. and inner-shell ionisation tables.
 	  
 	  OPEN(IWR,FILE='CPSIN.txt')
 	  write(IWR,*) 'CPSIN'
-	  WRITE(IWR,'(6E14.5)') XSPIN,XSPSI
-	  WRITE(IWR,'(4I5)') ISIP
+	  WRITE(IWR,'(10E14.5)') XSPIN,XSPSI
+	  WRITE(IWR,'(10I5)') ISIP
 	  CLOSE(IWR)
 	  
 C  ****  Compton scattering.
@@ -7154,7 +7165,7 @@ C  ****  Photon simulation tables.
 	  
 	  OPEN(IWR,FILE='CSOUR4.txt')
 	  write(IWR,*) 'CSOUR4'
-	  WRITE(IWR,'(8E14.5)') GMIN,RWGMIN,WGMAX,RLREAD
+	  WRITE(IWR,'(8E14.5)') WGMIN,RWGMIN,WGMAX,RLREAD
 	  WRITE(IWR,'(8I10)') IPSFI,NPSF,NPSN,NSPLIT,KODEPS
 	  CLOSE(IWR)
 	  
@@ -7217,17 +7228,18 @@ C  ****  Photon simulation tables.
 	  
 	  OPEN(IWR,FILE='CGCONE.txt')
 	  write(IWR,*) 'CGCONE'
-	  WRITE(IWR,'(8E14.5)') CPCT,CPST,SPCT,SPST,SPHI,CPHI,STHE,CTHE,CAPER
+	  WRITE(IWR,'(8E14.5)') CPCT,CPST,SPCT,SPST,SPHI,CPHI
+	  WRITE(IWR,'(8E14.5)') STHE,CTHE,CAPER
 	  CLOSE(IWR)
 	  
-	  OPEN(IWR,FILE='CENANG.txt')
-	  write(IWR,*) 'CENANG'
-	  WRITE(IWR,'(8E14.5)') EL1,EU1,THL,THU,BSEC,RBS1,BSTH,RBSTH,BSPH
-	  WRITE(IWR,'(8E14.5)') RBSPH,PDE,PDE2,PDEP,PDA,PDA2,PDAP
-	  WRITE(IWR,*) LPDE,LPDA
-	  WRITE(IWR,'(8I10)') NE1,NTH,NPH
-	  WRITE(IWR,*) LLE,LLTH
-	  CLOSE(IWR)	
+c	  OPEN(IWR,FILE='CENANG.txt')
+c	  write(IWR,*) 'CENANG'
+c	  WRITE(IWR,'(8E14.5)') EL1,EU1,THL,THU,BSEC,RBS1,BSTH,RBSTH,BSPH
+c	  WRITE(IWR,'(8E14.5)') RBSPH,PDE,PDE2,PDEP,PDA,PDA2,PDAP
+c	  WRITE(IWR,*) LPDE,LPDA
+c	  WRITE(IWR,'(8I10)') NE1,NTH,NPH
+c	  WRITE(IWR,*) LLE,LLTH
+c	  CLOSE(IWR)	
 	  
 	  OPEN(IWR,FILE='CIMDET.txt')
 	  write(IWR,*) 'CIMDET'
@@ -7248,12 +7260,12 @@ C  ****  Photon simulation tables.
 	  WRITE(IWR,'(8I10)') NE4,NID4
 	  CLOSE(IWR)	
 	  
-	  OPEN(IWR,FILE='CDOSE1.txt')
-	  write(IWR,*) 'CDOSE1'
-	  WRITE(IWR,'(8E14.5)') DOSE,DOSE2,DOSEP
-	  WRITE(IWR,*) LDOSE
-	  WRITE(IWR,'(8I10)') KDOSE
-	  CLOSE(IWR)
+c	  OPEN(IWR,FILE='CDOSE1.txt')
+c	  write(IWR,*) 'CDOSE1'
+c	  WRITE(IWR,'(8E14.5)') DOSE,DOSE2,DOSEP
+c	  WRITE(IWR,*) LDOSE
+c	  WRITE(IWR,'(8I10)') KDOSE
+c	  CLOSE(IWR)
 	  
 	  OPEN(IWR,FILE='CDOSE2.txt')
 	  write(IWR,*) 'CDOSE2'
@@ -7267,17 +7279,14 @@ C  ****  Photon simulation tables.
 	  WRITE(IWR,*) NDB
 	  CLOSE(IWR)
 	  
-	  OPEN(IWR,FILE='CDOSE4.txt')
-	  write(IWR,*) 'CDOSE4'
-	  WRITE(IWR,'(8E14.5)') VMASS
-	  CLOSE(IWR)
+c	  OPEN(IWR,FILE='CDOSE4.txt')
+c	  write(IWR,*) 'CDOSE4'
+c	  WRITE(IWR,'(8E14.5)') VMASS
+c	  CLOSE(IWR)
 
 	 
     	  
-	  
-	  
-	
-	   
+	 
 	 
 
       RETURN

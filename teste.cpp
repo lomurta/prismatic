@@ -986,7 +986,7 @@ void geomin2_(double *PARINP, int *NPINP, int *NMATG, int *NBOD, FILE *IRD, FILE
 
 void rotshf2_(double &OMEGA, double &THETA, double &PHI, double &DX, double &DY, double &DZ, double &AXX, double &AXY, double &AXZ, double &AYY, double &AYZ, double &AZZ, double &AX, double &AY, double &AZ, double &A0);
 
-void peinit2_(double *EMAX, int *NMATER, FILE *IWR, int *INFO, char (*PMFILE)[21]);
+void peinit2_(double *EMAX, int &NMATER, FILE *IWR, int *INFO, char (*PMFILE)[20]);
 
 void egrid2_(double &EMINu, double *EMAXu);
 
@@ -1140,6 +1140,8 @@ void imdetr2_(ifstream &IRD, FILE *IWDUMP);
 void endetr2_(ifstream &IRD, FILE *IWDUMP);
 
 void doser2_(ifstream &IRD, FILE *IWDUMP);
+
+void tabelas_();
 
 
 }
@@ -1646,7 +1648,7 @@ void transfcpsiac_(double (*PSIAC)[NEGP][MAXMAT], int (*IPSI)[MAXMAT], int *NPSI
 }
 
 void transfcpsin_(double (*XSPIN)[NEGP], double (*XSPSI)[NEGP], int *ISIP){
-	
+	printf("\n\ntransf cpsin\n\n");
 	CPSIN_.XSPIN = XSPIN;
 	CPSIN_.XSPSI = XSPSI;
 	CPSIN_.ISIP = ISIP;
@@ -2849,18 +2851,18 @@ void stepsi2_(int &KB, double *S, int *IS, int &NSC){
 		ABSB = fabs(B);
 		
 		// Plano, unica raiz
-		if(ABSA < 1e-36){
+		if(ABSA < 1.0e-36){
 			if (ABSB > 0.0e0){
 				if (C < -FUZZL){
-					QTREE_.KSP[KS -1] = 1;
+					QTREE_.KSP[KS-1] = 1;
 				} 
 				else if (C > FUZZL){
-						QTREE_.KSP [KS -1] = 2;
+						QTREE_.KSP[KS -1] = 2;
 				} else{
 					if (B < 0.0e0){
-						QTREE_.KSP [KS -1] = 1;
+						QTREE_.KSP[KS -1] = 1;
 					} else{
-						QTREE_.KSP [KS -1] = 2;
+						QTREE_.KSP[KS -1] = 2;
 					}
 					goto L100;	
 				}
@@ -3022,7 +3024,7 @@ void steplb2_( int &KB, int &IERR){
 			for (int KSS = 1; KSS <= QTREE_.KSURF[NXG -1 ][KBD -1]; KSS++){
 				KS = QTREE_.KSURF[KSS -1 ][KBD -1];
 				KF = QTREE_.KFLAG[KSS -1][KBD -1];
-				if ((KF < 3) && (QTREE_.KSP[KS -1] != KF))
+				if ((KF < 3) && (QTREE_.KSP[KS-1] != KF))
 					goto L200;		
 			}
 			*TRACK_mod_.IBODY = KBD;
@@ -3252,20 +3254,20 @@ void geomin2_(double *PARINP, int *NPINP, int *NMATG, int *NBOD, FILE *IRD, FILE
 
 	
 	
- /*	FILE* IR = fopen("quadril.geo", "r");
+ 	FILE* IR = fopen("quadril.geo", "r");
 	if (IR == NULL){
 		printf("Não foi possível abrir o arquivo de geometria");
 		exit(0);
 	}
 	
-	FILE* IW = fopen("geometry-res.geo", "w");
+	FILE* IW = fopen("geometry2.geo", "w");
 	if (IW == NULL){
 		printf("Não foi possível abrir o arquivo de geometria-res");
 		exit(0);
-	}*/
+	}
 
-	FILE* IR = IRD;
-	FILE* IW = IWR;
+	//FILE* IR = IRD;
+//	FILE* IW = IWR;
 
 
 	
@@ -3318,6 +3320,7 @@ void geomin2_(double *PARINP, int *NPINP, int *NMATG, int *NBOD, FILE *IRD, FILE
 	*QTREE_.NWARN = 0;
 	
 	
+	
 	//Lendo o arquivo de entrada de geometria.
 	
 	
@@ -3340,8 +3343,9 @@ void geomin2_(double *PARINP, int *NPINP, int *NMATG, int *NBOD, FILE *IRD, FILE
 	 IRI = max(IR, IW) + 1;*/
 	 
 	NINCL = 0;
-	C1[0] = CA[NINCL];
+	C1[0] = CA[NINCL+1-1];
 	C1[1] = '\0';
+	
 	 
 
 L9:;
@@ -3367,6 +3371,7 @@ L1:;
 	//extrairString(LKEYW, BLINE, 0, 8);
 	
 	extrairString(LKEYW, BLINE, 0, 8);
+
 	
 	
 //	printf("LKEYW: %s\n", LKEYW);
@@ -3388,6 +3393,7 @@ L1:;
 	
 L2:;
 //printf(" linha 1178 ");
+
 	fgets(BLINE, sizeof(BLINE), IR);
 	
 //	printf(" linha 1188 ");
@@ -3429,7 +3435,9 @@ L2:;
 	
 	//Superficies
 	
+	
 L100:;
+	
 	//if ((strcmp(strncpyy(APOIO, BLINE+8, 1), "(" )) || (strcmp(strncpyy(APOIO, BLINE+13, 1), ")"))){
 	if ((BLINE[8] != '(' ) || (BLINE[13] != ')')){
 		fputs(BLINE, IW);
@@ -3480,7 +3488,7 @@ L100:;
 //	printf("1266\n");
 	
 	//Indices
-	
+
 L190:;
 
 	fgets(BLINE, sizeof(BLINE), IR);
@@ -5967,7 +5975,7 @@ void imprimirKDGHT(FILE* IW, int &KB){
 	
 }
 
-void peinit2_(double *EMAX, int *NMATER, FILE *IWR, int *INFO, char (*PMFILE)[21]){
+void peinit2_(double *EMAX, int &NMATER, FILE *IWR, int *INFO, char (*PMFILE)[20]){
 	
 	
 /*Modulo Penelope.f
@@ -6055,11 +6063,14 @@ void peinit2_(double *EMAX, int *NMATER, FILE *IWR, int *INFO, char (*PMFILE)[21
 	char APOIO[80];
 	
 	
-	//FILE* IWR = fopen("material2.dat", "w");
- //	if (IWR == NULL){
- //		printf("N�o foi possivel abrir o arquivo material2.dat");
- //		exit(0);
- //	}
+	FILE* IWR2 = fopen("material2.dat", "w");
+	IWR = IWR2;
+    if (IWR == NULL){
+ 		printf("N�o foi possivel abrir o arquivo material2.dat");
+ 		exit(0);
+ 	}
+
+
 	fprintf(IWR, "\n **********************************\n");
 	fprintf(IWR, " **   PENELOPE  (version 2014)   **\n");
 	fprintf(IWR, " **********************************\n");
@@ -6068,7 +6079,8 @@ void peinit2_(double *EMAX, int *NMATER, FILE *IWR, int *INFO, char (*PMFILE)[21
 	*CERSEC_.IERSEC = 0;
 	
 	
-	*PENELOPE_mod_.NMAT = *NMATER;
+	*PENELOPE_mod_.NMAT = NMATER;
+//	printf("\n\nNMAT: %d\n\n", *PENELOPE_mod_.NMAT);
 	for (int M = 1; M <= *PENELOPE_mod_.NMAT; M++){
 		if (PENELOPE_mod_.EABS[M-1][1-1] < 49.999e0){
 			fprintf(IWR, "EABS(1, %2d) = %.4E eV \n ERROR: electron absorption energy cannot be less than 50 eV\n", M, PENELOPE_mod_.EABS[M-1, 1-1]);
@@ -6121,21 +6133,27 @@ void peinit2_(double *EMAX, int *NMATER, FILE *IWR, int *INFO, char (*PMFILE)[21
 		}	
 		EMIN = fmin(EMIN, fmin(fmin(PENELOPE_mod_.EABS[M-1][1-1], PENELOPE_mod_.EABS[M-1][2-1]), PENELOPE_mod_.EABS[M-1][3-1]));
 	}
+			
 	
 	if (EMIN < 50.0e0)
 		EMIN = 50.0e0;
+
+		
 	
 	fprintf(IWR, "EMIN = %.4E eV,  EMAX = %.4E eV\n", EMIN, *EMAX);
 	if (*EMAX < EMIN + 10.0){
 		printf("The energy interval is too narrow.");
 		exit(0);
 	}
+
+	
 	
 	if (*PENELOPE_mod_.NMAT > MAXMAT){
 		fprintf(IWR, "*** PENELOPE cannot handle %2d different materials. \nEdit the source file and change the parameter MAXMAT = %2d to MAXMAT = %2d\n\n", *PENELOPE_mod_.NMAT, MAXMAT, *PENELOPE_mod_.NMAT); 
 		printf("PEINIT. Too many materials.");
 		exit(0);
 	}
+	
 	
 	if (*INFO > 2) 
 		fprintf(IWR, "NOTE: 1 mtu = 1 g/cm**2\n");
@@ -6149,6 +6167,7 @@ void peinit2_(double *EMAX, int *NMATER, FILE *IWR, int *INFO, char (*PMFILE)[21
 	
 	
 	egrid2_(EMIN, EMAX);
+
 	esia02_(); //Inicializa rotinas de ioniza��o por impacto de el�trons.
 	psia02_(); //Inicializa as rotinas de ioniza��o por impacto de p�sitrons.
 	gpha02_(); //Inicializa rotinas fotoel�tricas.
@@ -6156,6 +6175,8 @@ void peinit2_(double *EMAX, int *NMATER, FILE *IWR, int *INFO, char (*PMFILE)[21
 	relax02_(); //Inicializa rotinas de relaxamento at�mico.
 	rndg30_();
 	rndg302_(); //Inicializa a rotina de amostragem gaussiana.
+
+
 	
 	for (int M = 1; M <= *PENELOPE_mod_.NMAT; M++){
 		
@@ -6168,14 +6189,15 @@ void peinit2_(double *EMAX, int *NMATER, FILE *IWR, int *INFO, char (*PMFILE)[21
 		fprintf(IWR, " **	%2d%s material  **\n", M, LIT);
 		fprintf(IWR, " *********************\n");
         extrairString(APOIO, PMFILE[M-1], 0 , 20);
+		//printf("\nPMFILE %s\n", PMFILE[M-1]);
 		
 		fprintf(IWR, "\nMaterial data file: %s\n\n", APOIO);
 		
 		FILE* IRD = fopen(APOIO, "r");
 	
 		if (IRD == NULL){
-			fprintf(IWR, "N�o foi possivel abrir o arquivo %s\n", APOIO);
-  	   		printf("N�o foi possivel abrir o arquivo %s\n", APOIO);
+			fprintf(IWR, "Nao foi possivel abrir o arquivo %s\n", APOIO);
+  	   		printf("Nao foi possivel abrir o arquivo %s\n", APOIO);
 		   	exit(0);
 		}
 		
@@ -6445,8 +6467,10 @@ void rndg302_(){ //OK
 	double ERRM;
 	FILE *F;
 	int PDF = 1;
+
 	
 	rita02_(PDF, XMIN, XMAX, N, NU, ERRM, F);
+
 	
 	
 	if (N != NR){
@@ -6518,7 +6542,9 @@ void rita02_(int &PDF, double &XLOW, double &XHIGH, int &N, int &NU, double &ERR
 //	printf("\n\nPDF: %d\nXLOW: %f, XHIGH: %f\n",PDF, XLOW, XHIGH );
 	const static int NM = 512;
 	
+	
 	ritai02_(PDF, XLOW, XHIGH, N, NU, ERRM, IWR);
+
 
 	
 	*CRITAA_.NPM1A = *CRITA_.NPM1;
@@ -6572,6 +6598,11 @@ void pematr2_(int *M, FILE *IRD, FILE *IWR, int *INFO){
 	double RADN[NEGP];*/
 	
     static const int NO = 512;
+	static const int NRP = 8000;
+	static const int NOCO=512;
+	static const int NDIM=12000;
+	static const int NEGP = 200;
+
     
 	
 	
@@ -7203,6 +7234,7 @@ void pematr2_(int *M, FILE *IRD, FILE *IWR, int *INFO){
         	NI=NI+1;
             CPINAC_.IPIN[NI-1][*M-1] = KO;
             CPSIN_.ISIP[KO-1] = -NI;
+	//		printf("\n\nCPSIN1 %d\n\n", CPSIN_.ISIP[KO-1]);
             INOUT[NI-1] = 0;
             for (int IEL = 1; IEL <= COMPOS_.NELEM[*M-1]; IEL++){
             	if (IZZ == COMPOS_.IZ[IEL-1][*M-1])
@@ -7214,6 +7246,7 @@ void pematr2_(int *M, FILE *IRD, FILE *IWR, int *INFO){
 				NS = NS + 1;
             	CPSIAC_.IPSI[NS-1][*M-1] = KO;
             	CPSIN_.ISIP[KO-1] = NS;
+		//		printf("\n\nCPSIN2 %d\n\n", CPSIN_.ISIP[KO-1]);
             	for (int IEL = 1; IEL <= COMPOS_.NELEM[*M-1]; IEL++){
     		   		if (IZZ == COMPOS_.IZ[IEL-1][*M-1])
             		   	STFI[NS-1] = COMPOS_.STF[IEL-1][*M-1];
@@ -7222,6 +7255,7 @@ void pematr2_(int *M, FILE *IRD, FILE *IWR, int *INFO){
 				NI=NI+1;
             	CPINAC_.IPIN[NI-1][*M-1] = KO;
             	CPSIN_.ISIP[KO-1] = -NI;
+			//	printf("\n\nCPSIN3: %d\n\n", CPSIN_.ISIP[KO-1]);
             	INOUT[NI-1] = 1;
             	for (int IEL = 1; IEL <= COMPOS_.NELEM[*M-1]; IEL++){
             		if (IZZ == COMPOS_.IZ[IEL-1][*M-1])
@@ -7234,6 +7268,7 @@ void pematr2_(int *M, FILE *IRD, FILE *IWR, int *INFO){
 			NI=NI+1;
 			CPINAC_.IPIN[NI-1][*M-1] = KO;
    			CPSIN_.ISIP[KO-1] = -NI;
+		//	   printf("\n\nCPSIN4 %d\n\n", CPSIN_.ISIP[KO-1]);
    			INOUT[NI-1] = 0;
             for (int IEL = 1; IEL <= COMPOS_.NELEM[*M-1]; IEL++){
             	if (IZZ == COMPOS_.IZ[IEL-1][*M-1])
@@ -7289,6 +7324,7 @@ void pematr2_(int *M, FILE *IRD, FILE *IWR, int *INFO){
 		
 		for (int KO = 1; KO <= CEIN_.NOSC[*M-1]; KO++){
 			int IO = CPSIN_.ISIP[KO-1];
+		//	printf("\n\nIO: %d\n\n", CPSIN_.ISIP[KO-1]);
 			//Cascas internas
 			if (IO > 0){
 				IZZ = CEIN_.KZ[KO-1][*M-1];
@@ -7746,7 +7782,8 @@ void pematr2_(int *M, FILE *IRD, FILE *IWR, int *INFO){
 			CEGRID_.ET[I-1],COMPOS_.RHO[*M-1]/FPEL,COMPOS_.RHO[*M-1]/FPIN,COMPOS_.RHO[*M-1]/FPBR,COMPOS_.RHO[*M-1]/FPTOT,COMPOS_.RHO[*M-1]/FPSI);
 		}
     	CEIMFP_.SEAUX[I-1][*M-1]=log(1.0e-35);
-        CEIMFP_.SETOT[I-1][*M-1]=log(FPTOT);	
+        CEIMFP_.SETOT[I-1][*M-1]=log(FPTOT);
+	//	printf("\n\nSETOT %f\n\n", CEIMFP_.SETOT[I-1][*M-1])	;
 	}
 	
 	for (int I = 2; I <= NEGP-1; I++){
@@ -8327,6 +8364,9 @@ void ritai02_(int &PDF, double &XLOW, double &XHIGH, int &N, int &NU, double &ER
 		*/
 		
 		ICASE=1;
+
+		
+
 L100:;
 		ERR[I-1]=0.0e0;
 		for (int K = 1; K <= NIP; K++){
@@ -8463,6 +8503,7 @@ L200:;
 		*/
 		
 		ICASE=1;
+		
 L300:;
 		
 		ERR[I-1]=0.0e0;
@@ -8537,11 +8578,13 @@ L400:;
     CRITA_.IL[NP-1]=NP-1;
     CRITA_.IU[NP-1]=NP;
 
+	
+
     
     
     //Imprimir tabelas de interpola��o (somente quando IWR.GT.0).
     
-    FILE* IW = fopen("param.dat", "w");
+    FILE* IW = fopen("param2.dat", "w");
 	if (IW == NULL){
 		printf("N�o foi possivel abrir o arquivo param2.dat");
 		exit(0);
@@ -8550,18 +8593,21 @@ L400:;
 	fprintf(IW, "#  Interpolation error = %.7E\n", ERRM );
 	fprintf(IW, "# Normalising constant = %.7E\n", *CRITAN_.CNORM);
 	fprintf(IW, " #     X           PDF(X)          A             B             C           error\n");
+
+	
 	for (int I =1; I <= *CRITA_.NPM1; I++){
 		switch (PDF){
 			case 1: //rndg3f2
-				PDFE = fmax(rndg3f2_(XS[I-1]), ZEROT)* *CRITAN_.CNORM;
+				PDFE = fmax(rndg3f2_(CRITA_.XT[I-1]), ZEROT)* *CRITAN_.CNORM;
 				break;
 			case 2: //dcsel2
-				PDFE = fmax(dcsel2_(XS[I-1]), ZEROT)* *CRITAN_.CNORM;
+				PDFE = fmax(dcsel2_(CRITA_.XT[I-1]), ZEROT)* *CRITAN_.CNORM;
 				break;	
 			case 3: //dcsel2
-				PDFE = fmax(graaf22_(XS[I-1]), ZEROT)* *CRITAN_.CNORM;
+				PDFE = fmax(graaf22_(CRITA_.XT[I-1]), ZEROT)* *CRITAN_.CNORM;
 				break;
 		}
+	
 		fprintf(IW, "%f  %.6E %f  %f  %f  %d\n", CRITA_.XT[I-1], PDFE, CRITA_.A[I-1], CRITA_.B[I-1], C[I-1], ERR[I-1] );
 	}
 	fclose(IW);
@@ -9919,7 +9965,7 @@ void braar2_(int *M, FILE *IRD, FILE *IWR, int *INFO){
 		}	
 	}
 	
-//	printf("\n\nBRAAR2\n\n");	
+	//printf("\n\nBRAAR2\n\n");	
 
 }
 
@@ -13783,11 +13829,10 @@ void pmrdr2_(){
 
     char LINHA[100];
 	char KWORD[100];
-	char TITLE[100];
 	char APOIO[100];
 	char LIT[3];
 	char *PCH;
-	char PMFILE[MAXMAT][21];
+	char PMFILE[MAXMAT][20];
 	char PFILE[21];
 	char PFILER[21];
 	char SPCDIO[21];
@@ -13816,13 +13861,21 @@ void pmrdr2_(){
 	double FSAFE=1.000000001e0;
 
 	static const int NPINPM=500;
-	double PARINP[NPINPM] = {};
+	double PARINP[NPINPM];
 	static const int NSEM = 1000;
 	static const int NB = 5000;
 
 	double SALPHA, SPHI, STHETA, THETLD,THETUD, PHILD,PHIUD, EPMAXR, EAB1, EAB2, EAB3, EMIN, EMAX,EDIL,EDIU, AGEU, AGEL, EDEL, EDEU, XLD, XUD, YLD, YUD, ZLD, ZUD, SAVE,TIMEA, SHNA, CPUTA;
 
-	int KBSMAX, ISEC, KB, ISOURC, NMATR, NPINP, IHEAD, IP, NMATG, NBE, NBTH, NBPH, NDBOD,NDICH, NAGE,ITST, KPARD, NDECH, NBX, NBY, NBZ, IDOSE, NBR, IRESUM;
+	int KBSMAX, ISEC, KB, ISOURC, NMATR, IHEAD, IP, NMATG, NBE, NBTH, NBPH, NDBOD,NDICH, NAGE,ITST, KPARD, NDECH, NBX, NBY, NBZ, IDOSE, NBR, IRESUM;
+
+    int NPINP = 0;
+
+
+	for (int I = 1; I <= NPINPM; I++){
+		PARINP[I-1] = NPINPM*0.0e0;
+	}
+
 
 	clock_t start, end;
 
@@ -13845,6 +13898,15 @@ void pmrdr2_(){
 			CNT0_.SEC[I-1][K-1]=0.0e0;
             CNT0_.SEC2[I-1][K-1]=0.0e0;
 		}
+	}
+
+	for (int I = 1; I <= 2; I++){
+		CNT0_.AVW[I-1]=0.0e0;
+        CNT0_.AVW2[I-1]=0.0e0;
+        CNT0_.AVA[I-1]=0.0e0;
+        CNT0_.AVA2[I-1]=0.0e0;
+        CNT0_.AVE[I-1]=0.0e0;
+        CNT0_.AVE2[I-1]=0.0e0;
 	}
 
 	for (int I = 1; I <= NSEM; I++){
@@ -13899,13 +13961,13 @@ void pmrdr2_(){
 
 	PCH = strtok(LINHA, " ");
 	PCH = strtok(NULL, " ");
-	strcpy(TITLE, PCH);
+	strcpy(CTITLE_.TITLE, PCH);
 	
 
 //	extrairString(TITLE, LINHA, 7, 65);
 	
 	if (!strcmp(KWORD, KWTITL)){
-		fprintf(IWR, "\n   %s\n", TITLE);
+		fprintf(IWR, "\n   %s\n", CTITLE_.TITLE);
 	} else{
 		fprintf(IWR, "\nThe input file must begin with the TITLE line\n");
 		printf("The input file must begin with the TITLE line\n");
@@ -14033,7 +14095,7 @@ L15:;
 				fprintf(IWR, "                %4d  %.6E  %.6E  %.6E\n", I,CSOUR2_.ESRC[I-1],CSOUR2_.ESRC[I+1-1],CSOUR2_.PSRC[I-1]);
 			}
 			*CSOUR1_.E0=CSOUR2_.ESRC[*CNT2_.NSEB-1];
-            *CNT2_.NSEB =*CNT2_.NSEB -1;
+            *CNT2_.NSEB =*CNT2_.NSEB-1;
 			irnd02_(CSOUR2_.PSRC,CSOUR2_.FSRC,CSOUR2_.IASRC,CNT2_.NSEB);
  
 		}else{
@@ -14069,6 +14131,7 @@ A energia C dos fótons de aniquilação é .lt. 1,21*(E0+me*c**2).
 		*CSOUR1_.SP20 = atof(PCH);
 		PCH = strtok(NULL, " ");
 		*CSOUR1_.SP30 = atof(PCH);
+		*CSOUR0_.LGPOL=true;
 L20:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
@@ -14146,7 +14209,7 @@ L17:;
 L717:;
 	if (!strcmp(KWORD, KWSBOD)){
 		PCH = strtok(BUFFER, " ");
-		KB = atof(PCH);
+		KB = atoi(PCH);
 		if ((KB < 1) || (KB > NB)){
 			fprintf(IWR, "%s %s\n", KWORD, BUFFER);
 			fprintf(IWR, "Incorrect body label\n");
@@ -14155,7 +14218,7 @@ L717:;
 		}
 		fprintf(IWR,"   Active body = %4d\n", KB);
 		CSOUR3_.IXSBOD[KB-1]=1;
-        *CSOUR3_.LEXBD=false;
+        *CSOUR3_.LEXBD=true;
         KBSMAX=max(KBSMAX,KB);
 L766:;
 		fgets(LINHA, sizeof(LINHA), IRD);
@@ -14438,6 +14501,14 @@ L33:;
 			goto L31;
 	}
 
+	if (NMATR == 0){
+		fprintf(IWR, "%s %s", KWORD, BUFFER);
+		fprintf(IWR, "You have to specify a material file (line MFNAME).\n" );
+		printf("You have to specify a material file (line MFNAME).\n");
+		exit(0);
+
+	}
+
 	if (NMATR > MAXMAT){
 		fprintf(IWR, "Wrong number of materials.\n");
 		fprintf(IWR, "NMAT = %4d is larger than MAXMAT = %4d",NMATR,MAXMAT );
@@ -14458,10 +14529,10 @@ L33:;
 		fprintf(IWR, "   Material data file: %s\n", PMFILE[M-1]);
 		if (PENELOPE_mod_.EABS[M-1][1-1] < 5.0e1)
 			PENELOPE_mod_.EABS[M-1][1-1]=5.0e1;
-		if (PENELOPE_mod_.EABS[M-2][1-1] < 5.0e1)
-			PENELOPE_mod_.EABS[M-2][1-1]=5.0e1;
-		if (PENELOPE_mod_.EABS[M-3][1-1] < 5.0e1)
-			PENELOPE_mod_.EABS[M-3][1-1]=5.0e1;
+		if (PENELOPE_mod_.EABS[M-1][2-1] < 5.0e1)
+			PENELOPE_mod_.EABS[M-1][2-1]=5.0e1;
+		if (PENELOPE_mod_.EABS[M-1][3-1] < 5.0e1)
+			PENELOPE_mod_.EABS[M-1][3-1]=5.0e1;
 		fprintf(IWR, "   Electron absorption energy = %.6E\n", PENELOPE_mod_.EABS[M-1][1-1]);
 		fprintf(IWR, "     Photon absorption energy = %.6E\n", PENELOPE_mod_.EABS[M-1][2-1]);
 		fprintf(IWR, "   Positron absorption energy = %.6E\n", PENELOPE_mod_.EABS[M-1][3-1]);
@@ -14482,8 +14553,11 @@ L33:;
 	}
 	int INFO = 3;
 
-	peinit2_(CSOUR1_.EPMAX, &NMATR, MATERIAL2, &INFO, PMFILE);
+	peinit2_(CSOUR1_.EPMAX, NMATR, MATERIAL2, &INFO, PMFILE);
+
 	fclose(MATERIAL2);
+
+	
 
 	// Definicão da Geometria
 
@@ -14543,6 +14617,8 @@ L34:;
 		geomin2_(PARINP, &NPINP, &NMATG, PENGEOM_mod_.NBODY, GEOMETRIA, GEOMETRY2);
 		fclose(GEOMETRIA);
 		fclose(GEOMETRY2);
+
+	
 
 		if (NMATG < 1){
 			fprintf(IWR, "NMATG must be greater than 0.\n");
@@ -14708,7 +14784,8 @@ L37:;
 
  */
 
-
+	
+	
    // Energia e distribuições angulares de partículas .
 
 	fprintf(IWR, "\n   ------------------------------------------------------------------------\n");
@@ -14779,9 +14856,12 @@ L52:;
 	if (NBPH < 1){
 		fprintf(IWR,"   Wrong number of PHI bins.\n");
 		printf("Wrong number of PHI bins.\n");
+		exit(0);
 	}
 
-	enang02_(EMIN,EMAX,NBE,NBTH,NBPH, IWR);
+
+	enang02_(EMIN,EMAX,NBE,NBTH,NBPH,IWR);
+
 
 	//Detectores de impacto
 
@@ -14822,14 +14902,13 @@ L61:;
 			EDIL=50.0e0;
 
 		if (EDIU < 50.0e0)
-			EDIU=50.0e0;
+			EDIU= *CSOUR1_.EPMAX;
 
 		if (NDICH < 0){
 			EDIL=max(EDIL,50.0e0);
 			fprintf(IWR, "   Energy window = (%.5E, %.5E) eV\n",EDIL,EDIU );
 			fprintf(IWR, "   Number of energy bins = %4d   (logarithmic scale)\n", abs(NDICH));
 		}else{
-			EDIL=max(EDIL,50.0e0);
 			fprintf(IWR, "   Energy window = (%.5E, %.5E) eV\n",EDIL,EDIU );
 			fprintf(IWR, "   Number of energy bins = %4d   (linear scale)\n", NDICH);
 		}
@@ -14893,12 +14972,14 @@ L64:;
 			}
 			PCH = strtok(BUFFER, " ");
 			strcpy(PSFDIO, PCH);
-			fprintf(IWR, "   Output phase-space file: %s\n", PSFDIO);
-			*CNT4_.NPSFO=*CNT4_.NPSFO+1;
-			if (*CNT4_.NPSFO > 1){
-				fprintf(IWR, "You cannot generate more than one PSF in a single run.\n");
-				printf("Only one PSF can be generated in a each run\n");
-				exit(0);
+			if (CNT4_.IPSF[*CNT4_.NID-1] > 0){
+				fprintf(IWR, "   Output phase-space file: %s\n", PSFDIO);
+				*CNT4_.NPSFO=*CNT4_.NPSFO+1;
+				if (*CNT4_.NPSFO > 1){
+					fprintf(IWR, "You cannot generate more than one PSF in a single run.\n");
+					printf("Only one PSF can be generated in a each run\n");
+					exit(0);
+				}
 			}else{
 				fprintf(IWR, "No phase-space file is generated.\n");
 			}
@@ -15067,6 +15148,13 @@ L65:;
 				exit(0);
 			}
 
+			if (PENGEOM_mod_.MATER[KB-1] != 0){
+				fprintf(IWR, "%s %s\n", KWORD,BUFFER );
+				fprintf(IWR, "   A void body cannot be part of two detectors.\n");
+				printf("   A void body cannot be part of two detectors.\n");
+				exit(0);
+			}
+
 			fprintf(IWR, "   Active body = %4d\n", KB);
 			PENGEOM_mod_.KDET[KB-1]= *CNT4_.NID;
           	NDBOD=NDBOD+1;
@@ -15082,6 +15170,7 @@ L66:;
 				if (NDBOD == 0){
 					fprintf(IWR, "This detector has no active bodies.\n");
 					printf("This detector has no active bodies.\n");
+					exit(0);
 				}
 				ITST=fmax(CNT4_.KKDI[1-1][*CNT4_.NID-1], fmax(CNT4_.KKDI[2-1][*CNT4_.NID-1], CNT4_.KKDI[3-1][*CNT4_.NID-1]));
 				if (ITST == 0){
@@ -15117,10 +15206,10 @@ L67:;
 				CNT4_.KKDI[1-1][*CNT4_.NID-1]=1;
 				fprintf(IWR,"   Detected particles = electrons\n");
 			}else if (KPARD == 2){
-				CNT4_.KKDI[2-1][*CNT4_.NID-1]=2;
+				CNT4_.KKDI[2-1][*CNT4_.NID-1]=1;
 				fprintf(IWR,"   Detected particles = photons\n");
 			}else if (KPARD == 3){
-				CNT4_.KKDI[3-1][*CNT4_.NID-1]=3;
+				CNT4_.KKDI[3-1][*CNT4_.NID-1]=1;
 				fprintf(IWR,"   Detected particles = positrons\n");
 			}
 
@@ -15138,6 +15227,7 @@ L68:;
 				if (NDBOD == 0){
 					fprintf(IWR, "This detector has no active bodies.\n");
 					printf("This detector has no active bodies.\n");
+					exit(0);
 				}
 				ITST=max(CNT4_.KKDI[1-1][*CNT4_.NID-1],max(CNT4_.KKDI[2-1][*CNT4_.NID-1],CNT4_.KKDI[3-1][*CNT4_.NID-1]));
 				if (ITST == 0){
@@ -15171,6 +15261,8 @@ L68:;
 		imdet02_(EDIL,EDIU,NDICH,AGEL,AGEU,NAGE,CNT4_.IDCUT[*CNT4_.NID-1],SPCDIO,SPCFSO,SPCAGE, *CNT4_.NID, IWR);
 			
 	}
+
+
 
 	//Detectores de deposição de energia
 
@@ -15304,6 +15396,7 @@ L47:;
 	}
 
 	//Distribuição de dose
+
 
     *CNT6_.LDOSEM=false;
     NBX=0;
@@ -15477,6 +15570,7 @@ L73:;
 		dose02_(XLD,XUD,YLD,YUD,ZLD,ZUD,NBX,NBY,NBZ,IDOSE, IWR);
 
 
+
 	//Caracteristicas do trabalho
 
 	fprintf(IWR,"\n\n   ------------------------------------------------------------------------\n");
@@ -15609,14 +15703,14 @@ L78:;
     *CNT4_.RLAST=0.0e0;
     *CNT4_.RWRITE=0.0e0;
 
-	char TITLE2[100];
 	char LINHADUMP[50];
 	double aux;
 	string line;
-	
 
 
-//	printf("PFILER: %s\n", PFILER);
+
+
+	printf("PFILER: %s\n", PFILER);
 	if (IRESUM == 1){
 
 		FILE* IWDUMP = fopen("iwdump.dmp", "w");
@@ -15633,24 +15727,33 @@ L78:;
 		inFILE.open(PFILER);
 		getline(inFILE, line);
 
+		
+
 	    char *sArray = (char *) malloc((line.length()+1) * sizeof(char));
+
+		if (line.length() == 0){
+			printf("\nLinha dump1.dmp zerada\n");
+			
+			goto L91;
+
+		}
 		
 		strcpy(sArray, line.c_str());
 		PCH = strtok(sArray, " ");
 		SHNA = atof(PCH);
 		PCH = strtok(NULL, " ");
         CPUTA = atof(PCH);
+		printf("  Reading the DUMP file ...\n");
 		fprintf(IWDUMP, "	%f		%f\n", SHNA, CPUTA);
-		if (SHNA == 0.0e0)
-			goto L91;
+		
 
         getline(inFILE, line);
 		sArray = (char *) realloc(NULL, (line.length()+1) * sizeof(char));
 		strcpy(sArray, line.c_str());
 		PCH = strtok(sArray, " ");
-		strcpy(TITLE2, PCH);
-		fprintf(IWDUMP, "%s\n", TITLE2);
-		if (strcmp(TITLE2, TITLE)){
+		strcpy(CTITLE_.TITLE2, PCH);
+		fprintf(IWDUMP, "%s\n", CTITLE_.TITLE2);
+		if (strcmp(CTITLE_.TITLE2, CTITLE_.TITLE)){
 			fprintf(IWR, "The dump file is corrupted (the TITLE does not match).\n");
 			printf("The dump file is corrupted (the TITLE does not match).\n");
 			exit(0);
@@ -15959,6 +16062,10 @@ L91:;
 		IRESUM = 0;
 	}
 L92:;
+	*CNT4_.IPSFO=21;
+	*CSOUR4_.IPSFI=20;
+
+
 
  //Na sequencia é feito a leitura dos dados referentes ao arquivo Phase-Espace. Porém, esta
  //versão nao contepla a utilização desse arquivo.
@@ -15968,15 +16075,25 @@ L92:;
 	*CNTRL_.SHN=SHNA;  //Contador de simulações partículas do arquivo de despejo
     *CNTRL_.N=fmod(*CNTRL_.SHN,2.0e9)+0.5e0;
     *CNTRL_.TSIM=CPUTA;
-
     end = clock();
-
-    //*CNTRL_.CPUT0=CPUTIM();
-
 	*CNTRL_.CPUT0= (double)(end - start) / CLOCKS_PER_SEC;
+	if (*CNTRL_.SHN > *CNTRL_.DSHN-0.5e0){
+		fprintf(IWR, "  **** The simulation was already completed. \n");
+		printf("  **** The simulation was already completed.\n");
+		*CSOUR0_.JOBEND=3;
+	}else{
+		printf("   The simulation is started ...\n");
+	}
+
+
+
+//printf("\n\nimprimndo tabelas\n\n");
+//tabelas_();
+	//		printf("\n\nCaracteristicas do trabalh\n\n");
+//		exit(0);
+
 
 	printf("\nFIM PMRDR2\n");
-	exit(0);
 }
 
 
@@ -15991,7 +16108,7 @@ void gcone02_(double THETA, double PHI, double ALPHA){
 	*/
 
 	*CGCONE_.CPCT=cos(PHI)*cos(THETA);
-    *CGCONE_.CPST=sin(PHI)*sin(THETA);
+    *CGCONE_.CPST=cos(PHI)*sin(THETA);
     *CGCONE_.SPCT=sin(PHI)*cos(THETA);
     *CGCONE_.SPST=sin(PHI)*sin(THETA);
     *CGCONE_.SPHI=sin(PHI);
@@ -15999,6 +16116,8 @@ void gcone02_(double THETA, double PHI, double ALPHA){
     *CGCONE_.STHE=sin(THETA);
     *CGCONE_.CTHE=cos(THETA);
     *CGCONE_.CAPER=cos(ALPHA);	
+
+	printf("\n\nCAPER: %f\n\n ",*CGCONE_.CAPER);
 
 	printf("\n\nGCONE0\n\n");
 }
@@ -16035,7 +16154,7 @@ void enang02_(double &EMIN, double &EMAX, int &NBE, int &NBTH, int &NBPH, FILE *
 		exit(0);
 	}
 
-	if (abs(NBPH) > NBPHM){
+	if (NBPH > NBPHM){
 		fprintf(IWR, "ENANG: NBPH is too large.\n");
 		fprintf(IWR, "ENANG: Set the parameter NBPHM equal to %.d\n", abs(NBPH));
 		printf("ENANG: NBPH is too large.\n");
@@ -16054,7 +16173,7 @@ void enang02_(double &EMIN, double &EMAX, int &NBE, int &NBTH, int &NBPH, FILE *
         *CENANG_.NE=NBE;
 	}
 
-	*CENANG_.BSE=FSAFE*(*CENANG_.EU-*CENANG_.EL)/ *CENANG_.NE;
+	*CENANG_.BSE=FSAFE*(*CENANG_.EU - *CENANG_.EL) / *CENANG_.NE;
     *CENANG_.RBSE=1.0e0/ *CENANG_.BSE;
 
 	if (NBTH < 0){
@@ -16116,7 +16235,7 @@ void imdet02_(double &EMIN, double &EMAX, int &NBE, double &AGEMIN, double &AGEM
 	static const int NBEM=1000;
 
 
-	int NIDS = 0;
+	static int NIDS = 0;
 
 	if (ID <= NIDS){
 		fprintf(IWR, " SIMDET: Detector already defined.\n");
@@ -16163,9 +16282,9 @@ void imdet02_(double &EMIN, double &EMAX, int &NBE, double &AGEMIN, double &AGEM
 
 	for (int J = 1; J <= CIMDET_.NE[ID-1]+1; J++){
 		if (CIMDET_.LLE[ID-1] == 1)
-			CIMDET_.ET[J-1][ID-1]=exp(CIMDET_.EL[ID-1]-+(J-1)*CIMDET_.BSE[ID-1]);
+			CIMDET_.ET[J-1][ID-1]=exp(CIMDET_.EL[ID-1]+(J-1)*CIMDET_.BSE[ID-1]);
 		else
-		CIMDET_.ET[J-1][ID-1]=CIMDET_.EL[ID-1]+(J-1)*CIMDET_.BSE[ID-1];
+			CIMDET_.ET[J-1][ID-1]=CIMDET_.EL[ID-1]+(J-1)*CIMDET_.BSE[ID-1];
 	}
 
 	CIMDET_.EDEP[ID-1]=0.0e0;
@@ -16245,7 +16364,7 @@ void endet02_(double &EMIN, double &EMAX, int &NB, char *FNSPC, int &ID, FILE *I
 	static const int NBEM=1000;
 
 
-	int NIDS = 0;
+	static int NIDS = 0;
 
 	if (ID <= NIDS){
 		fprintf(IWR, " SENDET: Detector already defined.\n");
@@ -16382,9 +16501,9 @@ void dose02_(double &XL, double &XU,double &YL,double &YU,double &ZL,double &ZU,
 	for (int I = 1; I <= 3; I++){
 		CDOSE3_.BDOSE[I-1]=FSAFE*(CDOSE3_.DXU[I-1]-CDOSE3_.DXL[I-1])/(CDOSE3_.NDB[I-1]);
 		if (fabs(CDOSE3_.BDOSE[I-1]) < 1.0e-35)
-			CDOSE3_.BDOSE[I-1]=1.0e35;
+			CDOSE3_.RBDOSE[I-1]=1.0e35;
 		else
-		    CDOSE3_.BDOSE[I-1]=1.0e0/CDOSE3_.BDOSE[I-1];
+		    CDOSE3_.RBDOSE[I-1]=1.0e0/CDOSE3_.BDOSE[I-1];
 	}
 
 	//Contadores de Dose

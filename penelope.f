@@ -9,7 +9,7 @@ C    P       EEEEEE  N    N  EEEEEE  LLLLLL   OOOO   P       EEEEEE    C
 C                                                                      C
 C                                                   (version 2014).    C
 C                                                                      C
-C  Subroutine package for Monte Carlo simulation of coupled electron-  C
+C  Subroutine package for Monte Carlo simulation of coupled electron-  c 
 C  photon transport in homogeneous media.                              C
 C                                                                      C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
