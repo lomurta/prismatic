@@ -649,6 +649,16 @@ typedef struct{
 }CDOSE4;
 
 
+typedef struct{
+	double *ELAST1, *ELAST2;
+	int *MHINGE, *KSOFTE, *KSOFTI, *KDELTA;
+}CJUMP1;
+
+typedef struct{
+	double *ES, *XS, *YS, *ZS, *US , *VS, *WS, *WGHTS, *SP1S, *SP2S, *SP3S, *PTAUS;
+    int *KS, *IBODYS, *MS, (*ILBS)[5], *IPOLS, *NSEC;
+}SECST;
+
 
 
 
@@ -749,6 +759,8 @@ void imprimirKDGHT(FILE* IW, int &KB);
    CDOSE2 CDOSE2_;
    CDOSE3 CDOSE3_;
    CDOSE4 CDOSE4_;
+   CJUMP1 CJUMP1_;
+   SECST SECST_;
 
 
 extern "C" {
@@ -960,6 +972,11 @@ void transfcdose3_(double *DXL, double *DXU, double *BDOSE, double *RBDOSE, int 
 
 void transfcdose4_(double (*VMASS)[NDYM][NDXM]);
 
+void transfcjump1_(double *ELAST1, double *ELAST2, int *MHINGE, int *KSOFTE, int *KSOFTI, int *KDELTA);
+
+void transfsecst_(double *ES, double *XS, double *YS, double *ZS, double *US , double *VS, double *WS, double *WGHTS, double *SP1S, double *SP2S, double *SP3S, double *PTAUS,
+    int *KS, int *IBODYS, int *MS, int (*ILBS)[5], int *IPOLS, int *NSEC);
+
 
 
 
@@ -1142,6 +1159,14 @@ void endetr2_(ifstream &IRD, FILE *IWDUMP);
 void doser2_(ifstream &IRD, FILE *IWDUMP);
 
 void tabelas_();
+
+void shower2_();
+
+void cleans2_();
+
+int rand2_(double DUMMY);
+
+void gcone2_(double &UF, double &VF, double &WF);
 
 
 }
@@ -2285,6 +2310,38 @@ void transfcdose4_(double (*VMASS)[NDYM][NDXM]){
 	CDOSE4_.VMASS = VMASS;
 }
 
+
+void transfcjump1_(double *ELAST1, double *ELAST2, int *MHINGE, int *KSOFTE, int *KSOFTI, int *KDELTA){
+
+	CJUMP1_.ELAST1 = ELAST1;
+	CJUMP1_.ELAST2 = ELAST2;
+	CJUMP1_.MHINGE = MHINGE;
+	CJUMP1_.KSOFTE = KSOFTE;
+	CJUMP1_.KSOFTI = KSOFTI;
+	CJUMP1_.KDELTA = KDELTA;
+}
+
+void transfsecst_(double *ES, double *XS, double *YS, double *ZS, double *US , double *VS, double *WS, double *WGHTS, double *SP1S, double *SP2S, double *SP3S, double *PTAUS,
+    int *KS, int *IBODYS, int *MS, int (*ILBS)[5], int *IPOLS, int *NSEC){
+		SECST_.ES = ES;
+		SECST_.XS = XS;
+		SECST_.YS = YS;
+		SECST_.ZS = ZS;
+		SECST_.US = US;
+		SECST_.VS = VS;
+		SECST_.WS = WS;
+		SECST_.WGHTS = WGHTS;
+		SECST_.SP1S = SP1S;
+		SECST_.SP2S = SP2S;
+		SECST_.SP3S = SP3S;
+		SECST_.PTAUS = PTAUS;
+        SECST_.KS = KS;
+		SECST_.IBODYS = IBODYS;
+		SECST_.MS = MS;
+		SECST_.ILBS = ILBS;
+		SECST_.IPOLS = IPOLS;
+		SECST_.NSEC = NSEC;
+	}
 
 
 
@@ -18285,6 +18342,255 @@ void doser2_(ifstream &IRD, FILE *IWDUMP){
 
 }
 
+
+void shower2_(){
+
+	//Simula uma nova particula e registra as quantidades relevantes.
+
+	bool LINTF;
+
+	double REV=5.10998928e5;
+	double TREV=2.0e0*REV;
+	double PI=3.1415926535897932e0;
+	double TWOPI=2.0e0*PI;
+
+	int IEXIT, METAST, NTRIAL, K, KEn;
+	double RN, RNF, UV, PHI;
+
+	//A simulação da particula começa aqui.
+
+	//Contadores de particulas primarias
+
+L100:;
+	for (int I = 1; I <= 3; I++){
+		CNT0_.DPRIM[I-1]=0.0e0;
+		for (int K = 1; K <= 3; K++){
+			CNT0_.DSEC[I-1][K-1]=0.0e0;
+		}
+	}
+
+	for (int I = 1; I <= 2; I++){
+		CNT0_.DAVW[I-1]=0.0e0;
+        CNT0_.DAVA[I-1]=0.0e0;
+        CNT0_.DAVE[I-1]=0.0e0;
+	}
+
+	for (int KB = 1; KB <= *PENGEOM_mod_.NBODY; KB++){
+		CNT1_.DEBO[KB-1]=0.0e0; //Energias depositadas nos diversos corpos KB
+	}
+
+	IEXIT=0;
+    METAST=0;
+
+	cleans2_(); //Limpa a pilha secundaria
+
+	//if (*TRACK_MOD_.LAGE)
+	//	PAGE0; //define o tempo de voo igual a 0
+	//Não será realizado a contabilização do tempo individual de vida de uma particula nesta versão do programa
+
+
+	//Definindo o estado inicial da partícula primária.
+
+L201:;
+
+	if (*CSOUR0_.KPARP == 0){ //não será implementado o tratamento para eletrons como particula primaria nesta versão do programas.
+
+
+	}else{
+		//Fonte Externa
+		*CNTRL_.SHN= *CNTRL_.SHN+1.0e0;
+        *CNTRL_.N= *CNTRL_.N+1;
+
+		
+		if (*CNTRL_.N > 2000000000)
+			*CNTRL_.N= *CNTRL_.N-2000000000;
+
+		*TRACK_mod_.KPAR=*CSOUR0_.KPARP;
+        *TRACK_mod_.WGHT=1.0e0;
+		
+		//Posição inicial da particula
+		if (*CSOUR3_.LEXSRC){
+			if (*CSOUR3_.LEXBD){
+				NTRIAL=0;
+L301:;			
+				*TRACK_mod_.X= *CSOUR3_.SX0+(rand2_(1.0e0)-0.5e0)* *CSOUR3_.SSX;
+            	*TRACK_mod_.Y= *CSOUR3_.SY0+(rand2_(2.0e0)-0.5e0)* *CSOUR3_.SSY;
+            	*TRACK_mod_.Z= *CSOUR3_.SZ0+(rand2_(3.0e0)-0.5e0)* *CSOUR3_.SSZ;
+            	locate2_();
+				NTRIAL=NTRIAL+1;
+				if (NTRIAL > 200){
+					printf("   WARNING: the sampling of initial positions may be very inefficient.");
+					//imrpimir em um arquivo tbm
+				}
+
+				if (CSOUR3_.IXSBOD[*TRACK_mod_.IBODY-1] == 0)
+				goto L301;
+			}else{
+				*TRACK_mod_.X= *CSOUR3_.SX0+(rand2_(1.0e0)-0.5e0)* *CSOUR3_.SSX;
+            	*TRACK_mod_.Y= *CSOUR3_.SY0+(rand2_(2.0e0)-0.5e0)* *CSOUR3_.SSY;
+            	*TRACK_mod_.Z= *CSOUR3_.SZ0+(rand2_(3.0e0)-0.5e0)* *CSOUR3_.SSZ;
+			}
+		} else{
+			*TRACK_mod_.X= *CSOUR3_.SX0;
+            *TRACK_mod_.Y= *CSOUR3_.SY0;
+            *TRACK_mod_.Z= *CSOUR3_.SZ0;
+		}
+
+		//Direção Inicial
+		if (*CSOUR0_.LSCONE){
+			gcone2_(*TRACK_mod_.U, *TRACK_mod_.V, *TRACK_mod_.W); //Feixe Conico
+		}else{ //Feixe Retangular
+
+			*TRACK_mod_.W=*CSOUR0_.CTHL+rand2_(4.0e0)* *CSOUR0_.DCTH; 
+            UV=sqrt(1.0e0-*TRACK_mod_.W * *TRACK_mod_.W);
+            PHI=*CSOUR0_.PHIL+rand2_(5.0e0)* *CSOUR0_.DPHI;
+            *TRACK_mod_.U=UV*cos(PHI);
+            *TRACK_mod_.V=UV*sin(PHI);
+		}
+		//Energia Inicial
+		if (*CSOUR2_.LSPEC){
+			RN=rand2_(6.0e0)* *CNT2_.NSEB+1;
+            K=int(RN); //Espectro contínuo. E amostrado pelo método de Walker.
+            RNF=RN-K;
+			if (RNF > CSOUR2_.FSRC[K-1]){
+				KEn=CSOUR2_.IASRC[K-1];
+			}else{
+				KEn=K;
+			}
+			*TRACK_mod_.E=CSOUR2_.ESRC[KEn-1]+rand2_(7.0e0)*(CSOUR2_.ESRC[KEn+1-1]-CSOUR2_.ESRC[KEn-1]);
+          	CNT2_.SHIST[KEn-1]=CNT2_.SHIST[KEn-1]+1.0e0;
+		}else{
+			*TRACK_mod_.E= *CSOUR1_.E0; //Fonte MonoEnergetica.
+         	 CNT2_.SHIST[1-1]=CNT2_.SHIST[1-1]+1.0e0;
+		}
+
+		TRACK_mod_.ILB[1-1]=1;  //Identifica partículas primárias.
+        TRACK_mod_.ILB[2-1]=0;
+        TRACK_mod_.ILB[3-1]=0;
+        TRACK_mod_.ILB[4-1]=0;
+        TRACK_mod_.ILB[5-1]=0;
+
+		if (*TRACK_mod_.KPAR == 2){
+			if (*CSOUR0_.LGPOL){
+				*TRACK_mod_.IPOL=1;  //Polarizacao de Fotons
+           	 	*TRACK_mod_.SP1=*CSOUR1_.SP10;
+            	*TRACK_mod_.SP2=*CSOUR1_.SP20;
+            	*TRACK_mod_.SP3=*CSOUR1_.SP30;
+			}
+			else{
+				*TRACK_mod_.IPOL=0;
+			}
+		}else{
+			*TRACK_mod_.IPOL=0;
+		}
+	}
+
+	//Verifique se a trajetória cruza o sistema de materiais.
+	//implementacao da simulacao
+L302:;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+void cleans2_(){
+
+	//Esta sub-rotina inicializa a pilha secundária. Deve ser chamada antes de iniciar a simulação de cada pista primária.
+
+	*SECST_.NSEC=0;
+
+
+}
+
+
+int rand2_(double DUMMY){ //gerador de numeros aleatorios
+
+
+
+
+	/*
+	Esta é uma versão adaptada da sub-rotina RANECU escrita por F. James
+	(Comput. Phys. Commun. 60 (1990) 329-344), que foi modificado para
+	dá um único número aleatório em cada chamada.
+
+	As 'sementes' ISEED1 e ISEED2 devem ser inicializadas no programa principal
+	e transferido através do bloco comum nomeado /RSEED/.
+
+	Alguns compiladores incorporam um gerador de números aleatórios intrínseco com
+	o mesmo nome (mas com diferentes listas de argumentos). Para evitar conflitos,
+	é aconselhável declarar RAND como uma função externa em todas as sub-
+	programas em que o chamam.
+	*/
+
+	double USCALE=1.0e0/2.147483563e9;
+	int I1, I2, IZ;
+
+	I1=*RSEED_.ISEED1/53668;
+    *RSEED_.ISEED1=40014*(*RSEED_.ISEED1-I1*53668)-I1*12211;
+	if (*RSEED_.ISEED1 < 0)
+		*RSEED_.ISEED1=*RSEED_.ISEED1+2147483563;
+
+	I2=*RSEED_.ISEED2/52774;
+    *RSEED_.ISEED2=40692*(*RSEED_.ISEED2-I2*52774)-I2*3791;
+    if (*RSEED_.ISEED2 < 0)
+		 *RSEED_.ISEED2=*RSEED_.ISEED2+2147483399;
+
+	IZ=*RSEED_.ISEED1-*RSEED_.ISEED2;
+    if (IZ < 1) 
+		IZ=IZ+2147483562;
+
+	return IZ*USCALE;
+
+}
+
+
+void gcone2_(double &UF, double &VF, double &WF){
+
+	/*
+	Esta sub-rotina amostra uma direção aleatória uniformemente dentro de um cone
+	 com eixo central na direção (THETA,PHI) e abertura ALPHA.
+	Os parâmetros são inicializados chamando a sub-rotina GCONE0.
+	*/
+
+	double PI=3.1415926535897932e0;
+	double TWOPI=2.0e0*PI;
+
+	double WT,DF, SUV, UT, VT, DXY, DXYZ, FNORM;
+
+	//Defina uma direção relativa ao eixo z.
+	WT=*CGCONE_.CAPER+(1.0e0-*CGCONE_.CAPER)*rand2_(1.0e0);
+    DF=TWOPI*rand2_(2.0e0);
+    SUV=sqrt(1.0e0-WT*WT);
+    UT=SUV*cos(DF);
+    VT=SUV*cos(DF);
+
+	//Rotacao para a direção do eixo do feixe
+
+	UF=*CGCONE_.CPCT*UT-*CGCONE_.SPHI*VT+*CGCONE_.CPST*WT;
+    VF=*CGCONE_.SPCT*UT+*CGCONE_.CPHI*VT+*CGCONE_.SPST*WT;
+    WF=-*CGCONE_.STHE*UT+*CGCONE_.CTHE*WT;
+
+	//Normalizaçao
+	DXY=UF*UF+VF*VF;
+    DXYZ=DXY+WF*WF;
+	if (fabs(DXYZ-1.0e0) > 1.0e-14){
+		FNORM=1.0e0/sqrt(DXYZ);
+        UF=FNORM*UF;
+        VF=FNORM*VF;
+        WF=FNORM*WF;
+	}
+}
 
 
 
