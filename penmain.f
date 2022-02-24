@@ -946,6 +946,8 @@ C  ****  Photon simulation tables.
 	  COMMON/SECST/ES(NMS),XSS(NMS),YS(NMS),ZS(NMS),US(NMS),VS(NMS),
      1   WS(NMS),WGHTS(NMS),SP1S(NMS),SP2S(NMS),SP3S(NMS),PTAUS(NMS),
      2   KSS(NMS),IBODYS(NMS),MS(NMS),ILBS(5,NMS),IPOLS(NMS),NSEC
+	 
+	 COMMON/CJUMP0/PJ(8),ST,DST,DSR,W1,W2,T1,T2
 	  
 	 
 C
@@ -1186,6 +1188,10 @@ C	 CALL PINaT1(E,UK,WK,DELTA,WCCM,H0,H1,H2,S0,S1,S2,R0,R1,R2)
 	  CALL transfsecst(ES,XSS,YS,ZS,US,VS,
      1   WS,WGHTS,SP1S,SP2S,SP3S,PTAUS,
      2   KSS,IBODYS,MS,ILBS,IPOLS,NSEC)
+	 
+	 CALL transfjump0(PJ,ST,DST,DSR,W1,W2,T1,T2)
+	 
+	
 	  
 	  
 	 
@@ -6762,6 +6768,9 @@ C  ****  Photon simulation tables.
      2   KSS(NMS),IBODYS(NMS),MS(NMS),ILBS(5,NMS),IPOLS(NMS),NSEC
 	 
 	 
+	  COMMON/CJUMP0/PJ(8),ST,DST,DSR,W1,W2,T1,T2
+	 
+	 
 	  
 	  
       
@@ -7316,8 +7325,12 @@ c	  CLOSE(IWR)
 	  WRITE(IWR,'(8E14.5)') WGHTS,SP1S,SP2S,SP3S,PTAUS
 	  WRITE(IWR,'(8I10)') KSS,IBODYS,MS,ILBS,IPOLS,NSEC
 	  CLOSE(IWR)
+	  
+	  OPEN(IWR,FILE='JUMP0.txt')
+	  write(IWR,*) 'JUMP0'
+	  WRITE(IWR,'(8E14.5)') PJ,ST,DST,DSR,W1,W2,T1,T2
+	  CLOSE(IWR)
  	 
-
       RETURN
       END
 	  
