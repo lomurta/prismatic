@@ -659,7 +659,7 @@ typedef struct{
     int *KS, *IBODYS, *MS, (*ILBS)[5], *IPOLS, *NSEC;
 }SECST;
 
-tyepdef struct{
+typedef struct{
 	double *P, *ST, *DST, *DSR, *W1, *W2, *T1, *T2;
 }CJUMP0;
 
@@ -765,7 +765,7 @@ void imprimirKDGHT(FILE* IW, int &KB);
    CDOSE4 CDOSE4_;
    CJUMP1 CJUMP1_;
    SECST SECST_;
-   CJUMP0 CJUMP0_.
+   CJUMP0 CJUMP0_;
 
 
 extern "C" {
@@ -1183,7 +1183,17 @@ void sdose2_(double &DEP, double &XD, double &YD, double &ZD, int &MATC, int &N)
 
 void simdet2_(int &N, int &ID);
 
+void jump2_(double &DSMAX, double &DS);
+
 void start2_();
+
+double rndg32_();
+
+void eimfp2_(int &IEND);
+
+void pimfp2_(int &IEND);
+
+void gimfp2_();
 
 }
 
@@ -18606,11 +18616,11 @@ L102:;
 
 	//Comprimento do caminho livre para o próximo evento de interação.
 L103:;
-	IBODYL=IBODY; 
-	MATL=MAT; 
-	XL=X; 
-	YL=Y; 
-	ZL=Z;
+	IBODYL=*TRACK_mod_.IBODY; 
+	MATL=*TRACK_mod_.MAT; 
+	XL=*TRACK_mod_.X; 
+	YL=*TRACK_mod_.Y; 
+	ZL=*TRACK_mod_.Z;
 
 	/*if ((CFORCI_.LFORCE[KPAR-1][IBODY-1]) && ((WGHT > WLOW[KPAR-1][IBODY-1]) && (WGHT < WHIG[KPAR-1][IBODY-1]))){
 		//JUMPF(DSMAX(IBODY),DS)  //Força de Interação
@@ -18621,13 +18631,14 @@ L103:;
         LINTF=false
 	}*/
 
-	jump2_(CSPGEO_.DSMAX[IBODY-1], DS);
+	jump2_(CSPGEO_.DSMAX[*TRACK_mod_.IBODY-1], DS);
     LINTF=false;
 
-	step2_(DS,DSEF,NCROSS) //Determina a posição final do passo.
+	step2_(&DS,&DSEF,&NCROSS); //Determina a posição final do passo.
 
 	//Distribuição de energia de fluência.
 	
+
 
 
 
@@ -19127,7 +19138,8 @@ void jump2_(double &DSMAX, double &DS){
 	= DESOFT/passo_comprimento.
 	*/
 
-    double DSMAXP, DSMC, EDE0, VDE0, FSEDE, FSVDE, EDEM, VDEM, W21, ELOWER, XE1, KE1, XEK1, STLWR, EDE, VDE;
+    double DSMAXP, DSMC, EDE0, VDE0, FSEDE, FSVDE, EDEM, VDEM, W21, ELOWER, XE1, KE1, XEK1, STLWR, EDE, VDE, SIGMA;
+	double RU, EDE2, VDE3, PNULL;
 
 	if (*TRACK_mod_.KPAR == 1){ //eletrons
 		if (*CJUMP1_.MHINGE == 1){
@@ -19136,7 +19148,8 @@ void jump2_(double &DSMAX, double &DS){
             	*CEGRID_.XE=1.0e0+(*CEGRID_.XEL-*CEGRID_.DLEMP1)**CEGRID_.DLFC;
             	*CEGRID_.KE=*CEGRID_.XE;
             	*CEGRID_.XEK=*CEGRID_.XE-*CEGRID_.KE;
-            	CALL EIMFP(1);
+				int wvar = 1;
+            	eimfp2_(wvar);
             	*CJUMP1_.ELAST1=*TRACK_mod_.E;
 			}
 			DS=*CJUMP0_.DSR;
@@ -19148,7 +19161,8 @@ void jump2_(double &DSMAX, double &DS){
             *CEGRID_.XE=1.0e0+(*CEGRID_.XEL-*CEGRID_.DLEMP1)**CEGRID_.DLFC;
             *CEGRID_.KE=*CEGRID_.XE;
             *CEGRID_.XEK=*CEGRID_.XE-*CEGRID_.KE;
-            CALL EIMFP(2);
+			int wvar = 2;
+            eimfp2_(wvar);
             *CJUMP1_.ELAST2=*TRACK_mod_.E;
             *CJUMP1_.ELAST1=*TRACK_mod_.E;
 		}
@@ -19204,9 +19218,9 @@ void jump2_(double &DSMAX, double &DS){
             STLWR=exp(CEIMFP_.SETOT[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CEIMFP_.SETOT[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.SETOT[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])*XEK1);
             *CJUMP0_.ST=fmax(*CJUMP0_.ST,STLWR);
 		}else{
-			KSOFTI=0;
-            PENELOPE_mod_.DESOFT=0.0e0;
-            PENELOPE_mod_.SSOFT=0.0e0;
+			*CJUMP1_.KSOFTI=0;
+            *PENELOPE_mod_.DESOFT=0.0e0;
+            *PENELOPE_mod_.SSOFT=0.0e0;
 		}
 
 		/*
@@ -19215,7 +19229,7 @@ void jump2_(double &DSMAX, double &DS){
 		KSOFTE=0, dispersão suave não está ativa.
 		*/
 
-		if (T1 > 1.0e-20){
+		if (*CJUMP0_.T1 > 1.0e-20){
 			*CJUMP1_.KSOFTE=1;
 		}else{
 			*CJUMP1_.KSOFTE=0;
@@ -19253,37 +19267,338 @@ void jump2_(double &DSMAX, double &DS){
              		EDE=EDE0*FSEDE;
               		VDE=VDE0*FSVDE;
 
-					  //Geração de valores aleatórios DE com média EDE e variância VDE.
-
-
+					//Geração de valores aleatórios DE com média EDE e variância VDE.
+					SIGMA=sqrt(VDE);
+					if (SIGMA < 0.333333333e0*EDE){
+						//Distribuição gaussiana truncada.
+						*PENELOPE_mod_.DESOFT=EDE+rndg32_()*SIGMA;
+					}else{
+						RU=rand2_(4.0e0);
+                		EDE2=EDE*EDE;
+                		VDE3=3.0e0*VDE;
+						if (EDE2 < VDE3){
+							PNULL=(VDE3-EDE2)/(VDE3+3.0e0*EDE2);
+							if (RU < PNULL){
+								*PENELOPE_mod_.DESOFT=0.0e0;
+                    			*PENELOPE_mod_.SSOFT=0.0e0;
+								if (*CJUMP1_.KSOFTE == 0){
+                      				*CJUMP1_.MHINGE=1;
+                      				DS=*CJUMP0_.DST;
+								}else{
+									*CJUMP1_.KSOFTI=0;
+								}
+								return;
+							}else{
+								//Distribuição Uniforme
+								*PENELOPE_mod_.DESOFT=1.5e0*(EDE+VDE/EDE)*(RU-PNULL)/(1.0e0-PNULL);
+							}
+						}else{
+							*PENELOPE_mod_.DESOFT=EDE+(2.0e0*RU-1.0e0)*sqrt(VDE3);
+						}
+					}
+					*PENELOPE_mod_.SSOFT=*PENELOPE_mod_.DESOFT/ *CJUMP0_.DST;
 				 }
 			 }
+		}
+		return;
+	}else if (*TRACK_mod_.KPAR == 3){ //Positrons
 
+		if (*CJUMP1_.MHINGE == 1){
+			if (*TRACK_mod_.E < *CJUMP1_.ELAST1){
+				*CEGRID_.XEL=log(*TRACK_mod_.E);
+            	*CEGRID_.XE=1.0e0+(*CEGRID_.XEL-*CEGRID_.DLEMP1)* *CEGRID_.DLFC;
+            	*CEGRID_.KE=*CEGRID_.XE;
+            	*CEGRID_.XEK=*CEGRID_.XE-*CEGRID_.KE;
+				int wvar = 1;
+            	pimfp2_(wvar);
+            	*CJUMP1_.ELAST1=*TRACK_mod_.E;
+			}
+			DS=*CJUMP0_.DSR;
+            return;
 		}
 
+		*PENELOPE_mod_.E0STEP=*TRACK_mod_.E;
+		if (*TRACK_mod_.E < *CJUMP1_.ELAST2){
+			*CEGRID_.XEL=log(*TRACK_mod_.E);
+          	*CEGRID_.XE=1.0e0+(*CEGRID_.XEL-*CEGRID_.DLEMP1)* *CEGRID_.DLFC;
+          	*CEGRID_.KE=*CEGRID_.XE;
+          	*CEGRID_.XEK=*CEGRID_.XE-*CEGRID_.KE;
+         	int wvar = 2;
+            pimfp2_(wvar);
+         	*CJUMP1_.ELAST2=*TRACK_mod_.E;
+          	*CJUMP1_.ELAST1=*TRACK_mod_.E;
+		}
 
+		//Caminho livre médio rígido inverso (probabilidade de interação por unidade comprimento do caminho).
+		*CJUMP0_.ST=CJUMP0_.P[2-1]+CJUMP0_.P[3-1]+CJUMP0_.P[4-1]+CJUMP0_.P[5-1]+CJUMP0_.P[8-1];
+        DSMAXP=DSMAX;
 
+		/*
+		Interações de parada suave.
+ 		KSOFTI=1, parada suave está ativa,
+ 		KSOFTI=0, a parada suave não está ativa.
+		*/
 
+		if (*CJUMP0_.W1 > 1.0e-20){
+			*CJUMP1_.KSOFTI=1;
+			/*
+			O comprimento máximo do passo, DSMAXP, é determinado em termos do
+			valor DSMAX de entrada (que é especificado pelo usuário) e a média
+			caminho livre para interações difíceis (1/ST).
+			*/
+			DSMC=4.0e0 / *CJUMP0_.ST;
+			if (DSMAXP > DSMC){
+				DSMAXP=DSMC;
+			}else if (DSMAXP < 1.0e-8){
+				DSMAXP=DSMC;
+			}
 
+			//O valor de DSMAXP é randomizado para eliminar artefatos de dose no final da primeira etapa.
+			DSMAXP=(0.5e0+rand2_(1.0e0)*0.5e0)*DSMAXP;
 
+			//Limite superior para a probabilidade de interação ao longo da etapa (incluindo straggling de energia suave).
 
+			EDE0=*CJUMP0_.W1*DSMAXP;
+            VDE0=*CJUMP0_.W2*DSMAXP;
+            FSEDE=fmax(1.0e0-CPIMFP_.DW1PL[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]*EDE0,0.75e0);
+            FSVDE=fmax(1.0e0-CPIMFP_.DW2PL[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]*EDE0,0.75e0);
+            EDEM=EDE0*FSEDE;
+            VDEM=VDE0*FSVDE;
+            W21=VDEM/EDEM;
 
+			if (EDEM > 9.0e0*W21){
+				ELOWER=fmax(*TRACK_mod_.E-(EDEM+3.0e0*sqrt(VDEM)),*CEGRID_.EMIN);
+			}else if (EDEM > 3.0e0*W21){
+				ELOWER=fmax(*TRACK_mod_.E-(EDEM+sqrt(3.0e0*VDEM)),*CEGRID_.EMIN);
+			}else{
+				ELOWER=fmax(*TRACK_mod_.E-1.5e0*(EDEM+W21),*CEGRID_.EMIN);
+			}
 
+			XE1=1.0e0+(log(ELOWER)-*CEGRID_.DLEMP1)* *CEGRID_.DLFC;
+            KE1=XE1;
+            XEK1=XE1-KE1;
+            STLWR=exp(CPIMFP_.SPTOT[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CPIMFP_.SPTOT[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CPIMFP_.SPTOT[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])*XEK1);
+            *CJUMP0_.ST=fmax(*CJUMP0_.ST,STLWR);
+		}else{
+			*CJUMP1_.KSOFTI=0;
+            *PENELOPE_mod_.DESOFT=0.0e0;
+            *PENELOPE_mod_.SSOFT=0.0e0;
+		}
 
+		/*
+		Dispersão elástica suave.
+		KSOFTE=1, dispersão suave está ativa,
+		KSOFTE=0, dispersão suave não está ativa.
+		*/
 
+		if (*CJUMP0_.T1 > 1.0e-20){
+			*CJUMP1_.KSOFTE=1;
+		}else{
+			*CJUMP1_.KSOFTE=0;
+		}
 
+		/*
+		Interações delta.
+		KDELTA=0, segue-se uma interação difícil,
+		KDELTA=1, segue-se uma interação delta.
+		*/
 
+		*CJUMP0_.DST=-log(rand2_(2.0e0))/ *CJUMP0_.ST;
+		if (*CJUMP0_.DST< DSMAXP){
+			*CJUMP1_.KDELTA=0;
+		}else{
+			*CJUMP0_.DST=DSMAXP;
+            *CJUMP1_.KDELTA=1;
+		}
+
+		if (*CJUMP1_.KSOFTE+*CJUMP1_.KSOFTI == 0){
+			*CJUMP1_.MHINGE=1;
+         	DS=*CJUMP0_.DST;
+		}else{
+			DS=*CJUMP0_.DST*rand2_(3.0e0);
+         	*CJUMP0_.DSR=*CJUMP0_.DST-DS;
+			 if (*CJUMP1_.KSOFTI == 1){
+				 if (*CJUMP0_.DST < 1.0e-8){
+					*PENELOPE_mod_.SSOFT=*CJUMP0_.W1;
+              		*PENELOPE_mod_.DESOFT=*PENELOPE_mod_.SSOFT * *CJUMP0_.DST;
+				 }else{
+					EDE0=*CJUMP0_.W1* *CJUMP0_.DST;
+              		VDE0=*CJUMP0_.W2* *CJUMP0_.DST;
+              		FSEDE=fmax(1.0e0-CPIMFP_.DW1PL[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]*EDE0,0.75e0);
+             		FSVDE=fmax(1.0e0-CPIMFP_.DW2PL[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]*EDE0,0.75e0);
+             		EDE=EDE0*FSEDE;
+              		VDE=VDE0*FSVDE;
+
+					//Geração de valores aleatórios DE com média EDE e variância VDE.
+					SIGMA=sqrt(VDE);
+					if (SIGMA < 0.333333333e0*EDE){
+						//Distribuição gaussiana truncada.
+						*PENELOPE_mod_.DESOFT=EDE+rndg32_()*SIGMA;
+					}else{
+						RU=rand2_(4.0e0);
+                		EDE2=EDE*EDE;
+                		VDE3=3.0e0*VDE;
+						if (EDE2 < VDE3){
+							PNULL=(VDE3-EDE2)/(VDE3+3.0e0*EDE2);
+							if (RU < PNULL){
+								*PENELOPE_mod_.DESOFT=0.0e0;
+                    			*PENELOPE_mod_.SSOFT=0.0e0;
+								if (*CJUMP1_.KSOFTE == 0){
+                      				*CJUMP1_.MHINGE=1;
+                      				DS=*CJUMP0_.DST;
+								}else{
+									*CJUMP1_.KSOFTI=0;
+								}
+								return;
+							}else{
+								//Distribuição Uniforme
+								*PENELOPE_mod_.DESOFT=1.5e0*(EDE+VDE/EDE)*(RU-PNULL)/(1.0e0-PNULL);
+							}
+						}else{
+							*PENELOPE_mod_.DESOFT=EDE+(2.0e0*RU-1.0e0)*sqrt(VDE3);
+						}
+					}
+					*PENELOPE_mod_.SSOFT=*PENELOPE_mod_.DESOFT/ *CJUMP0_.DST;
+				 }
+			 }
+		}
+		return;
+	}else{ //Fotons
+
+		if (*TRACK_mod_.E < *CJUMP1_.ELAST1){
+			*CEGRID_.XEL=log(*TRACK_mod_.E);
+			*CEGRID_.XE=1.0e0+(*CEGRID_.XEL-*CEGRID_.DLEMP1)* *CEGRID_.DLFC;
+			*CEGRID_.KE=*CEGRID_.XE;
+			*CEGRID_.XEK=*CEGRID_.XE-*CEGRID_.KE;
+			gimfp2_();
+			*CJUMP1_.ELAST1=*TRACK_mod_.E;
+			*CJUMP0_.ST=CJUMP0_.P[1-1]+CJUMP0_.P[2-1]+CJUMP0_.P[3-1]+CJUMP0_.P[4-1]+CJUMP0_.P[8-1];
+		}
+
+		DS=-log(rand2_(1.0e0))/ *CJUMP0_.ST;
 	}
-
-
-
-
-
-
-
 
 }
 
+
+double rndg32_(){
+
+	/*
+	Esta função entrega valores aleatórios no intervalo (-3.0,3.0)
+ 	amostrado de uma distribuição gaussiana truncada que tem média zero e
+	variação da unidade. A amostragem é realizada pelo método RITA.
+	*/
+
+	static const int NR = 128;
+	// Selection of the interval (Walker's aliasing).
+
+	double RN, TST, RR, D, resultado;
+	int K, I;
+
+	RN=rand2_(1.0e0)* *CRNDG3_.NPM1+1.0e0;
+    K=int(RN);
+    TST=RN-K;
+	if (TST < CRNDG3_.F[K-1]){
+		I=K;
+        RR=TST;
+        D=CRNDG3_.F[K-1];
+	}else{
+		I=CRNDG3_.KA[K-1];
+        RR=TST-CRNDG3_.F[K-1];
+        D=1.0e0-CRNDG3_.F[K-1];
+	}
+
+	//Amostragem da distribuição cumulativa inversa racional.
+	if (RR > 1.0e-12){
+		resultado = CRNDG3_.X[I-1]+((1.0e0+CRNDG3_.A[I-1]+CRNDG3_.B[I-1])*D*RR/(D*D+(CRNDG3_.A[I-1]*D+CRNDG3_.B[I-1]*RR)*RR))*(CRNDG3_.X[I+1-1]-CRNDG3_.X[I-1]);
+	}else{
+		resultado=CRNDG3_.X[I-1]+rand2_(2.0e0)*(CRNDG3_.X[I+1-1]-CRNDG3_.X[I-1]);
+	}
+
+	return resultado;
+
+}
+
+
+void pimfp2_(int &IEND){
+	/*
+	Esta sub-rotina calcula os caminhos livres médios inversos para
+	ações de pósitrons com a energia atual no material M.
+	*/
+
+	CJUMP0_.P[2-1]=exp(CPIMFP_.SPHEL[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CPIMFP_.SPHEL[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CPIMFP_.SPHEL[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+    CJUMP0_.P[3-1]=exp(CPIMFP_.SPHIN[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CPIMFP_.SPHIN[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CPIMFP_.SPHIN[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+    CJUMP0_.P[4-1]=exp(CPIMFP_.SPHBR[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CPIMFP_.SPHBR[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CPIMFP_.SPHBR[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+    CJUMP0_.P[5-1]=exp(CPIMFP_.SPISI[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CPIMFP_.SPISI[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CPIMFP_.SPISI[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+    CJUMP0_.P[6-1]=exp(CPIMFP_.SPAN[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CPIMFP_.SPAN[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CPIMFP_.SPAN[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+    CJUMP0_.P[8-1]=0.0e0;
+
+	if (IEND == 1){
+		return;
+	}
+
+	if (CPIMFP_.W1P[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1] > -78.3e0){
+		*CJUMP0_.W1=exp(CPIMFP_.W1P[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CPIMFP_.W1P[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CPIMFP_.W1P[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+        *CJUMP0_.W2=exp(CPIMFP_.W2P[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CPIMFP_.W2P[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CPIMFP_.W1P[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+	}else{
+		*CJUMP0_.W1=0.0e0;
+		*CJUMP0_.W2=0.0e0;
+	}
+
+	if (CPIMFP_.T1P[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1] > -78.3e0){
+		*CJUMP0_.T1=exp(CPIMFP_.T1P[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CPIMFP_.T1P[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CPIMFP_.T1P[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+        *CJUMP0_.T2=exp(CPIMFP_.T2P[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CPIMFP_.T2P[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CPIMFP_.T2P[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+	}else{
+		*CJUMP0_.T1=0.0e0;
+		*CJUMP0_.T2=0.0e0;
+	}
+}
+
+void eimfp2_(int &IEND){
+	/*
+	Esta sub-rotina calcula os caminhos livres médios inversos para
+	ações de eletrons com a energia atual no material M.
+	*/
+
+	CJUMP0_.P[2-1]=exp(CEIMFP_.SEHEL[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CEIMFP_.SEHEL[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.SEHEL[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+    CJUMP0_.P[3-1]=exp(CEIMFP_.SEHIN[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CEIMFP_.SEHIN[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.SEHIN[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+    CJUMP0_.P[4-1]=exp(CEIMFP_.SEHBR[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CEIMFP_.SEHBR[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.SEHBR[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+    CJUMP0_.P[5-1]=exp(CEIMFP_.SEISI[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CEIMFP_.SEISI[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.SEISI[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+    CJUMP0_.P[8-1]=0.0e0;
+
+	if (IEND == 1){
+		return;
+	}
+
+	if (CEIMFP_.W1E[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1] > -78.3e0){
+		*CJUMP0_.W1=exp(CEIMFP_.W1E[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CEIMFP_.W1E[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.W1E[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+        *CJUMP0_.W2=exp(CEIMFP_.W2E[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CEIMFP_.W2E[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.W2E[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+	}else{
+		*CJUMP0_.W1=0.0e0;
+		*CJUMP0_.W2=0.0e0;
+	}
+
+	if (CEIMFP_.T1E[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1] > -78.3e0){
+		*CJUMP0_.T1=exp(CEIMFP_.T1E[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CEIMFP_.T1E[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.T1E[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+        *CJUMP0_.T2=exp(CEIMFP_.T2E[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CEIMFP_.T2E[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.T2E[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+	}else{
+		*CJUMP0_.T1=0.0e0;
+		*CJUMP0_.T2=0.0e0;
+	}
+}
+
+void gimfp2_(){
+	CJUMP0_.P[1-1]=CGIMFP_.SGRA[*CEGRID_.KE-1][*TRACK_mod_.MAT-1];
+    CJUMP0_.P[2-1]=exp(CGIMFP_.SGCO[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CGIMFP_.SGCO[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CGIMFP_.SGCO[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+    CJUMP0_.P[3-1]=CGIMFP_.SGPH[*CEGRID_.KE-1][*TRACK_mod_.MAT-1];
+
+	if (*TRACK_mod_.E < 1.023e6){
+		CJUMP0_.P[4-1]=0.0e0;
+	}else{
+		CJUMP0_.P[4-1]=exp(CGIMFP_.SGPP[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CGIMFP_.SGPP[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CGIMFP_.SGPP[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+	}
+	CJUMP0_.P[8-1]=0.0e0;
+}
 
 
 
