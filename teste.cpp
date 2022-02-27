@@ -1195,6 +1195,10 @@ void pimfp2_(int &IEND);
 
 void gimfp2_();
 
+void fimdet2_(int &N, int &ID, double &DSEF);
+
+void fimdes2_(int &N, int &ID, double &EI, double &DECSD, double &DSEF );
+
 }
 
 
@@ -18392,7 +18396,7 @@ void shower2_(){
 	double TWOPI=2.0e0*PI;
 
 	int IEXIT, METAST, NTRIAL, K, KEn, IBODYL, NCROSS, IDET, NSHJ, MATL;
-	double RN, RNF, UV, PHI, DSEF, DS, DEP, XL, YL, ZL;
+	double RN, RNF, UV, PHI, DSEF, DS, DEP, XL, YL, ZL, DECSD;
 
 	//A simulação da particula começa aqui.
 
@@ -18637,10 +18641,25 @@ L103:;
 	step2_(&DS,&DSEF,&NCROSS); //Determina a posição final do passo.
 
 	//Distribuição de energia de fluência.
-	
+	IDET=PENGEOM_mod_.KDET[IBODYL-1];
+	if (IDET != 0){
+		if (CNT4_.IDCUT[IDET-1] == 2){
+			if (CNT4_.KKDI[*TRACK_mod_.KPAR-1][IDET-1] == 1){
+				if (*TRACK_mod_.KPAR == 2){
+					fimdet2_(*CNTRL_.N,IDET,DSEF);
+				}else{
+					DECSD=*PENELOPE_mod_.SSOFT*DSEF;
+					if (DECSD > 1.0e-12){ // A distribuição pode se estender
+						fimdes2_(*CNTRL_.N,IDET,*PENELOPE_mod_.E0STEP,DECSD,DSEF); //abaixo do EABS.
+					}else{
+						fimdet2_(*CNTRL_.N,IDET,DSEF);
+					}
+				}
+			}
+		}
+	}
 
-
-
+	//A partícula cruzou uma interface.
 
 
 
@@ -19600,6 +19619,100 @@ void gimfp2_(){
 	CJUMP0_.P[8-1]=0.0e0;
 }
 
+void fimdet2_(int &N, int &ID, double &DSEF){
 
+	/*
+	Distribuição de fluência de partículas dentro do
+	detector. Apenas colisões discretas.
+	
+	*/
+	
+	double FSAFE=1.000000001e0;
+	static const int NIDM=25;
+	static const int NBEM=1000;
 
+	int IE, IT;
 
+	if (CIMDET_.LLE[ID-1] == 1){
+		IE=1.0e0+(log(*TRACK_mod_.E)-CIMDET_.EL[ID-1])*CIMDET_.RBSE[ID-1];
+	}else{
+		IE=1.0e0+(*TRACK_mod_.E-CIMDET_.EL[ID-1])*CIMDET_.RBSE[ID-1];
+	}
+
+	if ((IE > 0) && (IE <= CIMDET_.NE[ID-1])){
+		if (N != CIMDET_.LFLT[IE-1][ID-1]){
+			CIMDET_.FLT[IE-1][ID-1]=CIMDET_.FLT[IE-1][ID-1]+CIMDET_.FLTP[IE-1][ID-1];
+            CIMDET_.FLT2[IE-1][ID-1]=CIMDET_.FLT2[IE-1][ID-1]+pow(CIMDET_.FLTP[IE-1][ID-1],2);
+            CIMDET_.FLTP[IE-1][ID-1]=*TRACK_mod_.WGHT * DSEF;
+            CIMDET_.LFLT[IE-1][ID-1]=N;
+		}else{
+			CIMDET_.FLTP[IE-1][ID-1]=CIMDET_.FLTP[IE-1][ID-1]+*TRACK_mod_.WGHT*DSEF;
+		}
+
+		if (N != CIMDET_.LFLP[*TRACK_mod_.KPAR-1][IE-1][ID-1]){
+			CIMDET_.FLP[*TRACK_mod_.KPAR-1][IE-1][ID-1]=CIMDET_.FLP[*TRACK_mod_.KPAR-1][IE-1][ID-1]+CIMDET_.FLPP[*TRACK_mod_.KPAR-1][IE-1][ID-1];
+            CIMDET_.FLP2[*TRACK_mod_.KPAR-1][IE-1][ID-1]=CIMDET_.FLP2[*TRACK_mod_.KPAR-1][IE-1][ID-1]+pow(CIMDET_.FLPP[*TRACK_mod_.KPAR-1][IE-1][ID-1],2);
+            CIMDET_.FLPP[*TRACK_mod_.KPAR-1][IE-1][ID-1]=*TRACK_mod_.WGHT*DSEF;
+            CIMDET_.LFLP[*TRACK_mod_.KPAR-1][IE-1][ID-1]=N;
+		}else{
+			CIMDET_.FLPP[*TRACK_mod_.KPAR-1][IE-1][ID-1]=CIMDET_.FLPP[*TRACK_mod_.KPAR-1][IE-1][ID-1]+*TRACK_mod_.WGHT*DSEF;
+		}
+	}
+}
+
+void fimdes2_(int &N, int &ID, double &EI, double &DECSD, double &DSEF ){
+	/*
+	Distribuição de fluência de partículas dentro do
+	detector C. Desaceleração contínua
+	*/
+
+	double FSAFE=1.000000001e0;
+	static const int NIDM=25;
+	static const int NBEM=1000;
+
+	int IE, IT, IEI, IEF;
+
+	double EIC, EF, FACT, EA, EB, TLBIN;
+
+	if (EI < CIMDET_.EL[ID-1])
+		return;
+	EIC=fmin(EI,CIMDET_.EU[ID-1]);
+    EF=fmax(EI-DECSD,CIMDET_.EL[ID-1]);
+
+	if (EF > EIC)
+		return;
+
+	if (CIMDET_.LLE[ID-1] == 1){
+		IEI=1.0e0+(log(EIC)-CIMDET_.EL[ID-1])*CIMDET_.RBSE[ID-1];
+        IEF=1.0e0+(log(EF)-CIMDET_.EL[ID-1])*CIMDET_.RBSE[ID-1];
+	}else{
+		IEI=1.0e0+(EIC-CIMDET_.EL[ID-1])*CIMDET_.RBSE[ID-1];
+        IEF=1.0e0+(EF-CIMDET_.EL[ID-1])*CIMDET_.RBSE[ID-1];
+	}
+
+	FACT=DSEF/DECSD;
+
+	for (int IE = IEF; IE <= IEI; IE++){
+		EA=fmax(EF,CIMDET_.ET[IE-1][ID-1]);
+        EB=fmin(EIC,CIMDET_.ET[IE+1-1][ID-1]);
+        TLBIN=(EB-EA)*FACT;
+		if (N != CIMDET_.LFLT[IE-1][ID-1]){
+			CIMDET_.FLT[IE-1][ID-1]=CIMDET_.FLT[IE-1][ID-1]+CIMDET_.FLTP[IE-1][ID-1];
+            CIMDET_.FLT2[IE-1][ID-1]=CIMDET_.FLT2[IE-1][ID-1]+pow(CIMDET_.FLTP[IE-1][ID-1],2);
+            CIMDET_.FLTP[IE-1][ID-1]=*TRACK_mod_.WGHT * TLBIN;
+            CIMDET_.LFLT[IE-1][ID-1]=N;
+		}else{
+			CIMDET_.FLTP[IE-1][ID-1]=CIMDET_.FLTP[IE-1][ID-1]+*TRACK_mod_.WGHT*TLBIN;
+		}
+
+		if (N != CIMDET_.LFLP[*TRACK_mod_.KPAR-1][IE-1][ID-1]){
+			CIMDET_.FLP[*TRACK_mod_.KPAR-1][IE-1][ID-1]=CIMDET_.FLP[*TRACK_mod_.KPAR-1][IE-1][ID-1]+CIMDET_.FLPP[*TRACK_mod_.KPAR-1][IE-1][ID-1];
+            CIMDET_.FLP2[*TRACK_mod_.KPAR-1][IE-1][ID-1]=CIMDET_.FLP2[*TRACK_mod_.KPAR-1][IE-1][ID-1]+pow(CIMDET_.FLPP[*TRACK_mod_.KPAR-1][IE-1][ID-1],2);
+            CIMDET_.FLPP[*TRACK_mod_.KPAR-1][IE-1][ID-1]=*TRACK_mod_.WGHT*TLBIN;
+            CIMDET_.LFLP[*TRACK_mod_.KPAR-1][IE-1][ID-1]=N;
+		}else{
+			CIMDET_.FLPP[*TRACK_mod_.KPAR-1][IE-1][ID-1]=CIMDET_.FLPP[*TRACK_mod_.KPAR-1][IE-1][ID-1]+*TRACK_mod_.WGHT*TLBIN;
+		}
+	}
+
+}
