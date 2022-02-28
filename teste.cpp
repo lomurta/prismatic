@@ -1199,6 +1199,14 @@ void fimdet2_(int &N, int &ID, double &DSEF);
 
 void fimdes2_(int &N, int &ID, double &EI, double &DECSD, double &DSEF );
 
+void eela2_(double &A, double &B, double &RNDC, double &RMU);
+
+void eeld2_(double &RNDC, double &RMU);
+
+void eina2_(double &E, double &DELTA, double &DE, double &EP, double &CDT, double &ES, double &CDTS, int &M, int &IOSC);
+
+void knock2_(double &DE, int &ICOL);
+
 }
 
 
@@ -18395,8 +18403,8 @@ void shower2_(){
 	double PI=3.1415926535897932e0;
 	double TWOPI=2.0e0*PI;
 
-	int IEXIT, METAST, NTRIAL, K, KEn, IBODYL, NCROSS, IDET, NSHJ, MATL;
-	double RN, RNF, UV, PHI, DSEF, DS, DEP, XL, YL, ZL, DECSD;
+	int IEXIT, METAST, NTRIAL, K, KEn, IBODYL, NCROSS, IDET, NSHJ, MATL, ICOL;
+	double RN, RNF, UV, PHI, DSEF, DS, DEP, XL, YL, ZL, DECSD, DSEFR, XD, YD, ZD, DE;
 
 	//A simulação da particula começa aqui.
 
@@ -18660,6 +18668,102 @@ L103:;
 	}
 
 	//A partícula cruzou uma interface.
+
+	if (NCROSS > 0){
+		//Correção da perda de energia suave (CSDA).
+		if (*TRACK_mod_.KPAR != 2){
+			*TRACK_mod_.E=*PENELOPE_mod_.E0STEP-*PENELOPE_mod_.SSOFT*DSEF;
+			if (*CJUMP1_.MHINGE == 0){
+				DEP=*PENELOPE_mod_.SSOFT*DSEF* *TRACK_mod_.WGHT;
+				if (*CNT6_.LDOSEM){
+					DSEFR=rand2_(8.0e0)*DSEF;
+              		XD=XL+*TRACK_mod_.U*DSEFR;
+              		YD=YL+*TRACK_mod_.V*DSEFR;
+              		ZD=ZL+*TRACK_mod_.W*DSEFR;
+					sdose2_(DEP,XD,YD,ZD,MATL,*CNTRL_.N);
+				}
+			}else{
+				DEP=-*PENELOPE_mod_.SSOFT*(DS-DSEF)**TRACK_mod_.WGHT;
+				if (*CNT6_.LDOSEM){
+					sdose2_(DEP,XL,YL,ZL,MATL,*CNTRL_.N);
+				}
+			}
+			CNT1_.DEBO[IBODYL-1]=CNT1_.DEBO[IBODYL-1]+DEP;
+		}
+		//Verifique se a partícula está fora do invólucro.
+		if (*TRACK_mod_.MAT == 0){ //A partícula está fora do recinto.
+			if (*TRACK_mod_.W > 0.0e0){
+				IEXIT=1; //Marca partículas ascendentes emergentes.
+			}else{
+				IEXIT=2; //Rotula partículas descendentes emergentes.
+			}
+			goto L104; //Saida
+		}
+
+		//Detectores de Impacto
+
+		IDET=PENGEOM_mod_.KDET[*TRACK_mod_.IBODY-1];
+		if (IDET != 0){
+			if ((PENGEOM_mod_.KDET[IBODYL-1] != IDET)  && (CNT4_.KKDI[*TRACK_mod_.KPAR-1][IDET-1] == 1)){
+				//Esse trecho faz gravação no arquivo Phase-Space que não será implementado nesta versao
+				/*if (CNT4_.IPSF[IDET-1] == 1){
+					NSHJ=*CNTRL_.SHN - *CNT4_.RLAST;
+					wrpsf2_(CNT4_.IPSFO,NSHJ,0);
+					*CNT4_.RWRITE=*CNT4_.RWRITE+1.0e0;
+					*CNT4_.RLAST=*CNTRL_.SHN;*/
+
+				simdet2_(*CNTRL_.N,IDET);
+
+				if (CNT4_.IDCUT[IDET-1] == 0){
+					CNT1_.DEBO[*TRACK_mod_.IBODY-1]=CNT1_.DEBO[*TRACK_mod_.IBODY-1]+*TRACK_mod_.E * *TRACK_mod_.WGHT;
+					IEXIT=3;
+					goto L104;
+				}
+			}
+		}
+		goto L102;
+	}
+
+	//Simulação dos eventos de interação da particula com a materia.
+	if (LINTF){
+		// knockf(DE, ICOL) // Não será implementado redução de variancia nesta versão
+	}else{
+		knock2_(DE, ICOL);
+	}
+
+	if (*TRACK_mod_.E < CSPGEO_.EABSB[*TRACK_mod_.IBODY-1][*TRACK_mod_.KPAR-1]){ //A partícula foi absorvida.
+		DE=DE+*TRACK_mod_.E;
+		if ((*TRACK_mod_.KPAR == 3) && (*TRACK_mod_.E > 1.0e-6)){ //Aniquilação de positron
+			panar2_(CSPGEO_.EABSB[*TRACK_mod_.IBODY-1][2-1]); // Quando Absorvida
+			DE=DE+TREV;
+		}
+		*TRACK_mod_.E=0.0e0;
+	}
+
+	DEP=DE* *TRACK_mod_.WGHT;
+    CNT1_.DEBO[*TRACK_mod_.IBODY-1]=CNT1_.DEBO[*TRACK_mod_.IBODY-1]+DEP;
+
+	if (*CNT6_.LDOSEM)
+		sdose2_(DEP,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,*TRACK_mod_.MAT,*CNTRL_.N);
+
+	if (*TRACK_mod_.E < CSPGEO_.EABSB[*TRACK_mod_.IBODY-1][*TRACK_mod_.KPAR-1]){ ////A partícula foi absorvida.
+		IEXIT=3; //Marca partículas absorvidas.
+		goto L104; //saida
+	}
+
+	goto L103;
+
+	//A simulação da particula termina aqui.
+
+
+
+
+
+
+
+
+
+	
 
 
 
@@ -19661,6 +19765,7 @@ void fimdet2_(int &N, int &ID, double &DSEF){
 }
 
 void fimdes2_(int &N, int &ID, double &EI, double &DECSD, double &DSEF ){
+
 	/*
 	Distribuição de fluência de partículas dentro do
 	detector C. Desaceleração contínua
@@ -19716,3 +19821,617 @@ void fimdes2_(int &N, int &ID, double &EI, double &DECSD, double &DSEF ){
 	}
 
 }
+
+
+
+void knock2_(double &DE, int &ICOL){
+
+	/*
+	Simulação de dobradiças aleatórias e eventos de interação difícil.
+
+	Argumentos de saída:
+	DE ..... energia depositada pela partícula no material. Isto é
+	geralmente igual à diferença entre as energias
+	antes e depois da interação.
+	ICOL ... tipo de interação sofrida pela partícula.
+	*/
+
+	double PI=3.1415926535897932e0;
+	double TWOPI=PI+PI; 
+	double REV=5.10998928e5;
+	double RREV=1.0e0/REV;
+	double TREV=2.0e0*REV;
+
+	double EMU1, EMU2, PNUM, PDEN, PMU0, PA, RND, CDT, DF, STNOW, STS, SS, TRNDC, TA, TB, RMU, DELTA, ES, EP, CDTS;
+	double DFS, US, VS, WS;
+	int IOSC;
+
+	static const int NO=512;
+	static const int NOCO=512;
+	static const int NBW=32;
+
+	if (*TRACK_mod_.KPAR == 1)
+		goto L1000;
+	else if (*TRACK_mod_.KPAR == 2)
+		goto L2000;
+	else if (*TRACK_mod_.KPAR == 3)
+		goto L3000;
+	else{
+		printf("   KNOCK: Incorrect particle type.\n");
+		exit(0);
+	}
+
+L1000:;
+	if (*CJUMP1_.MHINGE == 1)
+		goto L1100;
+
+	//Eletrons 
+	//Dobradiça, evento suave artificial (ICOL=1).
+
+	ICOL=1;
+    *CJUMP1_.MHINGE=1;
+
+	//Perda de Energia
+
+	if (*CJUMP1_.KSOFTI == 1){
+		DE=*PENELOPE_mod_.DESOFT;
+        *TRACK_mod_.E=*TRACK_mod_.E-DE;
+		if (*TRACK_mod_.E < PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][1-1]){
+			DE=*PENELOPE_mod_.E0STEP;
+            *TRACK_mod_.E=0.0e0;
+			return;
+		}
+		*PENELOPE_mod_.E0STEP=*PENELOPE_mod_.E0STEP-*PENELOPE_mod_.SSOFT*(*CJUMP0_.DST-*CJUMP0_.DSR);
+		if (*CJUMP1_.KSOFTE == 0){
+			*CEGRID_.XEL=log(*PENELOPE_mod_.E0STEP);
+        	*CEGRID_.XE=1.0e0+(*CEGRID_.XEL-*CEGRID_.DLEMP1)* *CEGRID_.DLFC;
+        	*CEGRID_.KE=*CEGRID_.XE;
+        	*CEGRID_.XEK=*CEGRID_.XE-*CEGRID_.KE;
+		}else{
+			DE=0.0e0;
+		}
+	}
+
+	//Deflexão Angular
+	if (CEIMFP_.T1E[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1] > -78.3e0){
+		*CJUMP0_.T1=exp(CEIMFP_.T1E[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CEIMFP_.T1E[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.T1E[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+        *CJUMP0_.T2=exp(CEIMFP_.T2E[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CEIMFP_.T2E[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.T2E[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+	}else{
+		*CJUMP0_.T1=0.0e0;
+        *CJUMP0_.T2=0.0e0;
+	}
+	if (*CJUMP0_.T1 < 1.0e-20)
+	    return;
+	//1º e 2º momentos da distribuição angular.
+	EMU1=0.5e0*(1.0e0-exp(-*CJUMP0_.DST* *CJUMP0_.T1));
+    EMU2=EMU1-(1.0e0-exp(-*CJUMP0_.DST* *CJUMP0_.T2))/6.0e0;
+	//Amostragem de um histograma de duas barras com esses momentos.
+	PNUM=2.0e0*EMU1-3.0e0*EMU2;
+    PDEN=1.0e0-2.0e0*EMU1;
+    PMU0=PNUM/PDEN;
+    PA=PDEN+PMU0;
+    RND=rand2_(2.0e0);
+
+	if (RND < PA){
+		CDT=1.0e0-2.0e0*PMU0*(RND/PA);
+	}else{
+		CDT=1.0e0-2.0e0*(PMU0+(1.0e0-PMU0)*((RND-PA)/(1.0e0-PA)));
+	}
+	direct2_(CDT,DF,*TRACK_mod_.U,*TRACK_mod_.V,*TRACK_mod_.W);
+	return;
+
+	//Evento duro
+
+L1100:;
+
+	*CJUMP1_.MHINGE=0;
+	//Uma interação delta (ICOL=7) ocorre quando o máximo comprimento de passo permitido é excedido.
+	if (*CJUMP1_.KDELTA == 1){
+		ICOL=7;
+        DE=0.0e0;
+		return;
+	}
+
+	//Amostragem aleatória do tipo de interação.
+	STNOW=CJUMP0_.P[2-1]+CJUMP0_.P[3-1]+CJUMP0_.P[4-1]+CJUMP0_.P[5-1]+CJUMP0_.P[8-1];
+    STS=fmax(STNOW,*CJUMP0_.ST)*rand2_(4.0e0);
+    SS=CJUMP0_.P[2-1];
+	if (SS > STS)
+		goto L1200;
+	SS=SS+CJUMP0_.P[3-1];
+	
+	if (SS > STS)
+		goto L1300;
+	SS=SS+CJUMP0_.P[4-1];
+
+	if (SS > STS)
+		goto L1400;
+	SS=SS+CJUMP0_.P[5-1];
+
+	if (SS > STS)
+		goto L1500;
+	SS=SS+CJUMP0_.P[8-1];
+
+	if (SS > STS)
+		goto L1800;
+
+	/*
+	Uma interação delta (ICOL=7) pode ocorrer quando o total
+	A probabilidade de interação por unidade de comprimento do caminho, ST, é maior que STNOW.
+	*/
+
+	ICOL=7;
+    DE=0.0e0;
+	return;
+
+	//Colisão Elastica Dura ICOL=2
+
+L1200:;
+	ICOL=2;
+	if (*TRACK_mod_.E >= CELSEP_.EELMAX[*TRACK_mod_.MAT-1]){
+		TRNDC=CEIMFP_.RNDCE[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CEIMFP_.RNDCE[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.RNDCE[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK;
+        TA=exp(CEIMFP_.AE[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CEIMFP_.AE[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.AE[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+        TB=CEIMFP_.BE[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CEIMFP_.BE[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.BE[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK;
+        eela2_(TA,TB,TRNDC,RMU);
+	
+	} else{
+		//Implementacao do modelo alternativo utilzando  ELSEPA database
+		TRNDC=CELSEP_.RNDCED[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CELSEP_.RNDCED[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CELSEP_.RNDCED[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK;
+        eeld2_(TRNDC,RMU);
+	}
+
+	CDT=1.0e0-(RMU+RMU);
+    DF=TWOPI*rand2_(5.0e0);
+	direct2_(CDT,DF,*TRACK_mod_.U,*TRACK_mod_.V,*TRACK_mod_.W);
+	DE=0.0e0;
+	return;
+
+	//Colisão Dura inelastica (ICOL=3)
+
+L1300:;
+	ICOL=3;
+    DELTA=CEIMFP_.DEL[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CEIMFP_.DEL[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.DEL[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK;
+	eina2_(*TRACK_mod_.E,DELTA,DE,EP,CDT,ES,CDTS,*TRACK_mod_.MAT,IOSC);
+
+	//Ângulos de espalhamento (elétron primário).
+	DF=TWOPI*rand2_(6.0e0);
+	//Raio Delta
+	if (ES > PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][1-1]){
+		DFS=DF+PI;
+        US=*TRACK_mod_.U;
+        VS=*TRACK_mod_.V;
+        WS=*TRACK_mod_.W;
+        direct2_(CDTS,DFS,US,VS,WS);
+        CXRSPL_.ILBA[1-1]=TRACK_mod_.ILB[1-1]+1;
+        CXRSPL_.ILBA[2-1]=*TRACK_mod_.KPAR;
+        CXRSPL_.ILBA[3-1]=ICOL;
+        CXRSPL_.ILBA[4-1]=0;
+        CXRSPL_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
+		int wvar = 1;
+        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CXRSPL_.ILBA,0);
+	}
+	//Nova energia e direção.
+	if (EP > PENELOPE_mod_.EABS[*TRACK_mod_.MAT][1-1]){
+		*TRACK_mod_.E=EP;
+        direct2_(CDT,DF,*TRACK_mod_.U,*TRACK_mod_.V,*TRACK_mod_.W);
+	}else{
+		DE=*TRACK_mod_.E;
+        *TRACK_mod_.E=0.0e0;
+	}
+
+	return;
+
+	//Emissão bremsstrahlung dura (ICOL=4).
+L1400:;
+	ICOL=4;
+
+
+L1500:;
+
+L1800:;
+
+L2000:;
+
+L3000:;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+void eela2_(double &A, double &B, double &RNDC, double &RMU){
+
+	/*
+	Simulação de eventos elásticos duros. Modelo Wentzel modificado.
+
+	Argumentos de entrada:
+	A, B ... parâmetros de distribuição angular.
+	RNDC ... probabilidade de corte.
+	Valores de saída :
+	RMU .... deflexão angular, =(1-CDT)/2.
+	*/
+
+	double A1, B1, RMUAV, RND0, RND, RNDMB, BB, RMUC, PW, RNDRC;
+
+	A1=A+1.0e0;
+
+	if (B >= 0.0e0){
+		//Caso I
+
+		RMUAV=A*A1*log(A1/A)-A;
+        B1=1.0e0-B;
+        RND0=B1*A1*RMUAV/(A+RMUAV);
+        RND=RNDC+rand2_(1.0e0)*(1.0e0-RNDC);
+
+		if (RND < RND0){
+			RMU=RND*A/(B1*A1-RND);
+
+		}else if (RND > RND0+B){
+			RNDMB=RND-B;
+          	RMU=RNDMB*A/(B1*A1-RNDMB);
+		}else{
+			RMU=RMUAV;
+		}
+	}else{
+		//Caso II
+		BB=-B;
+        B1=1.0e0-BB;
+        RMUC=RNDC*A/(B1*A1-RNDC);
+        PW=B1*A*(1.0e0-RMUC)/(A+RMUC);
+		if (rand2_(2.0e0)*(BB+PW) < BB){
+			RMU=0.5e0*(1.0e0+sqrt(rand2_(3.0e0)));
+		}else{
+			RNDRC=rand2_(3.0e0)*(1.0e0-RMUC);
+          	RMU=(A*RNDRC+A1*RMUC)/(A1-RNDRC);
+		}
+	}
+
+}
+
+void eeld2_(double &RNDC, double &RMU){
+
+	/*
+	Simulação de eventos elásticos rígidos de elétrons. Seções transversais de
+ 	a base de dados numérica ELSEPA.
+
+	Valor do argumento C:
+ 	RNDC ... valor de corte do número aleatório uniforme
+ 	(apenas eventos difíceis são simulados).
+ 	RMU .... deflexão angular amostrada, =(1-CDT)/2.
+	
+	*/
+
+	static const int NP=128;
+	static const int NPM1=NP-1;
+
+	double PK, RU, RR, PP, XX, AA, BB, D;
+	int ITN, JE, I, J, K;
+
+	//Ponto da rede de energia
+
+
+	PK=(*CEGRID_.XEL-CEGRID_.DLEMP[*CEGRID_.KE-1])* *CEGRID_.DLFC;
+
+	if (rand2_(1.0e0) < PK){
+		JE=*CEGRID_.KE+1;
+	}else{
+		JE=*CEGRID_.KE;
+	}
+
+	//Ponto
+	RU=RNDC+rand2_(2.0e0)*(1.0e0-RNDC);
+
+	//Selection of the interval (binary search in a restricted interval).
+	ITN=RU*NPM1+1;
+    I=CEELDB_.ITLE[*TRACK_mod_.MAT-1][JE-1][ITN-1];
+    J=CEELDB_.ITUE[*TRACK_mod_.MAT-1][JE-1][ITN-1];
+	if ((J-I) < 2)
+		goto L2;
+L1:;
+	K=(I+J)/2;
+	if (RU > CEELDB_.PSE[*TRACK_mod_.MAT-1][JE-1][K-1]){
+		I=K;
+	}else{
+		J=K;
+	}
+
+	if ((J-I) > 1)
+		goto L1;
+
+	//Amostragem da distribuição cumulativa inversa racional.
+L2:;
+	PP=CEELDB_.PSE[*TRACK_mod_.MAT-1][JE-1][I-1];
+    RR=RU-PP;
+	if (RR > 1.0e-16){
+		XX=CEELDB_.XSE[*TRACK_mod_.MAT-1][JE-1][I-1];
+        AA=CEELDB_.ASE[*TRACK_mod_.MAT-1][JE-1][I-1];
+        BB=CEELDB_.BSE[*TRACK_mod_.MAT-1][JE-1][I-1];
+        D=CEELDB_.PSE[*TRACK_mod_.MAT-1][JE-1][I+1-1]-PP;
+        RMU=XX+((1.0e0+AA+BB)*D*RR/(D*D+(AA*D+BB*RR)*RR))*(CEELDB_.XSE[*TRACK_mod_.MAT-1][JE-1][I+1-1]-XX);
+	}else{
+		RMU=CEELDB_.XSE[*TRACK_mod_.MAT-1][JE-1][I-1];
+	}
+}
+
+void eina2_(double &E, double &DELTA, double &DE, double &EP, double &CDT, double &ES, double &CDTS, int &M, int &IOSC){
+
+	/*
+	Amostragem aleatória de colisões inelásticas duras de elétrons.
+
+	Modelo C Sternheimer-Liljequist GOS.
+
+	Argumentos de entrada:
+	E ....... energia do elétron (eV).
+	M ....... material onde os elétrons se propagam.
+	DELTA ... Correção do efeito de densidade de Fermi.
+	Argumentos de saída:
+	DE ...... perda de energia (eV).
+	EP ...... energia do elétron espalhado (eV).
+	CDT ..... cosseno do ângulo de dispersão polar.
+	ES ...... energia do elétron secundário emitido (eV).
+	CDTS .... cosseno polar de direção do elétron secundário.
+	IOSC .... índice do oscilador que foi 'ionizado'.
+	
+	*/
+
+	double REV=5.10998928e5;
+	bool LDIST;
+	double RREV=1.0e0/REV;
+	double TREV=2.0e0*REV;
+	double RTREV=1.0e0/TREV;
+
+	static const int NO=512;
+
+	double WCCM, PK, JE, TST, UK, WK,WTHR, WM, WKP, QKP, EE, WCMAX, WDMAX, RB, GAM, GAM2, BETA2, AMOL, CPS, CP;
+	double CPPS, CPP, QM, RWKP, XHDL, XHDT, F0, RCL, RL1, RRL1, XHC, XHTOT, TS1, A, ARCL, FB, RK, RK2, RKF, PHI;
+	double QS, Q, QTREV;
+	int IO, JO, IT;
+
+	WCCM=PENELOPE_mod_.WCC[M-1];
+
+	if (WCCM > E){
+		DE=0.0e0;
+        EP=E;
+        CDT=1.0e0;
+        ES=0.0e0;
+        CDTS=0.0e0;
+        IOSC=NO;
+        return;
+	}
+	//Ponto da rede de energia
+	PK=(*CEGRID_.XEL-CEGRID_.DLEMP[*CEGRID_.KE-1])* *CEGRID_.DLFC;
+	if (rand2_(1.0e0) < PK){
+		JE=*CEGRID_.KE+1;
+	}else{
+		JE=*CEGRID_.KE;
+	}
+
+	//Seleção do oscilador ativo.
+	TST=rand2_(2.0e0);
+	//Busca binaria
+	IO=1;
+    JO=CEINAC_.NEIN[M-1]+1;
+L1:;
+    IT=(IO+JO)/2;
+	if (JO-IO > 1){
+	  IOSC=CEINAC_.IEIN[IO-1][M-1];
+      UK=CEIN_.UI[IOSC-1][M-1];
+      WK=CEIN_.WRI[IOSC-1][M-1];
+	}
+	if (UK > 1.0e-3){
+		WTHR=fmax(WCCM,UK);
+	}else{
+		WTHR=fmax(WCCM,WK);
+	}
+
+	if (E < WTHR+1.0e-6){
+		DE=0.0e0;
+        EP=E;
+        CDT=1.0e0;
+        ES=0.0e0;
+        CDTS=0.0e0;
+        IOSC=NO;
+        return;
+	}
+
+	/*
+	Truque: A energia de ressonância e a energia de recuo de corte de
+	conchas internas são variadas para produzir um limiar suave.
+	*/
+
+	LDIST=true;
+	if (UK > 1.0e-3){
+		WM=3.0e0*WK-2.0e0*UK;
+		if (E > WM){
+			WKP=WK;
+            QKP=UK;
+		}else{
+			WKP=(E+2.0e0*UK)/3.0e0;
+            QKP=UK*(E/WM);
+            WM=E;
+		}
+		if (WCCM > WM)
+		    LDIST=false;
+
+		EE=E+UK;
+        WCMAX=0.5e0*EE;
+        WDMAX=fmin(WM,WCMAX);
+        if (WTHR > WDMAX) 
+			LDIST=false;
+	}else{
+		if (WCCM > WK)
+			LDIST=false;
+		WKP=WK;
+        QKP=WK;
+        WM=E;
+        EE=E;
+        WCMAX=0.5e0*EE;
+        WDMAX=WKP+1.0e0;
+	}
+
+	//Constantes
+
+	RB=E+TREV;
+    GAM=1.0e0+E*RREV;
+    GAM2=GAM*GAM;
+    BETA2=(GAM2-1.0e0)/GAM2;
+    AMOL=pow(((GAM-1.0e0)/GAM),2);
+    CPS=E*RB;
+    CP=sqrt(CPS);
+
+	//Seções transversais parciais do oscilador ativo.
+	//Excitalçoes Distantes
+	if (LDIST){
+		CPPS=(E-WKP)*(E-WKP+TREV);
+        CPP=sqrt(CPPS);
+		if (WKP > 1.0e-6*E){
+			QM=sqrt(pow((CP-CPP),2)+REV*REV)-REV;
+		}else{
+			QM=pow(WKP,2)/(BETA2*TREV);
+            QM=QM*(1.0e0-QM*RTREV);
+		}
+		if (QM < QKP){
+			RWKP=1.0e0/WKP;
+         	XHDL=log(QKP*(QM+TREV)/(QM*(QKP+TREV)))*RWKP;
+          	XHDT=fmax(log(GAM2)-BETA2-DELTA,0.0e0)*RWKP;
+			if (UK > 1.0e-3){
+				F0=(WDMAX-WTHR)*(WM+WM-WDMAX-WTHR)/pow((WM-UK),2);
+             	XHDL=F0*XHDL;
+             	XHDT=F0*XHDT;
+			}
+		}else{
+			XHDL=0.0e0;
+            XHDT=0.0e0;
+		}
+	}else{
+		QM=0.0e0;    //Definido para evitar avisos de compilação.
+        CPP=0.0e0;   
+        CPPS=0.0e0;  
+        XHDL=0.0e0;
+        XHDT=0.0e0;
+	}
+
+	//Colisoes Fechadas
+	RCL=WTHR/EE;
+
+	if (RCL < 0.5e0){
+		RL1=1.0e0-RCL;
+        RRL1=1.0e0/RL1;
+        XHC=(AMOL*(0.5e0-RCL)+1.0e0/RCL-RRL1+(1.0e0-AMOL)*log(RCL*RRL1))/EE;
+	}else{
+		XHC=0.0e0;
+	}
+
+	XHTOT=XHC+XHDL+XHDT;
+	if (XHTOT < 1.0e-35){
+		DE=0.0e0;
+        EP=E;
+        CDT=1.0e0;
+        ES=0.0e0;
+        CDTS=0.0e0;
+        IOSC=NO;
+        return;
+	}
+
+	//Amostragem de variáveis ​​de estado final.
+
+	TST=rand2_(3.0e0)*XHTOT;
+
+	//Colisão fechada dura
+
+	TS1=XHC;
+	if (TST < TS1){
+		A=5.0e0*AMOL;
+        ARCL=A*0.5e0*RCL;
+L2:;
+		FB=(1.0e0+ARCL)*rand2_(4.0e0);
+		if (FB < 1.0e0){
+			RK=RCL/(1.0e0-FB*(1.0e0-(RCL+RCL)));
+		}else{
+			RK=RCL+(FB-1.0e0)*(0.5e0-RCL)/ARCL;
+		}
+		RK2=RK*RK;
+        RKF=RK/(1.0e0-RK);
+        PHI=1.0e0+pow(RKF,2)-RKF+AMOL*(RK2+RKF);
+		if (rand2_(5.0e0)*(1.0e0+A*RK2) > PHI)
+			goto L2;
+		//Energia e ângulo de espalhamento (elétron primário).
+		DE=RK*EE;
+        EP=E-DE;
+        CDT=sqrt(EP*RB/(E*(RB-DE)));
+		//Energia e ângulo de emissão do raio delta.
+		if (CEIN_.KS[IOSC-1][M-1] < 17){
+			if (UK > CECUTR_.ECUTR[M-1]){
+				ES=DE-UK;
+			}else{
+				ES=DE;
+			}
+		}
+		CDTS=sqrt(DE*RB/(E*(DE+TREV)));
+		return;
+	}
+
+	//Interação longitudinal dura distante.
+	TS1=TS1+XHDL;
+	if (UK > 1.0e-3){
+		DE=WM-sqrt(pow((WM-WTHR),2)-rand2_(7.0e0)*(WDMAX-WTHR)*(WM+WM-WDMAX-WTHR));
+	}else{
+		DE=WKP;
+	}
+	EP=E-DE;
+	if (TST < TS1){
+		QS=QM/(1.0e0+QM*RTREV);
+        Q=QS/(pow(((QS/QKP)*(1.0e0+QKP*RTREV)), rand2_(6.0e0))-(QS*RTREV));
+        QTREV=Q*(Q+TREV);
+        CDT=(CPPS+CPS-QTREV)/(2.0e0*CP*CPP);
+		if (CDT > 1.0e0){
+			CDT=1.0e0;
+		}
+		//Energia e ângulo de emissão do raio delta.
+		if (CEIN_.KS[IOSC-1][M-1] < 17){
+			ES=DE-UK; //Apenas conchas internas.
+		}else{
+			ES=DE;
+		}
+		CDTS=0.5e0*(WKP*(E+RB-WKP)+QTREV)/sqrt(CPS*QTREV);
+		if (CDTS > 1.0e0)
+		    CDTS=1.0e0;
+		return;
+	}
+
+	//Interação transversal distante difícil.
+	CDT=1.0e0;
+	//Energia e ângulo de emissão do raio delta.
+	if (CEIN_.KS[IOSC-1][M-1] < 17){
+		if (UK >  CECUTR_.ECUTR[M-1]){
+			ES=DE-UK; //Apenas conchas internas.
+		}else{
+			ES=DE;
+		}
+	}else{
+		ES=DE;
+	}
+	CDTS=1.0e0;
+
+}
+
+
+
+
+
