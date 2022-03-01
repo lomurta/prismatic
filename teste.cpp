@@ -663,6 +663,10 @@ typedef struct{
 	double *P, *ST, *DST, *DSR, *W1, *W2, *T1, *T2;
 }CJUMP0;
 
+typedef struct{
+	int *ILBA;
+}CHIST;
+
 
 
 
@@ -766,6 +770,7 @@ void imprimirKDGHT(FILE* IW, int &KB);
    CJUMP1 CJUMP1_;
    SECST SECST_;
    CJUMP0 CJUMP0_;
+   CHIST CHIST_;
 
 
 extern "C" {
@@ -984,7 +989,7 @@ void transfsecst_(double *ES, double *XS, double *YS, double *ZS, double *US , d
 
 void transfcjump0_(double *P, double *ST, double *DST, double *DSR, double *W1, double *W2, double *T1, double *T2);
 
-
+void transfchist_(int *ILBA);
 
 
 
@@ -1206,6 +1211,14 @@ void eeld2_(double &RNDC, double &RMU);
 void eina2_(double &E, double &DELTA, double &DE, double &EP, double &CDT, double &ES, double &CDTS, int &M, int &IOSC);
 
 void knock2_(double &DE, int &ICOL);
+
+void ebra2_(double &E, double &W, int &M);
+
+void ebraa2_(double &E, double &DE, double &CDT, int &M);
+
+void esia2_(double &E, double &DELTA, double &DE, double &EP, double &CDT, double &ES, double &CDTS, int &M, int &IZZ, int &ISH);
+
+void relax2_(int &IZ, int &IS);
 
 }
 
@@ -2391,6 +2404,10 @@ void transfcjump0_(double *P, double *ST, double *DST, double *DSR, double *W1, 
 	CJUMP0_.W2 = W2;
 	CJUMP0_.T1 = T1;
 	CJUMP0_.T2 = T2;
+}
+
+void transfchist_(int *ILBA){
+	CHIST_.ILBA = ILBA;
 }
 
 
@@ -19844,7 +19861,7 @@ void knock2_(double &DE, int &ICOL){
 
 	double EMU1, EMU2, PNUM, PDEN, PMU0, PA, RND, CDT, DF, STNOW, STS, SS, TRNDC, TA, TB, RMU, DELTA, ES, EP, CDTS;
 	double DFS, US, VS, WS;
-	int IOSC;
+	int IOSC, IZA, ISA;
 
 	static const int NO=512;
 	static const int NOCO=512;
@@ -20024,11 +20041,79 @@ L1300:;
 	//Emissão bremsstrahlung dura (ICOL=4).
 L1400:;
 	ICOL=4;
+	ebra2_(*TRACK_mod_.E, DE, *TRACK_mod_.MAT);
 
+	//fóton de Bremsstrahlung.
+
+	if (DE > PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][2-1]){
+		ebraa2_(*TRACK_mod_.E,DE,CDTS,*TRACK_mod_.MAT);
+        DFS=TWOPI*rand2_(7.0e0);
+        US=*TRACK_mod_.U;
+        VS=*TRACK_mod_.V;
+        WS=*TRACK_mod_.W;
+        direct2_(CDTS,DFS,US,VS,WS);
+        CXRSPL_.ILBA[1-1]=TRACK_mod_.ILB[1-1]+1;
+        CXRSPL_.ILBA[2-1]=*TRACK_mod_.KPAR;
+        CXRSPL_.ILBA[3-1]=ICOL;
+        CXRSPL_.ILBA[4-1]=0;
+        CXRSPL_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
+		int wvar = 2;
+        stores2_(DE,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CXRSPL_.ILBA,0);
+	}
+	//Nova energia
+	*TRACK_mod_.E=*TRACK_mod_.E-DE;
+	if (*TRACK_mod_.E < PENELOPE_mod_.EABS[*TRACK_mod_.MAT][1-1]){
+		DE=*TRACK_mod_.E+DE;
+        *TRACK_mod_.E=0.0e0;
+	}
+	return;
+
+	//Ionização de uma casca interna (ICOL=5).
 
 L1500:;
+	ICOL=5;
+	DELTA=CEIMFP_.DEL[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CEIMFP_.DEL[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.DEL[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK;
+	esia2_(*TRACK_mod_.E,DELTA,DE,EP,CDT,ES,CDTS,*TRACK_mod_.MAT,IZA,ISA);
+	//relaxamento atomico
+	if (IZA > 2){
+		CXRSPL_.ILBA[3-1]=ICOL;
+        relax2_(IZA,ISA);
+	}
+
+	//Ângulos de espalhamento (elétron primário).
+	DF=TWOPI*rand2_(8.0e0);
+	//raio delta
+	if (ES > PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][1-1]){
+		DFS=DF+PI;
+        US=*TRACK_mod_.U;
+        VS=*TRACK_mod_.V;
+        WS=*TRACK_mod_.W;
+        direct2_(CDTS,DFS,US,VS,WS);
+        CXRSPL_.ILBA[1-1]=TRACK_mod_.ILB[1-1]+1;
+        CXRSPL_.ILBA[2-1]=*TRACK_mod_.KPAR;
+        CXRSPL_.ILBA[3-1]=ICOL;
+        CXRSPL_.ILBA[4-1]=0;
+        CXRSPL_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
+		int wvar = 1;
+        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CXRSPL_.ILBA,0);
+	}
+
+	//Nova energia e direção
+	if (EP > PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][1-1]){
+		*TRACK_mod_.E=EP;
+        direct2_(CDT,DF,*TRACK_mod_.U,*TRACK_mod_.V,*TRACK_mod_.W);
+	}else{
+		DE=*TRACK_mod_.E;
+        *TRACK_mod_.E=0.0e0;
+	}
+	return;
+
+	//Auxiliary fictitious mechanism (ICOL=8).
 
 L1800:;
+	ICOL=8;
+
+
 
 L2000:;
 
@@ -20430,6 +20515,580 @@ L2:;
 	CDTS=1.0e0;
 
 }
+
+void ebra2_(double &E, double &W, int &M){
+
+ /*
+	Simulação da emissão de bremsstrahlung por elétrons ou pósitrons em
+	material M.
+ */
+
+	static const int NBW=32;
+	int IE, I, J, K;
+	double PT, W1, W2, DW, B, A, PMAX;
+
+
+	if (PENELOPE_mod_.WCR[M-1] > E){
+		W=0.0e0;
+        return;
+	}
+
+	//Seleção do ponto da rede de energia.
+
+	if (rand2_(1.0e0) < *CEGRID_.XEK){
+		IE=*CEGRID_.KE+1;
+	}else{
+		IE=*CEGRID_.KE;
+	}
+	//Ponteiro
+L1:;
+	PT=CEBR_.PBCUT[IE-1][M-1]+rand2_(2.0e0)*(CEBR_.PACB[NBW-1][IE-1][M-1]-CEBR_.PBCUT[IE-1][M-1]);
+
+	//Pesquisa binária do intervalo W.
+	I=1;
+    J=NBW;
+L2:;
+    K=(I+J)/2;
+	if (PT > CEBR_.PACB[K-1][IE-1][M-1]){
+		I=K;
+	}else{
+		J=K;
+	}
+
+	if (J-I > 1)
+		goto L2;
+
+	//Amostragem da energia do fóton (método de rejeição).
+	W1=CEBR_.WB[I-1];
+    W2=CEBR_.WB[I+1-1];
+    DW=W2-W1;
+    B=CEBR_.DPDFB[I-1][IE-1][M-1]/DW;
+    A=CEBR_.PDFB[I-1][IE-1][M-1]-B*W1;
+	if (W1 < CEBR_.WBCUT[IE-1][M-1]){
+		W1=CEBR_.WBCUT[IE-1][M-1];
+	}
+	if (W2 < W1){
+		printf(" **** WARNING: EBR. Conflicting end-point values.\n");
+		W=W1;
+		return;
+	}
+	PMAX=fmax(A+B*W1,A+B*W2);
+L3:;
+	W=W1*pow((W2/W1),rand2_(3.0e0));
+	if ((rand2_(4.0e0)*PMAX) > (A+B*W))
+		goto L3;
+	W=W*E;
+	if (W < PENELOPE_mod_.WCR[M-1]);
+		goto L1;
+
+}
+
+void ebraa2_(double &E, double &DE, double &CDT, int &M){
+	/*
+		Amostragem aleatória da direção inicial dos fótons bremss, relativa
+	na direção do projétil.
+	Ajuste numérico/interpolação de funções de forma de onda parcial dadas por
+	Kissel, Quarles e Pratt; ANDT 28(1993)381.
+
+	Parâmetros de entrada:
+	M ..... material onde o projétil se move.
+	E ..... energia cinética do projétil.
+	DE .... energia do fóton emitido.
+	Parâmetro de saída:
+	CDT ... cosseno do ângulo de emissão polar.
+	*/
+
+	double REV=5.10998928e5;
+	double TREV=2.0e0*REV;
+
+	double BETA, RK, P10, P11, P1, P20, P21, P2, BETAP;
+	int IE, IE1, IET, IK;
+
+	//Parametros de distribuição
+
+	BETA=sqrt(E*(E+TREV))/(E+REV);
+
+	//Uma distribuição dipolar pura é usada para E>500 keV.
+
+	if (E > 500.0e3){
+		CDT=2.0e0*rand2_(1.0e0)-1.0e0;
+		if (rand2_(2.0e0) > 0.75e0){
+			if (CDT < 0.0e0){
+				 CDT=-pow((-CDT),0.333333333333333e0);
+			}else{
+				CDT=pow(CDT,0.333333333333333e0);
+			}
+		}
+		CDT=(CDT+BETA)/(1.0e0+BETA*CDT);
+		return;
+	}
+
+	if (BETA > CBRANG_.BET[6-1]){
+		IE=6;
+		goto L20;
+	}
+	if (BETA < CBRANG_.BET[1-1]){
+		IE=1;
+		goto L20;
+	}
+	IE=1;
+    IE1=6;
+L10:;
+    IET=(IE+IE1)/2;
+	if (BETA > CBRANG_.BET[IET-1]){
+		IE=IET;
+	}else{
+		IE1=IET;
+	}
+	if (IE1-IE > 1)
+		goto L1;
+L20:;
+
+	RK=1.0e0+20.0e0*DE/E;
+    IK=min(int(RK),20);
+
+	P10=CBRANG_.BP1[1-1][IK-1][IE-1][M-1]+BETA*(CBRANG_.BP1[2-1][IK-1][IE-1][M-1]
+     	+BETA*(CBRANG_.BP1[3-1][IK-1][IE-1][M-1]+BETA*CBRANG_.BP1[4-1][IK-1][IE-1][M-1]));
+    P11=CBRANG_.BP1[1-1][IK+1-1][IE-1][M-1]+BETA*(CBRANG_.BP1[2-1][IK+1-1][IE-1][M-1]
+    	+BETA*(CBRANG_.BP1[3-1][IK+1-1][IE-1][M-1]+BETA*CBRANG_.BP1[4-1][IK+1-1][IE-1][M-1]));
+    P1=P10+(RK-IK)*(P11-P10);
+
+    P20=CBRANG_.BP2[1-1][IK-1][IE-1][M-1]+BETA*(CBRANG_.BP2[2-1][IK-1][IE-1][M-1]
+		+BETA*(CBRANG_.BP2[3-1][IK-1][IE-1][M-1]+BETA*CBRANG_.BP2[4-1][IK-1][IE-1][M-1]));
+    P21=CBRANG_.BP2[1-1][IK+1-1][IE-1][M-1]+BETA*(CBRANG_.BP2[2-1][IK+1-1][IE-1][M-1]
+    	+BETA*(CBRANG_.BP2[3-1][IK+1-1][IE-1][M-1]+BETA*CBRANG_.BP2[4-1][IK+1-1][IE-1][M-1]));
+    P2=P20+(RK-IK)*(P21-P20);
+
+	//Amostragem das distribuições dipolo transformadas por Lorentz.
+
+	P1=fmin(exp(P1)/BETA,1.0e0);
+    BETAP=fmin(fmax(BETA*(1.0e0+P2/BETA),0.0e0),0.999999999e0);
+
+	if (rand2_(3.0e0) < P1){
+L1:;
+		CDT=2.0e0*rand2_(4.0e0)-1.0e0;
+		if ((2.0e0*rand2_(5.0e0)) > (1.0e0+CDT*CDT))
+			goto L1;
+
+	}else{
+L2:;
+		CDT=2.0e0*rand2_(4.0e0)-1.0e0;
+		if (rand2_(5.0e0) > 1.0e0-CDT*CDT)
+		goto L2;
+	}
+	CDT=(CDT+BETAP)/(1.0e0+BETAP*CDT);
+
+}
+
+void esia2_(double &E, double &DELTA, double &DE, double &EP, double &CDT, double &ES, double &CDTS, int &M, int &IZZ, int &ISH){
+
+/*
+	Amostragem aleatória de ionização de camada interna por impacto de elétrons.
+
+	Modelo Sternheimer-Liljequist GOS.
+
+	Argumentos de entrada:
+	E ....... energia do elétron (eV).
+	M ....... material onde os elétrons se propagam.
+	DELTA ... Correção do efeito de densidade de Fermi.
+	Argumentos de saída:
+	DE ...... perda de energia (eV).
+	EP ...... energia do elétron espalhado (eV).
+	CDT ..... cosseno do ângulo de dispersão polar.
+	ES ...... energia do elétron secundário emitido (eV).
+	CDTS .... cosseno polar de direção do elétron secundário.
+	IZZ ..... número atômico do elemento onde a ionização ocorreu.
+	ISH ..... camada de elétrons atômicos que foi ionizada.
+*/
+
+	double REV=5.10998928e5;
+	double RREV=1.0e0/REV;
+
+	double TREV=2.0e0*REV;
+	double RTREV=1.0e0/TREV;
+
+	static const int NO=512;
+
+	double WCCM, PK, TST, UK, WK,WTHR, WM, WKP, QKP, EE, WCMAX, WDMAX, RB, GAM, GAM2, BETA2, AMOL, CPS, CP;
+	double CPPS, CPP, QM, RWKP, XHDL, XHDT, F0, RCL, RL1, RRL1, XHC, XHTOT, TS1, A, ARCL, FB, RK, RK2, RKF, PHI;
+	double QS, Q, QTREV;
+	int IO, JO, IT, IOSC, JE;
+
+	//Ponto da rede de energia
+
+	PK=(*CEGRID_.XEL-CEGRID_.DLEMP[*CEGRID_.KE-1])* *CEGRID_.DLFC;
+	if (rand2_(1.0e0) < PK){
+		JE=*CEGRID_.KE+1;
+	}else{
+		JE=*CEGRID_.KE;
+	}
+
+	//Seleção do oscilador ativo.
+
+	TST=rand2_(2.0e0);
+
+	//Busca binaria
+	IO=1;
+    JO=CESIAC_.NESI[M-1]+1;
+L1:;
+    IT=(IO+JO)/2;
+	if (TST > CESIAC_.ESIAC[IT-1][JE-1][M-1]){
+		IO=IT;
+	}else{
+		JO=IT;
+	}
+	if (JO-IO > 1)
+		goto L1;
+	
+	IOSC=CESIAC_.IESI[IO-1][M-1];
+    IZZ=CEIN_.KZ[IOSC-1][M-1];
+    ISH=CEIN_.KS[IOSC-1][M-1];
+    UK=CEIN_.UI[IOSC-1][M-1];
+    WK=CEIN_.WRI[IOSC-1][M-1];
+
+	if (UK > 1.0e-3){
+		WTHR=UK;
+	}else{
+		WTHR=WK;
+	}
+
+	if (E < WTHR+1.0e-6){
+		DE=UK;
+        EP=E-DE;
+        CDT=1.0e0;
+        ES=0.0e0;
+        CDTS=0.0e0;
+        return;
+	}
+
+	/*
+	Truque: A energia de ressonância e a energia de recuo de corte de
+	 conchas internas são variadas para produzir um limiar suave.
+	*/
+
+ 	WM=3.0e0*WK-2.0e0*UK;
+	if (E > WM){
+		WKP=WK;
+        QKP=UK;
+	}else{
+		WKP=(E+2.0e0*UK)/3.0e0;
+        QKP=UK*(E/WM);
+        WM=E;
+	}
+	EE=E+UK;
+    WCMAX=0.5e0*EE;
+    WDMAX=fmin(WM,WCMAX);
+
+
+	//Constantes
+
+	RB=E+TREV;
+    GAM=1.0e0+E*RREV;
+    GAM2=GAM*GAM;
+    BETA2=(GAM2-1.0e0)/GAM2;
+    AMOL=pow(((GAM-1.0e0)/GAM),2);
+    CPS=E*RB;
+    CP=sqrt(CPS);
+
+	//Seções transversais parciais do oscilador ativo.
+
+	//Excitações distantes.
+
+	CPPS=(E-WKP)*(E-WKP+TREV);
+    CPP=sqrt(CPPS);
+
+	if (WKP > 1.0e-6*E){
+		QM=sqrt(pow((CP-CPP),2)+REV*REV)-REV;
+	}else{
+		QM=pow(WKP,2)/(BETA2*TREV);
+        QM=QM*(1.0e0-QM*RTREV);
+	}
+
+	if (QM < QKP){
+		RWKP=1.0e0/WKP;
+        XHDL=log(QKP*(QM+TREV)/(QM*(QKP+TREV)))*RWKP;
+        XHDT=fmax(log(GAM2)-BETA2-DELTA,0.0e0)*RWKP;
+        F0=(WDMAX-WTHR)*(WM+WM-WDMAX-WTHR)/pow((WM-UK),2);
+        XHDL=F0*XHDL;
+        XHDT=F0*XHDT;
+	}else{
+		XHDL=0.0e0;
+        XHDT=0.0e0;
+	}
+
+	//Colisoes Proximas
+	RCL=WTHR/EE;
+    RL1=1.0e0-RCL;
+    RRL1=1.0e0/RL1;
+    XHC=(AMOL*(0.5e0-RCL)+1.0e0/RCL-RRL1+(1.0e0-AMOL)*log(RCL*RRL1))/EE;
+
+    XHTOT=XHC+XHDL+XHDT;
+
+	if (XHTOT < 1.0e-35){
+		DE=UK;
+        EP=E-DE;
+        CDT=1.0e0;
+        ES=0.0e0;
+        CDTS=0.0e0;
+        return;
+	}
+
+	//Amostragem de variáveis ​​de estado final.
+
+	TST=rand2_(3.0e0)*XHTOT;
+
+	//Colisão aproximada dura.
+
+	TS1=XHC;
+	if (TST < TS1){
+		A=5.0e0*AMOL;
+        ARCL=A*0.5e0*RCL;
+L2:;
+		FB=(1.0e0+ARCL)*rand2_(4.0e0);
+		if (FB <1.0e0){
+			RK=RCL/(1.0e0-FB*(1.0e0-(RCL+RCL)));
+		}else{
+			RK=RCL+(FB-1.0e0)*(0.5e0-RCL)/ARCL;
+		}
+		RK2=RK*RK;
+		RKF=RK/(1.0e0-RK);
+		PHI=1.0e0+pow(RKF,2)-RKF+AMOL*(RK2+RKF);
+		if (rand2_(5.0e0)*(1.0e0+A*RK2) > PHI)
+			goto L2;
+		//Energia e ângulo de espalhamento (elétron primário).
+		DE=RK*EE;
+		EP=E-DE;
+		CDT=sqrt(EP*RB/(E*(RB-DE)));
+		//Energia e ângulo de emissão do raio delta.
+		ES=DE-UK;
+		CDTS=sqrt(DE*RB/(E*(DE+TREV)));
+		return;
+	}
+
+	//Interação longitudinal dura distante.
+	TS1=TS1+XHDL;
+    DE=WM-sqrt(pow((WM-WTHR),2)-rand2_(7.0e0)*(WDMAX-WTHR)*(WM+WM-WDMAX-WTHR));
+    EP=E-DE;
+
+	if (TST < TS1){
+		QS=QM/(1.0e0+QM*RTREV);
+        Q=QS/(pow(((QS/QKP)*(1.0e0+QKP*RTREV)),rand2_(6.0e0))-(QS*RTREV));
+        QTREV=Q*(Q+TREV);
+        CDT=(CPPS+CPS-QTREV)/(2.0e0*CP*CPP);
+		if (CDT > 1.0e0)
+			CDT=1.0e0;
+
+		//Energia e ângulo de emissão do raio delta.
+		ES=DE-UK;
+        CDTS=0.5e0*(WKP*(E+RB-WKP)+QTREV)/sqrt(CPS*QTREV);
+		if (CDTS >1.0e0)
+			CDTS=1.0e0;
+		return;
+	}
+
+	//Interação transversal distante difícil.
+
+	CDT=1.0e0;
+
+	//Energia e ângulo de emissão do raio delta.
+
+	ES=DE-UK;
+    CDTS=1.0e0;
+
+}
+
+void relax2_(int &IZ, int &IS){
+    /*
+	Esta sub-rotina simula o relaxamento de um átomo ionizado
+	o elemento IZ com uma vaga no shell IS (o shell K ou um L
+	subcamada C ou M). Essa vacância inicial é preenchida por elétrons de
+	camadas externas através de transições radiativas e não radiativas, que
+	pode produzir vagas adicionais.
+
+	Usamos a seguinte notação para designar as transições possíveis:
+	* Radiativo: IS0-IS1 (um elétron da camada IS1 preenche o
+	vacância na casca IS0, deixando um buraco na casca IS1).
+	* Não radiativo: IS0-IS1-IS2 (um elétron da camada IS1 preenche
+	a vacância na camada IS0, e a energia liberada é tomada
+	afastado por um elétron na camada IS2; este processo deixa dois
+	, nas carcaças IS1 e IS2).
+	A cascata de desexcitação (ou seja, o conjunto de transições que ocorrem para
+	uma determinada vaga inicial) é amostrado a partir das probabilidades de transição
+	contido na Biblioteca de Dados Atômicos Avaliados de Livermore (EADL). O
+	A energia C da radiação emitida em cada transição é lida do
+	Base de dados C PENELOPE.
+
+    A simulação da cascata de desexcitação é descontinuada
+	quando as conchas K, L e M estiverem cheias ou quando não houver
+	energia suficiente para produzir radiação 'ativa' (com energia maior que
+	EAB). A energia de excitação do íon residual é assumida como sendo
+	depositado localmente. Desconsideramos a emissão e transporte de soft
+	raios-x e elétrons lentos, cujas energias são menores do que a ligação
+	energia C da camada N1 do elemento mais pesado no meio. este
+	estabelece um limite inferior para o intervalo de energia que pode ser coberto pelo
+	programa de simulação C de forma consistente.
+
+	Os dados de desexcitação para os elementos carregados são armazenados no
+	Bloco /CRELAX/, em uma forma projetada para minimizar a quantidade de memória
+	e para facilitar a amostragem aleatória. As quantidades em comum
+	bloco são os seguintes:
+	IFIRST(99,16) ... dados de desexcitação para uma vaga no shell IS de
+	o elemento IZ começa na posição K=IFIRST(IZ,IS) no
+	matrizes de armazenamento. Os valores permitidos para IS são de 1 a 16 (K shell
+	subcamadas L, M e N).
+	ILAST(99,16) ... os dados de desexcitação para uma vaga no shell
+	IS do elemento IZ termina na posição K=ILAST(IZ,IS) no
+	matrizes de armazenamento.
+	IS1(K), IS2(K) ... shells que estão ativos na transição (veja o
+	código do rótulo do shell abaixo). Para transições radiativas, IS2(K)=0.
+	P(K) ... probabilidade relativa para a transição IS-IS1(K)-IS2(K).
+	ET(K) ... energia da partícula secundária emitida na transição.
+	F(K), IAL(K) ... valores de corte e alias (método de amostragem de Walker).
+
+  ---------------------------------------------------------------------
+  Label code IS for electron shells:
+      1 = K  (1s1/2),     11 = N2 (4p1/2),     21 = O5 (5d5/2),
+      2 = L1 (2s1/2),     12 = N3 (4p3/2),     22 = O6 (5f5/2),
+      3 = L2 (2p1/2),     13 = N4 (4d3/2),     23 = O7 (5f7/2),
+      4 = L3 (2p3/2),     14 = N5 (4d5/2),     24 = P1 (6s1/2),
+      5 = M1 (3s1/2),     15 = N6 (4f5/2),     25 = P2 (6p1/2),
+      6 = M2 (3p1/2),     16 = N7 (4f7/2),     26 = P3 (6p3/2),
+      7 = M3 (3p3/2),     17 = O1 (5s1/2),     27 = P4 (6d3/2),
+      8 = M4 (3d3/2),     18 = O2 (5p1/2),     28 = P5 (6d5/2),
+      9 = M5 (3d5/2),     19 = O3 (5p3/2),     29 = Q1 (7s1/2),
+     10 = N1 (4s1/2),     20 = O4 (5d3/2),     30 = outer shells.
+  ---------------------------------------------------------------------
+    */
+
+   double PI=3.1415926535897932e0;
+   double TWOPI=PI+PI;
+
+   double PTIM[256];
+   double ISV[256];
+
+   static const int NRX=60000;
+
+   int NV, ISP, KF, KL, K1, NVIS, IS1K, IS2K, KPARS;
+   double PAGE0, RN, TST, WS, US, VS, DF, SDTS;
+
+   //Inicializacao
+
+    if ((IZ < 3) || (IS > 16)){
+	   return; 
+    }
+
+    if (CADATA_.EB[IS-1][IZ-1] < CECUTR_.ECUTR[*TRACK_mod_.MAT-1]) ////Se a energia de ionização da casca for menor que ECUTR, a cascata não é seguido.
+		return;
+
+	NV=1;
+    ISV[1-1]=IS;
+    PAGE0=*TRACK_mod_.PAGE;
+    PTIM[1-1]=*TRACK_mod_.PAGE;
+
+    //Proxima transição
+
+L1:;
+	ISP=ISV[NV-1];
+    *TRACK_mod_.PAGE=PTIM[NV-1];
+    KF=CRELAX_.IFIRST[ISP-1][IZ-1];
+    KL=CRELAX_.ILAST[ISP-1][IZ-1];
+    NV=NV-1;
+
+	if (KL > KF){
+		//Algoritmo de amostragem de Walker.
+		RN=rand2_(1.0e0)*(KL-KF+1);
+        K1=int(RN);
+        TST=RN-K1;
+		if (TST > CRELAX_.F[KF+K1-1]){
+			*CRELAX_.KS=CRELAX_.IS0[KF+K1-1];
+		}else{
+			*CRELAX_.KS=KF+K1;
+		}
+	}else{
+		*CRELAX_.KS=KF;
+	}
+
+	/*
+	Se MODER=0, o controle é retornado ao programa chamador após
+	determinando a primeira transição, KS. Útil para testar o aleatório
+	amostragem. Para operação normal, podemos comentar o seguinte
+	declaração .
+	*/
+
+	if (*CRELAX_.MODER == 0)
+		return;
+		//Se LAGE=true, a idade da partícula é registrada.
+	if (*TRACK_mod_.LAGE){
+		NVIS=1;
+		if (NV > 1) {//Várias vagas no shell ativo?
+			for (int ISC = 1; ISC <= NV; ISC++){
+				if (ISV[ISC-1] == ISP)
+				    NVIS=NVIS+1;
+			}
+		}
+		*TRACK_mod_.PAGE=*TRACK_mod_.PAGE-(CADATA_.ALW[ISP-1][IZ-1]/(NVIS))*log(rand2_(2.0e0));
+	}
+
+	//radiação fluorescente
+
+	IS1K=CRELAX_.IS1[*CRELAX_.KS-1];
+    IS2K=CRELAX_.IS2[*CRELAX_.KS-1];
+	if (IS2K == 0){
+		KPARS=2;
+		if (IS1K < 17){
+			if (CADATA_.EB[IS1K-1][IZ-1] > CECUTR_.ECUTR[*TRACK_mod_.MAT-1]){
+				NV=NV+1;
+            	ISV[NV-1]=IS1K;
+            	PTIM[NV-1]=*TRACK_mod_.PAGE;
+			}
+		}
+	}else{
+		KPARS=1;
+		if (IS1K < 17){
+			if (CADATA_.EB[IS1K-1][IZ-1] > CECUTR_.ECUTR[*TRACK_mod_.MAT-1]){
+				NV=NV+1;
+            	ISV[NV-1]=IS1K;
+            	PTIM[NV-1]=*TRACK_mod_.PAGE;
+			}
+		}
+		if (IS2K < 17){
+			if (CADATA_.EB[IS2K-1][IZ-1] > CECUTR_.ECUTR[*TRACK_mod_.MAT-1]){
+				NV=NV+1;
+            	ISV[NV-1]=IS2K;
+            	PTIM[NV-1]=*TRACK_mod_.PAGE;
+			}
+		}
+	}
+
+	/*	
+	A partícula emitida é armazenada na pilha secundária quando
+	sua energia ET(K) é maior que EABS.
+	*/
+
+	if (CRELAX_.ET[*CRELAX_.KS-1] > PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][KPARS-1]){
+		//Direção inicial (isotrópica).
+		WS=-1.0e0+2.0e0*rand2_(2.0e0);
+        SDTS=sqrt(1.0e0-WS*WS);
+        DF=TWOPI*rand2_(3.0e0);
+        US=cos(DF)*SDTS;
+        VS=sin(DF)*SDTS;
+        CHIST_.ILBA[1-1]=TRACK_mod_.ILB[1-1]+1;
+        CHIST_.ILBA[2-1]=*TRACK_mod_.KPAR;
+        CHIST_.ILBA[4-1]=IZ*1000000+ISP*10000+IS1K*100+IS2K;
+        CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
+        stores2_(CRELAX_.ET[*CRELAX_.KS-1],*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,KPARS,CHIST_.ILBA,0);
+	}
+
+	//Existem vagas não preenchidas nas conchas internas?
+
+	if (NV > 0)
+		goto L1;
+	*TRACK_mod_.PAGE=PAGE0;
+
+
+}
+
+
 
 
 
