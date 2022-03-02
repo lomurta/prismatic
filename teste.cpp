@@ -1228,6 +1228,22 @@ void dirpol2_(double &CDT, double &DF, double &CONS, double &SP1, double &SP2, d
 
 void gcoa2_(double &E, double &DE, double &EP, double &CDT, double &ES, double &CDTS, int &M, int &IZZ, int &ISH);
 
+void  gpha2_(double &ES, int &IZZ, int &ISH);
+
+void sauter2_(double &ES, double &CDTS);
+
+void schiff2_(double &B, double &G1, double &G2);
+
+void gppa2_(double &EE, double &CDTE, double &EP, double &CDTP, int &IZZ, int &ISH);
+
+void gaux2_();
+
+void peld2_(double &RNDC, double &RMU);
+
+void pina2_(double &E, double &DELTA, double &DE, double &EP, double &CDT, double &ES, double &CDTS, int &M, int &IOSC);
+
+void psia2_(double &E, double &DELTA, double &DE, double &EP, double &CDT, double &ES, double &CDTS, int &M, int &IZZ, int &ISH);
+
 }
 
 
@@ -19868,7 +19884,7 @@ void knock2_(double &DE, int &ICOL){
 	double TREV=2.0e0*REV;
 
 	double EMU1, EMU2, PNUM, PDEN, PMU0, PA, RND, CDT, DF, STNOW, STS, SS, TRNDC, TA, TB, RMU, DELTA, ES, EP, CDTS;
-	double DFS, US, VS, WS, ECDT, CONS;
+	double DFS, US, VS, WS, ECDT, CONS, EE, CDTE, CDTP, E1, CDT1, E2, CDT2;
 	int IOSC, IZA, ISA, IEFF;
 
 	static const int NO=512;
@@ -19942,6 +19958,7 @@ L1000:;
 	}else{
 		CDT=1.0e0-2.0e0*(PMU0+(1.0e0-PMU0)*((RND-PA)/(1.0e0-PA)));
 	}
+	DF=TWOPI*rand2_(3.0e0);
 	direct2_(CDT,DF,*TRACK_mod_.U,*TRACK_mod_.V,*TRACK_mod_.W);
 	return;
 
@@ -20027,13 +20044,13 @@ L1300:;
         VS=*TRACK_mod_.V;
         WS=*TRACK_mod_.W;
         direct2_(CDTS,DFS,US,VS,WS);
-        CXRSPL_.ILBA[1-1]=TRACK_mod_.ILB[1-1]+1;
-        CXRSPL_.ILBA[2-1]=*TRACK_mod_.KPAR;
-        CXRSPL_.ILBA[3-1]=ICOL;
-        CXRSPL_.ILBA[4-1]=0;
-        CXRSPL_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
+        CHIST_.ILBA[1-1]=TRACK_mod_.ILB[1-1]+1;
+        CHIST_.ILBA[2-1]=*TRACK_mod_.KPAR;
+        CHIST_.ILBA[3-1]=ICOL;
+        CHIST_.ILBA[4-1]=0;
+        CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
 		int wvar = 1;
-        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CXRSPL_.ILBA,0);
+        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,0);
 	}
 	//Nova energia e direção.
 	if (EP > PENELOPE_mod_.EABS[*TRACK_mod_.MAT][1-1]){
@@ -20060,13 +20077,13 @@ L1400:;
         VS=*TRACK_mod_.V;
         WS=*TRACK_mod_.W;
         direct2_(CDTS,DFS,US,VS,WS);
-        CXRSPL_.ILBA[1-1]=TRACK_mod_.ILB[1-1]+1;
-        CXRSPL_.ILBA[2-1]=*TRACK_mod_.KPAR;
-        CXRSPL_.ILBA[3-1]=ICOL;
-        CXRSPL_.ILBA[4-1]=0;
-        CXRSPL_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
+        CHIST_.ILBA[1-1]=TRACK_mod_.ILB[1-1]+1;
+        CHIST_.ILBA[2-1]=*TRACK_mod_.KPAR;
+        CHIST_.ILBA[3-1]=ICOL;
+        CHIST_.ILBA[4-1]=0;
+        CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
 		int wvar = 2;
-        stores2_(DE,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CXRSPL_.ILBA,0);
+        stores2_(DE,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,0);
 	}
 	//Nova energia
 	*TRACK_mod_.E=*TRACK_mod_.E-DE;
@@ -20084,7 +20101,7 @@ L1500:;
 	esia2_(*TRACK_mod_.E,DELTA,DE,EP,CDT,ES,CDTS,*TRACK_mod_.MAT,IZA,ISA);
 	//relaxamento atomico
 	if (IZA > 2){
-		CXRSPL_.ILBA[3-1]=ICOL;
+		CHIST_.ILBA[3-1]=ICOL;
         relax2_(IZA,ISA);
 	}
 
@@ -20097,13 +20114,13 @@ L1500:;
         VS=*TRACK_mod_.V;
         WS=*TRACK_mod_.W;
         direct2_(CDTS,DFS,US,VS,WS);
-        CXRSPL_.ILBA[1-1]=TRACK_mod_.ILB[1-1]+1;
-        CXRSPL_.ILBA[2-1]=*TRACK_mod_.KPAR;
-        CXRSPL_.ILBA[3-1]=ICOL;
-        CXRSPL_.ILBA[4-1]=0;
-        CXRSPL_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
+        CHIST_.ILBA[1-1]=TRACK_mod_.ILB[1-1]+1;
+        CHIST_.ILBA[2-1]=*TRACK_mod_.KPAR;
+        CHIST_.ILBA[3-1]=ICOL;
+        CHIST_.ILBA[4-1]=0;
+        CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
 		int wvar = 1;
-        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CXRSPL_.ILBA,0);
+        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,0);
 	}
 
 	//Nova energia e direção
@@ -20231,36 +20248,389 @@ L2200:;
 
 	//Absorção Fotoeletrica ICOL=3
 
-
 L2300:;
+	ICOL=3;
+	gpha2_(ES,IZA,ISA);
+	/*
+	Interação delta. Introduzido para corrigir o uso de um
+	limite superior do coeficiente de atenuação fotoelétrica.
+	*/
+
+	if (IZA == 0){
+		ICOL=7;
+        DE=0.0e0;
+        return;
+	}
+
+	if (ES > PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][1-1]){
+		sauter2_(ES,CDTS);
+        DFS=TWOPI*rand2_(5.0e0);
+        US=*TRACK_mod_.U;
+        VS=*TRACK_mod_.V;
+        WS=*TRACK_mod_.W;
+		direct2_(CDTS,DFS,US,VS,WS);
+		CHIST_.ILBA[1-1]=TRACK_mod_.ILB[1-1]+1;
+        CHIST_.ILBA[2-1]=*TRACK_mod_.KPAR;
+        CHIST_.ILBA[3-1]=ICOL;
+        CHIST_.ILBA[4-1]=0;
+        CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
+		int wKPARP = 1;
+        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wKPARP,CHIST_.ILBA,0);
+	}
+	if (ISA < 17){
+		CHIST_.ILBA[3-1]=ICOL;
+        relax2_(IZA,ISA);
+	}
+	DE=*TRACK_mod_.E;
+    *TRACK_mod_.E=0.0e0;
+	return;
+
+
+	//Produção de pares eletron-positron ICOL=4
 
 L2400:;
 
+	ICOL=4;
+	gppa2_(EE,CDTE,EP,CDTP,IZA,ISA);
+	DE=*TRACK_mod_.E;
+	//Eletron
+	if (EE >  PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][1-1]){
+		DF=TWOPI*rand2_(6.0e0);
+        US=*TRACK_mod_.U;
+        VS=*TRACK_mod_.V;
+        WS=*TRACK_mod_.W;
+		direct2_(CDTE,DF,US,VS,WS);
+		CHIST_.ILBA[1-1]=TRACK_mod_.ILB[1-1]+1;
+        CHIST_.ILBA[2-1]=*TRACK_mod_.KPAR;
+        CHIST_.ILBA[3-1]=ICOL;
+        CHIST_.ILBA[4-1]=0;
+        CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
+		int wKPARP = 1;
+        stores2_(EE,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wKPARP,CHIST_.ILBA,0);
+	}
+	//Positron
+	if (EP >  PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][3-1]){
+		DF=TWOPI*rand2_(7.0e0);
+        US=*TRACK_mod_.U;
+        VS=*TRACK_mod_.V;
+        WS=*TRACK_mod_.W;
+		direct2_(CDTP,DF,US,VS,WS);
+		CHIST_.ILBA[1-1]=TRACK_mod_.ILB[1-1]+1;
+        CHIST_.ILBA[2-1]=*TRACK_mod_.KPAR;
+        CHIST_.ILBA[3-1]=ICOL;
+        CHIST_.ILBA[4-1]=0;
+        CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
+		int wKPARP = 3;
+        stores2_(EP,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wKPARP,CHIST_.ILBA,0);
+		//O pósitron carrega uma energia 'latente' de 1022 keV.
+		DE=DE-TREV;
+	}else{
+		panar2_(PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][2-1]);
+	}
+	*TRACK_mod_.E=0.0e0;
+
+	//Relaxamento atômico após a produção de tripletos.
+	if (ISA < 17){
+		CHIST_.ILBA[3-1]=ICOL;
+        relax2_(IZA,ISA);
+	}
+	return;
+
+	//Mecanismo fictício auxiliar (ICOL=8).
+
 L2800:;
 
+	ICOL=8;
+	DE=0.0e0;
+	gaux2_();
+	return;
+
+	//Positrons KPAR=3
 
 
+L3000:;	
 
-L3000:;
+	if (*CJUMP1_.MHINGE == 1)
+		goto L3100;
+
+	//Eletrons 
+	//Dobradiça, evento suave artificial (ICOL=1).
+
+	ICOL=1;
+    *CJUMP1_.MHINGE=1;
+
+	//Perda de Energia
+
+	if (*CJUMP1_.KSOFTI == 1){
+		DE=*PENELOPE_mod_.DESOFT;
+        *TRACK_mod_.E=*TRACK_mod_.E-DE;
+		if (*TRACK_mod_.E < PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][3-1]){
+			panar2_(PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][2-1]); //Aniquilação em repouso.
+			DE=*PENELOPE_mod_.E0STEP+TREV;
+            *TRACK_mod_.E=0.0e0;
+			return;
+		}
+		*PENELOPE_mod_.E0STEP=*PENELOPE_mod_.E0STEP-*PENELOPE_mod_.SSOFT*(*CJUMP0_.DST-*CJUMP0_.DSR);
+		if (*CJUMP1_.KSOFTE == 0){
+			*CEGRID_.XEL=log(*PENELOPE_mod_.E0STEP);
+        	*CEGRID_.XE=1.0e0+(*CEGRID_.XEL-*CEGRID_.DLEMP1)* *CEGRID_.DLFC;
+        	*CEGRID_.KE=*CEGRID_.XE;
+        	*CEGRID_.XEK=*CEGRID_.XE-*CEGRID_.KE;
+		}else{
+			DE=0.0e0;
+		}
+	}
+
+	//Deflexão Angular
+	if (CPIMFP_.T1P[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1] > -78.3e0){
+		*CJUMP0_.T1=exp(CPIMFP_.T1P[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CPIMFP_.T1P[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CPIMFP_.T1P[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+        *CJUMP0_.T2=exp(CPIMFP_.T2P[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CPIMFP_.T2P[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CPIMFP_.T2P[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+	}else{
+		*CJUMP0_.T1=0.0e0;
+        *CJUMP0_.T2=0.0e0;
+	}
+	if (*CJUMP0_.T1 < 1.0e-20)
+	    return;
+	//1º e 2º momentos da distribuição angular.
+	EMU1=0.5e0*(1.0e0-exp(-*CJUMP0_.DST* *CJUMP0_.T1));
+    EMU2=EMU1-(1.0e0-exp(-*CJUMP0_.DST* *CJUMP0_.T2))/6.0e0;
+	//Amostragem de um histograma de duas barras com esses momentos.
+	PNUM=2.0e0*EMU1-3.0e0*EMU2;
+    PDEN=1.0e0-2.0e0*EMU1;
+    PMU0=PNUM/PDEN;
+    PA=PDEN+PMU0;
+    RND=rand2_(2.0e0);
+
+	if (RND < PA){
+		CDT=1.0e0-2.0e0*PMU0*(RND/PA);
+	}else{
+		CDT=1.0e0-2.0e0*(PMU0+(1.0e0-PMU0)*((RND-PA)/(1.0e0-PA)));
+	}
+	DF=TWOPI*rand2_(3.0e0);
+	direct2_(CDT,DF,*TRACK_mod_.U,*TRACK_mod_.V,*TRACK_mod_.W);
+	return;
+
+	//Evento duro
+
+L3100:;
+
+	*CJUMP1_.MHINGE=0;
+	//Uma interação delta (ICOL=7) ocorre quando o máximo comprimento de passo permitido é excedido.
+	if (*CJUMP1_.KDELTA == 1){
+		ICOL=7;
+        DE=0.0e0;
+		return;
+	}
+
+	//Amostragem aleatória do tipo de interação.
+	STNOW=CJUMP0_.P[2-1]+CJUMP0_.P[3-1]+CJUMP0_.P[4-1]+CJUMP0_.P[5-1]+CJUMP0_.P[6-1]+CJUMP0_.P[8-1];
+    STS=fmax(STNOW,*CJUMP0_.ST)*rand2_(4.0e0);
+    SS=CJUMP0_.P[2-1];
+	if (SS > STS)
+		goto L3200;
+
+	SS=SS+CJUMP0_.P[3-1];
+	if (SS > STS)
+		goto L3300;
+
+	SS=SS+CJUMP0_.P[4-1];
+	if (SS > STS)
+		goto L3400;
+
+	SS=SS+CJUMP0_.P[5-1];
+	if (SS > STS)
+		goto L3500;
+
+	SS=SS+CJUMP0_.P[6-1];
+	if (SS > STS)
+		goto L3600;
+
+	SS=SS+CJUMP0_.P[8-1];
+	if (SS > STS)
+		goto L3800;
+
+	/*
+	Uma interação delta (ICOL=7) pode ocorrer quando o total
+	A probabilidade de interação por unidade de comprimento do caminho, ST, é maior que STNOW.
+	*/
+
+	ICOL=7;
+    DE=0.0e0;
+	return;
+
+	//Colisão Elastica Dura ICOL=2
+
+L3200:;
+	ICOL=2;
+	if (*TRACK_mod_.E >= CELSEP_.PELMAX[*TRACK_mod_.MAT-1]){
+		TRNDC=CPIMFP_.RNDCP[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CPIMFP_.RNDCP[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CPIMFP_.RNDCP[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK;
+        TA=exp(CPIMFP_.AP[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CPIMFP_.AP[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CPIMFP_.AP[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+        TB=CPIMFP_.BP[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CPIMFP_.BP[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CPIMFP_.BP[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK;
+        eela2_(TA,TB,TRNDC,RMU);
+	} else{
+		//Implementacao do modelo alternativo utilzando  ELSEPA database
+		TRNDC=CELSEP_.RNDCPD[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CELSEP_.RNDCPD[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CELSEP_.RNDCPD[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK;
+        peld2_(TRNDC,RMU);
+	}
+
+	CDT=1.0e0-(RMU+RMU);
+    DF=TWOPI*rand2_(5.0e0);
+	direct2_(CDT,DF,*TRACK_mod_.U,*TRACK_mod_.V,*TRACK_mod_.W);
+	DE=0.0e0;
+	return;
+
+	//Colisão Dura inelastica (ICOL=3)
+
+L3300:;
+	ICOL=3;
+    DELTA=CEIMFP_.DEL[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CEIMFP_.DEL[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.DEL[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK;
+	pina2_(*TRACK_mod_.E,DELTA,DE,EP,CDT,ES,CDTS,*TRACK_mod_.MAT,IOSC);
+
+	//Ângulos de espalhamento (positron primário).
+	DF=TWOPI*rand2_(6.0e0);
+	//Raio Delta
+	if (ES > PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][1-1]){
+		DFS=DF+PI;
+        US=*TRACK_mod_.U;
+        VS=*TRACK_mod_.V;
+        WS=*TRACK_mod_.W;
+        direct2_(CDTS,DFS,US,VS,WS);
+        CHIST_.ILBA[1-1]=TRACK_mod_.ILB[1-1]+1;
+        CHIST_.ILBA[2-1]=*TRACK_mod_.KPAR;
+        CHIST_.ILBA[3-1]=ICOL;
+        CHIST_.ILBA[4-1]=0;
+        CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
+		int wvar = 1;
+        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,0);
+	}
+	//Nova energia e direção.
+	if (EP > PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][3-1]){
+		*TRACK_mod_.E=EP;
+        direct2_(CDT,DF,*TRACK_mod_.U,*TRACK_mod_.V,*TRACK_mod_.W);
+	}else{
+		panar2_(PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][2-1]);
+		DE=*TRACK_mod_.E+TREV;
+        *TRACK_mod_.E=0.0e0;
+	}
+
+	return;
+
+	//Emissão bremsstrahlung dura (ICOL=4).
+L3400:;
+	ICOL=4;
+	ebra2_(*TRACK_mod_.E, DE, *TRACK_mod_.MAT);
+
+	//fóton de Bremsstrahlung.
+
+	if (DE > PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][2-1]){
+		ebraa2_(*TRACK_mod_.E,DE,CDTS,*TRACK_mod_.MAT);
+        DFS=TWOPI*rand2_(7.0e0);
+        US=*TRACK_mod_.U;
+        VS=*TRACK_mod_.V;
+        WS=*TRACK_mod_.W;
+        direct2_(CDTS,DFS,US,VS,WS);
+        CHIST_.ILBA[1-1]=TRACK_mod_.ILB[1-1]+1;
+        CHIST_.ILBA[2-1]=*TRACK_mod_.KPAR;
+        CHIST_.ILBA[3-1]=ICOL;
+        CHIST_.ILBA[4-1]=0;
+        CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
+		int wvar = 2;
+        stores2_(DE,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,0);
+	}
+	//Nova energia
+	*TRACK_mod_.E=*TRACK_mod_.E-DE;
+	if (*TRACK_mod_.E < PENELOPE_mod_.EABS[*TRACK_mod_.MAT][2-1]){ //Aniquilação em repouso.
+		DE=*TRACK_mod_.E+DE+TREV;
+        *TRACK_mod_.E=0.0e0;
+	}
+	return;
+
+	//Ionização de uma casca interna (ICOL=5).
+
+L3500:;
+	ICOL=5;
+	DELTA=CEIMFP_.DEL[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CEIMFP_.DEL[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.DEL[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK;
+	psia2_(*TRACK_mod_.E,DELTA,DE,EP,CDT,ES,CDTS,*TRACK_mod_.MAT,IZA,ISA);
+	//relaxamento atomico
+	if (IZA > 2){
+		CHIST_.ILBA[3-1]=ICOL;
+        relax2_(IZA,ISA);
+	}
+
+	//Ângulos de espalhamento (elétron primário).
+	DF=TWOPI*rand2_(8.0e0);
+	//raio delta
+	if (ES > PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][1-1]){
+		DFS=DF+PI;
+        US=*TRACK_mod_.U;
+        VS=*TRACK_mod_.V;
+        WS=*TRACK_mod_.W;
+        direct2_(CDTS,DFS,US,VS,WS);
+        CHIST_.ILBA[1-1]=TRACK_mod_.ILB[1-1]+1;
+        CHIST_.ILBA[2-1]=*TRACK_mod_.KPAR;
+        CHIST_.ILBA[3-1]=ICOL;
+        CHIST_.ILBA[4-1]=0;
+        CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
+		int wvar = 1;
+        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,0);
+	}
+
+	//Nova energia e direção
+	if (EP > PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][3-1]){
+		*TRACK_mod_.E=EP;
+        direct2_(CDT,DF,*TRACK_mod_.U,*TRACK_mod_.V,*TRACK_mod_.W);
+	}else{
+		panar2_(PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][2-1]);
+		DE=*TRACK_mod_.E+TREV;
+        *TRACK_mod_.E=0.0e0;
+	}
+	return;
 
 
+L3600:;
+
+	ICOL=6;
+	//pana2_(*TRACK_mod_.E,E1,CDT1,E2,CDT2,*TRACK_mod_.MAT);
+	DF=TWOPI*rand2_(9.0e0);
+	if (E1 > PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][2-1]){
+		US=*TRACK_mod_.U;
+        VS=*TRACK_mod_.V;
+        WS=*TRACK_mod_.W;
+        direct2_(CDT1,DF,US,VS,WS);
+        CHIST_.ILBA[1-1]=TRACK_mod_.ILB[1-1]+1;
+        CHIST_.ILBA[2-1]=*TRACK_mod_.KPAR;
+        CHIST_.ILBA[3-1]=ICOL;
+        CHIST_.ILBA[4-1]=0;
+        CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
+		int wvar = 2;
+        stores2_(E1,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,0);
+	}
+	if (E2 > PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][2-1]){
+		DF=DF+PI;
+		US=*TRACK_mod_.U;
+        VS=*TRACK_mod_.V;
+        WS=*TRACK_mod_.W;
+        direct2_(CDT2,DF,US,VS,WS);
+        CHIST_.ILBA[1-1]=TRACK_mod_.ILB[1-1]+1;
+        CHIST_.ILBA[2-1]=*TRACK_mod_.KPAR;
+        CHIST_.ILBA[3-1]=ICOL;
+        CHIST_.ILBA[4-1]=0;
+        CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
+		int wvar = 2;
+        stores2_(E1,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,0);
+	}
+	DE=*TRACK_mod_.E+TREV;
+    *TRACK_mod_.E=0.0e0;
+	return;
 
 
+	//Mecanismo fictício auxiliar (ICOL=8).
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+L3800:;
+	ICOL=8;
+	DE=0.0e0;
+//	paux2_();
+	return;
 
 }
 
@@ -20407,10 +20777,10 @@ void eina2_(double &E, double &DELTA, double &DE, double &EP, double &CDT, doubl
 
 	static const int NO=512;
 
-	double WCCM, PK, JE, TST, UK, WK,WTHR, WM, WKP, QKP, EE, WCMAX, WDMAX, RB, GAM, GAM2, BETA2, AMOL, CPS, CP;
+	double WCCM, PK, TST, UK, WK,WTHR, WM, WKP, QKP, EE, WCMAX, WDMAX, RB, GAM, GAM2, BETA2, AMOL, CPS, CP;
 	double CPPS, CPP, QM, RWKP, XHDL, XHDT, F0, RCL, RL1, RRL1, XHC, XHTOT, TS1, A, ARCL, FB, RK, RK2, RKF, PHI;
 	double QS, Q, QTREV;
-	int IO, JO, IT;
+	int IO, JO, IT, JE;
 
 	WCCM=PENELOPE_mod_.WCC[M-1];
 
@@ -20438,11 +20808,17 @@ void eina2_(double &E, double &DELTA, double &DE, double &EP, double &CDT, doubl
     JO=CEINAC_.NEIN[M-1]+1;
 L1:;
     IT=(IO+JO)/2;
-	if (JO-IO > 1){
-	  IOSC=CEINAC_.IEIN[IO-1][M-1];
-      UK=CEIN_.UI[IOSC-1][M-1];
-      WK=CEIN_.WRI[IOSC-1][M-1];
+	if (TST > CEINAC_.EINAC[IT-1][JE-1][M-1]){
+		IO=IT;
+	}else{
+		JO=IT;
 	}
+	if (JO-IO > 1)
+		goto L1;
+	IOSC=CEINAC_.IEIN[IO-1][M-1];
+    UK=CEIN_.UI[IOSC-1][M-1];
+    WK=CEIN_.WRI[IOSC-1][M-1];
+	
 	if (UK > 1.0e-3){
 		WTHR=fmax(WCCM,UK);
 	}else{
@@ -20591,6 +20967,8 @@ L2:;
 			}else{
 				ES=DE;
 			}
+		}else{
+			ES=DE;
 		}
 		CDTS=sqrt(DE*RB/(E*(DE+TREV)));
 		return;
@@ -21609,6 +21987,852 @@ L6:;
 
 
 }
+
+void  gpha2_(double &ES, int &IZZ, int &ISH){
+
+ /*
+	Simulação de absorção fotoelétrica no material M.
+
+	Argumentos de saída:
+	ES .... energia cinética do fotoelétron.
+	IZZ ... número atômico do átomo onde ocorreu a absorção.
+	ISH ... camada de elétrons atômica que foi ionizada.
+
+	NOTA: O JUMP usa uma seção transversal fotoelétrica ligeiramente maior
+	do que seu valor 'verdadeiro'. Para corrigir isso, o fóton pode
+	'sobrevive' a um evento fotoelétrico. A sobrevivência do fóton é sinalizada por
+	configuração IZZ=0, ISH=0, ES=0.0D0 (a energia E do fóton é mantida
+	inalterado.
+ */
+
+	static const int NTP=12000;
+	double ACP[35];
+	double IP[35];
+
+	int I, IU, IT, IELAC, J;
+	double PTOT, DEE, PCSL, TST, PIS, EBB;
+
+	//Coeficientes de atenuação parcial.
+
+	PTOT=0.0e0;
+	for (int IEL=1; IEL <= COMPOS_.NELEM[*TRACK_mod_.MAT-1]; IEL++){
+		IZZ=COMPOS_.IZ[IEL-1][*TRACK_mod_.MAT-1];
+       //Busca Binaria
+        I=CGPH00_.IPHF[IZZ-1];
+        IU=CGPH00_.IPHL[IZZ-1];
+L1:;
+    	IT=(I+IU)/2;
+		if (*CEGRID_.XEL > CGPH00_.EPH[IT-1])
+			I=IT;
+		else
+			IU=IT;
+		if (IU-I > 1)
+			goto L1;
+
+		IP[IEL-1]=I;
+        DEE=CGPH00_.EPH[I+1-1]-CGPH00_.EPH[I-1];
+		if (DEE > 1.0e-15){
+			PCSL=CGPH00_.XPH[1-1][I-1]+(CGPH00_.XPH[1-1][I+1-1]-CGPH00_.XPH[1-1][I-1])*(*CEGRID_.XEL-CGPH00_.EPH[I-1])/DEE;
+		}else{
+			PCSL=CGPH00_.XPH[1-1][I-1];
+		}
+		PTOT=PTOT+COMPOS_.STF[IEL-1][*TRACK_mod_.MAT-1]*exp(PCSL);
+        ACP[IEL-1]=PTOT;
+	}
+	if (PTOT*COMPOS_.VMOL[*TRACK_mod_.MAT-1] > CGIMFP_.SGPH[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]){
+		printf("WARNING: SGPH is less than the actual mac.\n");
+	}
+
+	//Faça uma amostra do elemento ativo.
+	TST=rand2_(1.0e0)*CGIMFP_.SGPH[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]/COMPOS_.VMOL[*TRACK_mod_.MAT-1];
+	for (int IEL = 1; IEL <= COMPOS_.NELEM[*TRACK_mod_.MAT-1]; IEL++){
+		if (ACP[IEL-1] > TST){
+			IELAC=IEL;
+          	IZZ=COMPOS_.IZ[IEL-1][*TRACK_mod_.MAT-1];
+          	goto L2;
+		}
+	}
+
+	//nteração delta. Introduzido para corrigir o uso de um limite superior do coeficiente de atenuação fotoelétrica.
+	IZZ=0;
+    ISH=0;
+    ES=0.0e0;
+    return;
+
+L2:;
+	//Seleção do shell ativo.
+	I=IP[IELAC-1];
+    DEE=CGPH00_.EPH[I+1-1]-CGPH00_.EPH[I-1];
+    PIS=0.0e0;
+
+	if (DEE > 1.0e-15){
+		PTOT=exp(CGPH00_.XPH[1-1][I-1]+(CGPH00_.XPH[1-1][I+1-1]-CGPH00_.XPH[1-1][I-1])*(*CEGRID_.XEL-CGPH00_.EPH[I-1])/DEE);
+        TST=rand2_(2.0e0)*PTOT;
+	
+		for (int IS=1; IS <= CGPH00_.NPHS[IZZ-1]; IS++){
+			J=IS+1;
+          	PCSL=CGPH00_.XPH[J-1][I-1]+(CGPH00_.XPH[J-1][I+1-1]-CGPH00_.XPH[J-1][I-1])*(*CEGRID_.XEL-CGPH00_.EPH[I-1])/DEE;
+         	PIS=PIS+exp(PCSL);
+			 if (PIS > TST){
+				 ISH=IS;
+				 goto L3;
+			 }
+		}
+	}else{
+		PTOT=exp(CGPH00_.XPH[1-1][I-1]);
+        TST=rand2_(2.0e0)*PTOT;
+		for (int IS=1; IS <= CGPH00_.NPHS[IZZ-1]; IS++){
+			PIS=PIS+exp(CGPH00_.XPH[IS+1-1][I-1]);
+			if (PIS > TST){
+				ISH=IS;
+				goto L3;
+			}
+		}
+	}
+	ISH=17;
+
+	//Emissão do FotoEletron
+L3:;
+	if (ISH < 17){
+		EBB=CADATA_.EB[ISH-1][IZZ-1];
+		if (EBB > CECUTR_.ECUTR[*TRACK_mod_.MAT-1]){
+			ES=*TRACK_mod_.E-EBB;
+		}else{
+			ES=*TRACK_mod_.E;
+          	ISH=17;
+		}
+	}else{
+		ES=*TRACK_mod_.E;
+	}
+
+
+
+}
+
+void sauter2_(double &ES, double &CDTS){
+
+	/*
+	Amostragem aleatória da direção inicial dos fotoelétrons do
+	Distribuição Sauter.
+	*/
+
+	double REV=5.10998928e5;
+
+	double GAM, GAM2, BETA, AC, A1, A2, GTMAX, RU, TSAM, GTR;
+
+	if (ES > 1.0e9){
+		CDTS=1.0e0;
+		return;
+	}
+	GAM=1.0e0+ES/REV;
+    GAM2=GAM*GAM;
+    BETA=sqrt((GAM2-1.0e0)/GAM2);
+    AC=1.0e0/BETA-1.0e0;
+    A1=0.5e0*BETA*GAM*(GAM-1.0e0)*(GAM-2.0e0);
+    A2=AC+2.0e0;
+    GTMAX=2.0e0*(A1+1.0e0/AC);
+L1:;
+	RU=rand2_(1.0e0);
+    TSAM=2.0e0*AC*(2.0e0*RU+A2*sqrt(RU))/(A2*A2-4.0e0*RU);
+    GTR=(2.0e0-TSAM)*(A1+1.0e0/(AC+TSAM));
+	if (rand2_(2.0e0)*GTMAX > GTR)
+		goto L1;
+	CDTS=1.0e0-TSAM;
+
+}
+
+void gppa2_(double &EE, double &CDTE, double &EP, double &CDTP, int &IZZ, int &ISH){
+
+ /*
+	Amostragem aleatória do par elétron-pósitron e produção de tripletos por
+	fótons. Seção transversal diferencial Bethe-Heitler.
+
+	Valores de saída :
+	EE ..... energia cinética do elétron.
+	CDTE ... direção polar cosseno do elétron.
+	EP ..... energia cinética do pósitron.
+	CDTP ... cosseno de direção polar do pósitron.
+	IZZ ... número atômico do átomo onde ocorreu a absorção.
+	ISH .... camada de elétrons atômicos que foi ionizada.
+ */
+	double REV=5.10998928e5;
+	double SL=137.035999074e0;
+	double  TREV=2.0e0*REV;
+
+	static const int NOCO=512;
+
+	double EKI, EPS, ALZ, T, F00, G0, BMIN, G1MIN, G2MIN, XR, A1, A2, P1, RU2M1, B, G1, G2, TRIPL, TST;
+	int I, ISHELL, JO;
+
+	EKI=REV/ *TRACK_mod_.E;
+
+	if (*TRACK_mod_.E < 1.1e6){
+		EPS=EKI+(1.0e0-2.0e0*EKI)*rand2_(1.0e0);
+		goto L3;
+	}
+
+	//Low-energy and Coulomb corrections.
+	ALZ=CGPP00_.ZEQPP[*TRACK_mod_.MAT-1]/SL;
+    T=sqrt(2.0e0*EKI);
+    F00=(-1.774e0-1.210e1*ALZ+1.118e1*ALZ*ALZ)*T
+        +(8.523e0+7.326e1*ALZ-4.441e1*ALZ*ALZ)*pow(T,2)
+        -(1.352e1+1.211e2*ALZ-9.641e1*ALZ*ALZ)*pow(T,3)
+        +(8.946e0+6.205e1*ALZ-6.341e1*ALZ*ALZ)*pow(T,4);
+    G0=CGPP00_.F0[2-1][*TRACK_mod_.MAT-1]+F00;
+    BMIN=4.0e0*EKI/CGPP00_.BCB[*TRACK_mod_.MAT-1];
+	schiff2_(BMIN,G1,G2);
+	G1MIN=G1+G0;
+    G2MIN=G2+G0;
+    XR=0.5e0-EKI;
+    A1=6.666666666666666e-1*G1MIN*pow(XR,2);
+    P1=A1/(A1+G2MIN);
+
+	//Amostragem aleatória de EPS.
+
+L1:;
+	if (rand2_(2.020) > P1)
+		goto L2;
+	RU2M1=2.0e0*rand2_(3.0e0)-1.0e0;
+	if (RU2M1 < 0.0e0)
+		EPS=0.5e0-XR*pow(fabs(RU2M1),3.333333333333333e-1);
+	else
+		EPS=0.5e0+XR*pow(RU2M1,3.333333333333333e-1);
+	B=EKI/(CGPP00_.BCB[*TRACK_mod_.MAT-1]*EPS*(1.0e0-EPS));
+	schiff2_(B,G1,G2);
+	G1=fmax(G1+G0,0.0e0);
+	if (rand2_(4.0e0)*G1MIN > G1)
+		goto L1;
+	goto L3;
+L2:;
+	EPS=EKI+2.0e0*XR*rand2_(5.0e0);
+    B=EKI/(CGPP00_.BCB[*TRACK_mod_.MAT-1]*EPS*(1.0e0-EPS));
+    schiff2_(B,G1,G2);
+    G2=fmax(G2+G0,0.0e0);
+	if (rand2_(6.0e0)*G2MIN > G2)
+		goto L1;
+L3:;
+	//Eletron
+	EE=EPS**TRACK_mod_.E-REV;
+    CDTE=2.0e0*rand2_(7.0e0)-1.0e0;
+    A1=EE+REV;
+    A2=sqrt(EE*(EE+TREV));
+    CDTE=(CDTE*A1+A2)/(A1+CDTE*A2);
+	//Positron
+	EP=(1.0e0-EPS)* *TRACK_mod_.E-REV;
+    CDTP=2.0e0*rand2_(8.0e0)-1.0e0;
+    A1=EP+REV;
+    A2=sqrt(EP*(EP+TREV));
+    CDTP=(CDTP*A1+A2)/(A1+CDTP*A2);
+
+	//Produção de Tripletos
+	TRIPL=CGPP01_.TRIP[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CGPP01_.TRIP[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CGPP01_.TRIP[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK;
+    IZZ=0;
+    ISH=30;
+	if (TRIPL < 1.0e-5)
+		return;
+	if (rand2_(9.0e0) > TRIPL)
+		return;
+	TST=rand2_(10.0e0);
+	//Busca binaria
+	if (TST < CGCO_.PTRSH[1-1][*TRACK_mod_.MAT-1]){
+		ISHELL=1;
+	}else{
+		ISHELL=1;
+        JO=CGCO_.NOSCCO[*TRACK_mod_.MAT-1]+1;
+L4:;
+    	I=(ISHELL+JO)/2;
+		if (TST > CGCO_.PTRSH[I-1][*TRACK_mod_.MAT-1]){
+			ISHELL=I;
+
+		}else{
+			JO=I;
+		}
+		if (JO-ISHELL > 1)
+			goto L4;
+		ISHELL=ISHELL+1;
+	}
+	IZZ=CGCO_.KZCO[ISHELL-1][*TRACK_mod_.MAT-1];
+    ISH=CGCO_.KSCO[ISHELL-1][*TRACK_mod_.MAT-1];
+
+
+}
+
+void schiff2_(double &B, double &G1, double &G2){
+
+	/*
+	Funções de triagem F1(B) e F2(B) no diferencial Bethe-Heitler
+	seção transversal para produção de pares.
+	*/
+
+	double PI=3.1415926535897932e0;
+	double TWOPI=PI+PI;
+	double B1, F1, F2, A0, B2;
+
+	B2=B*B;
+    F1=2.0e0-2.0e0*log(1.0e0+B2);
+    F2=F1-6.666666666666666e-1;
+	if (B < 1.0e-10){
+		F1=F1-TWOPI*B;
+	}else{
+		A0=4.0e0*B*atan2(1.0e0,B);
+        F1=F1-A0;
+        F2=F2+2.0e0*B2*(4.0e0-A0-3.0e0*log((1.0e0+B2)/B2));
+	}
+	G1=0.5e0*(3.0e0*F1-F2);
+    G2=0.25e0*(3.0e0*F1+F2);
+
+}
+
+void gaux2_(){
+	/*	
+	Mecanismo de interação auxiliar para fotons, definível pelo usuário.
+	Geralmente não está ativo.
+	*/
+	printf("Warning: Subroutine GAUX has been entered.\n");
+}
+
+void peld2_(double &RNDC, double &RMU){
+
+	/*
+	Simulação de eventos elásticos rígidos de positrons. Seções transversais de
+ 	a base de dados numérica ELSEPA.
+
+	Valor do argumento :
+ 	RNDC ... valor de corte do número aleatório uniforme
+ 	(apenas eventos difíceis são simulados).
+ 	RMU .... deflexão angular amostrada, =(1-CDT)/2.
+	
+	*/
+
+	static const int NP=128;
+	static const int NPM1=NP-1;
+
+	double PK, RU, RR, PP, XX, AA, BB, D;
+	int ITN, JE, I, J, K;
+
+	//Ponto da rede de energia
+
+
+	PK=(*CEGRID_.XEL-CEGRID_.DLEMP[*CEGRID_.KE-1])* *CEGRID_.DLFC;
+
+	if (rand2_(1.0e0) < PK){
+		JE=*CEGRID_.KE+1;
+	}else{
+		JE=*CEGRID_.KE;
+	}
+
+	//Ponto
+	RU=RNDC+rand2_(2.0e0)*(1.0e0-RNDC);
+
+	//Selection of the interval (binary search in a restricted interval).
+	ITN=RU*NPM1+1;
+    I=CPELDB_.ITLP[*TRACK_mod_.MAT-1][JE-1][ITN-1];
+    J=CPELDB_.ITUP[*TRACK_mod_.MAT-1][JE-1][ITN-1];
+	if ((J-I) < 2)
+		goto L2;
+L1:;
+	K=(I+J)/2;
+	if (RU > CPELDB_.PSP[*TRACK_mod_.MAT-1][JE-1][K-1]){
+		I=K;
+	}else{
+		J=K;
+	}
+
+	if ((J-I) > 1)
+		goto L1;
+
+	//Amostragem da distribuição cumulativa inversa racional.
+L2:;
+	PP=CPELDB_.PSP[*TRACK_mod_.MAT-1][JE-1][I-1];
+    RR=RU-PP;
+	if (RR > 1.0e-16){
+		XX=CPELDB_.XSP[*TRACK_mod_.MAT-1][JE-1][I-1];
+        AA=CPELDB_.ASP[*TRACK_mod_.MAT-1][JE-1][I-1];
+        BB=CPELDB_.BSP[*TRACK_mod_.MAT-1][JE-1][I-1];
+        D=CPELDB_.PSP[*TRACK_mod_.MAT-1][JE-1][I+1-1]-PP;
+        RMU=XX+((1.0e0+AA+BB)*D*RR/(D*D+(AA*D+BB*RR)*RR))*(CPELDB_.XSP[*TRACK_mod_.MAT-1][JE-1][I+1-1]-XX);
+	}else{
+		RMU=CPELDB_.XSP[*TRACK_mod_.MAT-1][JE-1][I-1];
+	}
+}
+
+void pina2_(double &E, double &DELTA, double &DE, double &EP, double &CDT, double &ES, double &CDTS, int &M, int &IOSC){
+
+	/*
+	Amostragem aleatória de colisões inelásticas duras de positrons.
+
+	Modelo C Sternheimer-Liljequist GOS.
+
+	Argumentos de entrada:
+	E ....... energia do elétron (eV).
+	M ....... material onde os elétrons se propagam.
+	DELTA ... Correção do efeito de densidade de Fermi.
+	Argumentos de saída:
+	DE ...... perda de energia (eV).
+	EP ...... energia do elétron espalhado (eV).
+	CDT ..... cosseno do ângulo de dispersão polar.
+	ES ...... energia do elétron secundário emitido (eV).
+	CDTS .... cosseno polar de direção do elétron secundário.
+	IOSC .... índice do oscilador que foi 'ionizado'.
+	
+	*/
+
+	double REV=5.10998928e5;
+	bool LDIST;
+	double RREV=1.0e0/REV;
+	double TREV=2.0e0*REV;
+	double RTREV=1.0e0/TREV;
+
+	static const int NO=512;
+
+	double WCCM, PK, TST, UK, WK,WTHR, WM, WKP, QKP, WCMAX, WDMAX, RB, GAM, GAM2, BETA2, AMOL, CPS, CP;
+	double CPPS, CPP, QM, RWKP, XHDL, XHDT, F0, RCL, RL1, RRL1, XHC, XHTOT, TS1, A, ARCL, FB, RK, RK2, RKF, PHI;
+	double QS, Q, QTREV, G12, BHA1, BHA2, BHA3, BHA4;
+	int IO, JO, IT, JE;
+
+	WCCM=PENELOPE_mod_.WCC[M-1];
+
+	if (WCCM > E){
+		DE=0.0e0;
+        EP=E;
+        CDT=1.0e0;
+        ES=0.0e0;
+        CDTS=0.0e0;
+        IOSC=NO;
+        return;
+	}
+	//Ponto da rede de energia
+	PK=(*CEGRID_.XEL-CEGRID_.DLEMP[*CEGRID_.KE-1])* *CEGRID_.DLFC;
+	if (rand2_(1.0e0) < PK){
+		JE=*CEGRID_.KE+1;
+	}else{
+		JE=*CEGRID_.KE;
+	}
+
+	//Seleção do oscilador ativo.
+	TST=rand2_(2.0e0);
+	//Busca binaria
+	IO=1;
+    JO=CPINAC_.NPIN[M-1]+1;
+L1:;
+    IT=(IO+JO)/2;
+	if (TST > CPINAC_.PINAC[IT-1][JE-1][M-1]){
+		IO=IT;
+	}else{
+		JO=IT;
+	}
+	if (JO-IO > 1)
+		goto L1;
+	IOSC=CPINAC_.IPIN[IO-1][M-1];
+    UK=CEIN_.UI[IOSC-1][M-1];
+    WK=CEIN_.WRI[IOSC-1][M-1];
+	
+	if (UK > 1.0e-3){
+		WTHR=fmax(WCCM,UK);
+	}else{
+		WTHR=fmax(WCCM,WK);
+	}
+
+	if (E < (WTHR+1.0e-6)){
+		DE=0.0e0;
+        EP=E;
+        CDT=1.0e0;
+        ES=0.0e0;
+        CDTS=0.0e0;
+        IOSC=NO;
+        return;
+	}
+
+	/*
+	Truque: A energia de ressonância e a energia de recuo de corte de
+	conchas internas são variadas para produzir um limiar suave.
+	*/
+
+	LDIST=true;
+	if (UK > 1.0e-3){
+		WM=3.0e0*WK-2.0e0*UK;
+		if (E > WM){
+			WKP=WK;
+            QKP=UK;
+		}else{
+			WKP=(E+2.0e0*UK)/3.0e0;
+            QKP=UK*(E/WM);
+            WM=E;
+		}
+		if (WCCM > WM)
+		    LDIST=false;
+
+		
+        WCMAX=E;
+        WDMAX=fmin(WM,WCMAX);
+        if (WTHR > WDMAX) 
+			LDIST=false;
+	}else{
+		if (WCCM > WK)
+			LDIST=false;
+		WKP=WK;
+        QKP=WK;
+        WM=E;
+        WCMAX=E;
+        WDMAX=WKP+1.0e0;
+	}
+
+	//Constantes
+
+	RB=E+TREV;
+    GAM=1.0e0+E*RREV;
+    GAM2=GAM*GAM;
+    BETA2=(GAM2-1.0e0)/GAM2;
+	G12=pow((GAM+1.0e0),2);
+    AMOL=pow(((GAM-1.0e0)/GAM),2);
+	BHA1=AMOL*(2.0e0*G12-1.0e0)/(GAM2-1.0e0);
+    BHA2=AMOL*(3.0e0+1.0e0/G12);
+    BHA3=AMOL*2.0e0*GAM*(GAM-1.0e0)/G12;
+    BHA4=AMOL*pow((GAM-1.0e0),2)/G12;
+    CPS=E*RB;
+    CP=sqrt(CPS);
+
+	//Seções transversais parciais do oscilador ativo.
+	//Excitalçoes Distantes
+	if (LDIST){
+		CPPS=(E-WKP)*(E-WKP+TREV);
+        CPP=sqrt(CPPS);
+		if (WKP > 1.0e-6*E){
+			QM=sqrt(pow((CP-CPP),2)+REV*REV)-REV;
+		}else{
+			QM=pow(WKP,2)/(BETA2*TREV);
+            QM=QM*(1.0e0-QM*RTREV);
+		}
+		if (QM < QKP){
+			RWKP=1.0e0/WKP;
+         	XHDL=log(QKP*(QM+TREV)/(QM*(QKP+TREV)))*RWKP;
+          	XHDT=fmax(log(GAM2)-BETA2-DELTA,0.0e0)*RWKP;
+			if (UK > 1.0e-3){
+				F0=(WDMAX-WTHR)*(WM+WM-WDMAX-WTHR)/pow((WM-UK),2);
+             	XHDL=F0*XHDL;
+             	XHDT=F0*XHDT;
+			}
+		}else{
+			XHDL=0.0e0;
+            XHDT=0.0e0;
+		}
+	}else{
+		QM=0.0e0;    //Definido para evitar avisos de compilação.
+        CPP=0.0e0;   
+        CPPS=0.0e0;  
+        XHDL=0.0e0;
+        XHDT=0.0e0;
+	}
+
+	//Colisoes Fechadas
+	RCL=WTHR/E;
+
+	RL1=1.0e0-RCL;
+      XHC=((1.0e0/RCL-1.0e0)+BHA1*log(RCL)+BHA2*RL1
+     	 +(BHA3/2.0e0)*(pow(RCL,2)-1.0e0)+(BHA4/3.0e0)*(1.0e0-pow(RCL,3)))/E;
+
+	XHTOT=XHC+XHDL+XHDT;
+	if (XHTOT < 1.0e-35){
+		DE=0.0e0;
+        EP=E;
+        CDT=1.0e0;
+        ES=0.0e0;
+        CDTS=0.0e0;
+        IOSC=NO;
+        return;
+	}
+
+	//Amostragem de variáveis ​​de estado final.
+
+	TST=rand2_(3.0e0)*XHTOT;
+
+	//Colisão fechada dura
+
+	TS1=XHC;
+	if (TST < TS1){
+L2:;
+		RK=RCL/(1.0e0-rand2_(4.0e0)*RL1);
+        PHI=1.0e0-RK*(BHA1-RK*(BHA2-RK*(BHA3-BHA4*RK)));
+		if (rand2_(5.0e0) > PHI)
+			goto L2;
+		//Energia e ângulo de espalhamento (positron primário).
+		DE=RK*E;
+        EP=E-DE;
+        CDT=sqrt(EP*RB/(E*(RB-DE)));
+		//Energia e ângulo de emissão do raio delta.
+		if (CEIN_.KS[IOSC-1][M-1] < 17){
+			if (UK > CECUTR_.ECUTR[M-1]){
+				ES=DE-UK;
+			}else{
+				ES=DE;
+			}
+		}else{
+			ES=DE;
+		}
+		CDTS=sqrt(DE*RB/(E*(DE+TREV)));
+		return;
+	}
+
+	//Interação longitudinal dura distante.
+	TS1=TS1+XHDL;
+	if (UK > 1.0e-3){
+		DE=WM-sqrt(pow((WM-WTHR),2)-rand2_(7.0e0)*(WDMAX-WTHR)*(WM+WM-WDMAX-WTHR));
+	}else{
+		DE=WKP;
+	}
+	EP=E-DE;
+	if (TST < TS1){
+		QS=QM/(1.0e0+QM*RTREV);
+        Q=QS/(pow(((QS/QKP)*(1.0e0+QKP*RTREV)), rand2_(6.0e0))-(QS*RTREV));
+        QTREV=Q*(Q+TREV);
+        CDT=(CPPS+CPS-QTREV)/(2.0e0*CP*CPP);
+		if (CDT > 1.0e0){
+			CDT=1.0e0;
+		}
+		//Energia e ângulo de emissão do raio delta.
+		if (CEIN_.KS[IOSC-1][M-1] < 17){
+			ES=DE-UK; //Apenas conchas internas.
+		}else{
+			ES=DE;
+		}
+		CDTS=0.5e0*(WKP*(E+RB-WKP)+QTREV)/sqrt(CPS*QTREV);
+		if (CDTS > 1.0e0)
+		    CDTS=1.0e0;
+		return;
+	}
+
+	//Interação transversal distante difícil.
+	CDT=1.0e0;
+	//Energia e ângulo de emissão do raio delta.
+	if (CEIN_.KS[IOSC-1][M-1] < 17){
+		if (UK >  CECUTR_.ECUTR[M-1]){
+			ES=DE-UK; //Apenas conchas internas.
+		}else{
+			ES=DE;
+		}
+	}else{
+		ES=DE;
+	}
+	CDTS=1.0e0;
+
+}
+
+void psia2_(double &E, double &DELTA, double &DE, double &EP, double &CDT, double &ES, double &CDTS, int &M, int &IZZ, int &ISH){
+
+/*
+	Amostragem aleatória de ionização de camada interna por impacto de positrons.
+
+	Modelo Sternheimer-Liljequist GOS.
+
+	Argumentos de entrada:
+	E ....... energia do elétron (eV).
+	M ....... material onde os elétrons se propagam.
+	DELTA ... Correção do efeito de densidade de Fermi.
+	Argumentos de saída:
+	DE ...... perda de energia (eV).
+	EP ...... energia do elétron espalhado (eV).
+	CDT ..... cosseno do ângulo de dispersão polar.
+	ES ...... energia do elétron secundário emitido (eV).
+	CDTS .... cosseno polar de direção do elétron secundário.
+	IZZ ..... número atômico do elemento onde a ionização ocorreu.
+	ISH ..... camada de elétrons atômicos que foi ionizada.
+*/
+
+	double REV=5.10998928e5;
+	double RREV=1.0e0/REV;
+
+	double TREV=2.0e0*REV;
+	double RTREV=1.0e0/TREV;
+
+	static const int NO=512;
+
+	double WCCM, PK, TST, UK, WK,WTHR, WM, WKP, QKP, WCMAX, WDMAX, RB, GAM, GAM2, BETA2, AMOL, CPS, CP;
+	double CPPS, CPP, QM, RWKP, XHDL, XHDT, F0, RCL, RL1, RRL1, XHC, XHTOT, TS1, A, ARCL, FB, RK, RK2, RKF, PHI;
+	double QS, Q, QTREV, G12, BHA1, BHA2, BHA3, BHA4;
+	int IO, JO, IT, IOSC, JE;
+
+	//Ponto da rede de energia
+
+	PK=(*CEGRID_.XEL-CEGRID_.DLEMP[*CEGRID_.KE-1])* *CEGRID_.DLFC;
+	if (rand2_(1.0e0) < PK){
+		JE=*CEGRID_.KE+1;
+	}else{
+		JE=*CEGRID_.KE;
+	}
+
+	//Seleção do oscilador ativo.
+
+	TST=rand2_(2.0e0);
+
+	//Busca binaria
+	IO=1;
+    JO=CPSIAC_.NPSI[M-1]+1;
+L1:;
+    IT=(IO+JO)/2;
+	if (TST > CPSIAC_.PSIAC[IT-1][JE-1][M-1]){
+		IO=IT;
+	}else{
+		JO=IT;
+	}
+	if (JO-IO > 1)
+		goto L1;
+	
+	IOSC=CPSIAC_.IPSI[IO-1][M-1];
+    IZZ=CEIN_.KZ[IOSC-1][M-1];
+    ISH=CEIN_.KS[IOSC-1][M-1];
+    UK=CEIN_.UI[IOSC-1][M-1];
+    WK=CEIN_.WRI[IOSC-1][M-1];
+
+	if (UK > 1.0e-3){
+		WTHR=UK;
+	}else{
+		WTHR=WK;
+	}
+
+	if (E < WTHR+1.0e-6){
+		DE=UK;
+        EP=E-DE;
+        CDT=1.0e0;
+        ES=0.0e0;
+        CDTS=0.0e0;
+        return;
+	}
+
+	/*
+	Truque: A energia de ressonância e a energia de recuo de corte de
+	 conchas internas são variadas para produzir um limiar suave.
+	*/
+
+ 	WM=3.0e0*WK-2.0e0*UK;
+	if (E > WM){
+		WKP=WK;
+        QKP=UK;
+	}else{
+		WKP=(E+2.0e0*UK)/3.0e0;
+        QKP=UK*(E/WM);
+        WM=E;
+	}
+	
+    WCMAX=E;
+    WDMAX=fmin(WM,WCMAX);
+
+
+	//Constantes
+
+	RB=E+TREV;
+    GAM=1.0e0+E*RREV;
+    GAM2=GAM*GAM;
+    BETA2=(GAM2-1.0e0)/GAM2;
+	G12=pow((GAM+1.0e0),2);
+    AMOL=pow(((GAM-1.0e0)/GAM),2);
+	BHA1=AMOL*(2.0e0*G12-1.0e0)/(GAM2-1.0e0);
+    BHA2=AMOL*(3.0e0+1.0e0/G12);
+    BHA3=AMOL*2.0e0*GAM*(GAM-1.0e0)/G12;
+    BHA4=AMOL*pow((GAM-1.0e0),2)/G12;
+    CPS=E*RB;
+    CP=sqrt(CPS);
+
+	//Seções transversais parciais do oscilador ativo.
+
+	//Excitações distantes.
+
+	CPPS=(E-WKP)*(E-WKP+TREV);
+    CPP=sqrt(CPPS);
+
+	if (WKP > 1.0e-6*E){
+		QM=sqrt(pow((CP-CPP),2)+REV*REV)-REV;
+	}else{
+		QM=pow(WKP,2)/(BETA2*TREV);
+        QM=QM*(1.0e0-QM*RTREV);
+	}
+
+	if (QM < QKP){
+		RWKP=1.0e0/WKP;
+        XHDL=log(QKP*(QM+TREV)/(QM*(QKP+TREV)))*RWKP;
+        XHDT=fmax(log(GAM2)-BETA2-DELTA,0.0e0)*RWKP;
+        F0=(WDMAX-WTHR)*(WM+WM-WDMAX-WTHR)/pow((WM-UK),2);
+        XHDL=F0*XHDL;
+        XHDT=F0*XHDT;
+	}else{
+		XHDL=0.0e0;
+        XHDT=0.0e0;
+	}
+
+	//Colisoes Proximas
+	RCL=WTHR/E;
+    RL1=1.0e0-RCL;
+    RRL1=1.0e0/RL1;
+    XHC=((1.0e0/RCL-1.0e0)+BHA1*log(RCL)+BHA2*RL1
+       +(BHA3/2.0e0)*(pow(RCL,2)-1.0e0)+(BHA4/3.0e0)*(1.0e0-pow(RCL,3)))/E;
+
+    XHTOT=XHC+XHDL+XHDT;
+
+	if (XHTOT < 1.0e-35){
+		DE=UK;
+        EP=E-DE;
+        CDT=1.0e0;
+        ES=0.0e0;
+        CDTS=0.0e0;
+        return;
+	}
+
+	//Amostragem de variáveis ​​de estado final.
+
+	TST=rand2_(3.0e0)*XHTOT;
+
+	//Colisão aproximada dura.
+
+	TS1=XHC;
+	if (TST < TS1){
+L2:;
+		RK=RCL/(1.0e0-rand2_(4.0e0)*RL1);
+        PHI=1.0e0-RK*(BHA1-RK*(BHA2-RK*(BHA3-BHA4*RK)));
+		if (rand2_(5.0e0) > PHI)
+			goto L2;
+		//Energia e ângulo de espalhamento (elétron primário).
+		DE=RK*E;
+		EP=E-DE;
+		CDT=sqrt(EP*RB/(E*(RB-DE)));
+		//Energia e ângulo de emissão do raio delta.
+		ES=DE-UK;
+		CDTS=sqrt(DE*RB/(E*(DE+TREV)));
+		return;
+	}
+
+	//Interação longitudinal dura distante.
+	TS1=TS1+XHDL;
+    DE=WM-sqrt(pow((WM-WTHR),2)-rand2_(7.0e0)*(WDMAX-WTHR)*(WM+WM-WDMAX-WTHR));
+    EP=E-DE;
+
+	if (TST < TS1){
+		QS=QM/(1.0e0+QM*RTREV);
+        Q=QS/(pow(((QS/QKP)*(1.0e0+QKP*RTREV)),rand2_(6.0e0))-(QS*RTREV));
+        QTREV=Q*(Q+TREV);
+        CDT=(CPPS+CPS-QTREV)/(2.0e0*CP*CPP);
+		if (CDT > 1.0e0)
+			CDT=1.0e0;
+
+		//Energia e ângulo de emissão do raio delta.
+		ES=DE-UK;
+        CDTS=0.5e0*(WKP*(E+RB-WKP)+QTREV)/sqrt(CPS*QTREV);
+		if (CDTS >1.0e0)
+			CDTS=1.0e0;
+		return;
+	}
+
+	//Interação transversal distante difícil.
+
+	CDT=1.0e0;
+
+	//Energia e ângulo de emissão do raio delta.
+
+	ES=DE-UK;
+    CDTS=1.0e0;
+
+}
+
+
+
 
 
 
