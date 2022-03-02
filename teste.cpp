@@ -1220,6 +1220,14 @@ void esia2_(double &E, double &DELTA, double &DE, double &EP, double &CDT, doubl
 
 void relax2_(int &IZ, int &IS);
 
+void eaux2_();
+
+void graa2_(double &E, double &CDT, int &IEFF, int &M);
+
+void dirpol2_(double &CDT, double &DF, double &CONS, double &SP1, double &SP2, double &SP3, double &U, double &V, double &W);
+
+void gcoa2_(double &E, double &DE, double &EP, double &CDT, double &ES, double &CDTS, int &M, int &IZZ, int &ISH);
+
 }
 
 
@@ -19860,8 +19868,8 @@ void knock2_(double &DE, int &ICOL){
 	double TREV=2.0e0*REV;
 
 	double EMU1, EMU2, PNUM, PDEN, PMU0, PA, RND, CDT, DF, STNOW, STS, SS, TRNDC, TA, TB, RMU, DELTA, ES, EP, CDTS;
-	double DFS, US, VS, WS;
-	int IOSC, IZA, ISA;
+	double DFS, US, VS, WS, ECDT, CONS;
+	int IOSC, IZA, ISA, IEFF;
 
 	static const int NO=512;
 	static const int NOCO=512;
@@ -20108,14 +20116,130 @@ L1500:;
 	}
 	return;
 
-	//Auxiliary fictitious mechanism (ICOL=8).
+	//Mecanismo fictício auxiliar (ICOL=8).
 
 L1800:;
 	ICOL=8;
+	DE=0.0e0;
+	eaux2_();
+	return;
 
-
+	//Fotons KPAR=2
 
 L2000:;
+
+	STS=*CJUMP0_.ST*rand2_(1.0e0);
+	SS=CJUMP0_.P[1-1];
+	if (SS > STS)
+		goto L2100;
+
+	SS=SS+CJUMP0_.P[2-1];
+	if (SS > STS)
+		goto L2200;
+
+	SS=SS+CJUMP0_.P[3-1];
+	if (SS > STS)
+		goto L2300;
+
+	SS=SS+CJUMP0_.P[4-1];
+	if (SS > STS)
+		goto L2400;
+
+	SS=SS+CJUMP0_.P[8-1];
+	if (SS > STS)
+		goto L2800;
+
+
+	//Espalhamento Rayleigh ICOL=1
+
+L2100:;
+	DE=0.0e0;
+	graa2_(*TRACK_mod_.E,CDT,IEFF,*TRACK_mod_.MAT);
+
+	/*
+	Interação delta. Introduzido para corrigir o uso de um
+	limite superior do coeficiente de atenuação de Rayleigh.
+	*/
+
+	if (IEFF == 0){
+		ICOL=7;
+		return;
+	}
+	ICOL=1;
+	if (*TRACK_mod_.IPOL == 1){
+		double wCONS = 0.0e0;
+		dirpol2_(CDT,DF,wCONS,*TRACK_mod_.SP1,*TRACK_mod_.SP2,*TRACK_mod_.SP3,*TRACK_mod_.U,*TRACK_mod_.V,*TRACK_mod_.W);
+	}else{
+		DF=TWOPI*rand2_(2.0e0);
+		direct2_(CDT,DF,*TRACK_mod_.U,*TRACK_mod_.V,*TRACK_mod_.W);
+	}
+
+	TRACK_mod_.ILB[1-1]=TRACK_mod_.ILB[1-1]+1;
+    TRACK_mod_.ILB[2-1]=*TRACK_mod_.KPAR;
+    TRACK_mod_.ILB[3-1]=ICOL;
+	return;
+
+	//Espalhamento Compton ICOL=2
+
+L2200:;
+	ICOL=2;
+	gcoa2_(*TRACK_mod_.E,DE,EP,CDT,ES,CDTS,*TRACK_mod_.MAT,IZA,ISA);
+	US=*TRACK_mod_.U;
+    VS=*TRACK_mod_.V;
+    WS=*TRACK_mod_.W;
+    DF=-1.0e0;
+	if ((IZA > 0) && (ISA < 17)){
+		CHIST_.ILBA[3-1]=ICOL;
+		relax2_(IZA,ISA);
+	}
+
+	//Nova direção e energia
+	if (EP > PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][2-1]){
+		if (*TRACK_mod_.IPOL == 1){
+			ECDT=*TRACK_mod_.E*RREV*(1.0e0-CDT);
+          	CONS=ECDT*ECDT/(1.0e0+ECDT);
+         	dirpol2_(CDT,DF,CONS,*TRACK_mod_.SP1,*TRACK_mod_.SP2,*TRACK_mod_.SP3,*TRACK_mod_.U,*TRACK_mod_.V,*TRACK_mod_.W);
+		}else{
+			DF=TWOPI*rand2_(3.0e0);
+			direct2_(CDT,DF,*TRACK_mod_.U,*TRACK_mod_.V,*TRACK_mod_.W);
+		}
+		*TRACK_mod_.E=EP;
+	}else{
+		DE=*TRACK_mod_.E;
+        *TRACK_mod_.E=0.0e0;
+	}
+
+	//Electron Compton - particula secundaria
+	if (ES > PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][1-1]){
+		if (DF < -0.5e0)
+			DF=TWOPI*rand2_(4.0e0);
+		DFS=DF+PI;
+        direct2_(CDTS,DFS,US,VS,WS);
+        CHIST_.ILBA[1-1]=TRACK_mod_.ILB[1-1]+1;
+        CHIST_.ILBA[2-1]=*TRACK_mod_.KPAR;
+        CHIST_.ILBA[3-1]=ICOL;
+        CHIST_.ILBA[4-1]=0;
+        CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
+		int wKPARP = 1;
+        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wKPARP,CHIST_.ILBA,0);
+	}
+	TRACK_mod_.ILB[1-1]=TRACK_mod_.ILB[1-1]+1;
+    TRACK_mod_.ILB[2-1]=*TRACK_mod_.KPAR;
+    TRACK_mod_.ILB[3-1]=ICOL;
+	return;
+
+
+	//Absorção Fotoeletrica ICOL=3
+
+
+L2300:;
+
+L2400:;
+
+L2800:;
+
+
+
 
 L3000:;
 
@@ -21088,9 +21212,403 @@ L1:;
 
 }
 
+void eaux2_(){
+	/*	
+	Mecanismo de interação auxiliar para elétrons, definível pelo usuário.
+	Geralmente não está ativo.
+	*/
+	printf("Warning: Subroutine EAUX has been entered.\n");
+}
+
+void graa2_(double &E, double &CDT, int &IEFF, int &M){
+
+	//Amostragem aleatória de espalhamento coerente (Rayleigh)
+
+	double REV=5.10998928e5;
+	double RREV=1.0e0/REV;
+	static const int NQ=250;
+	static const int NEX=1024;
+	static const int NP=150;
+	static const int NPM1=NP-1;
+
+	int II, IU, IT, ITN, I, J, K;
+	double XSE, QMAX, Q2MAX, G, RU, RR, D, XX;
+
+	//Busca Binaria
+
+	II=CGRA01_.IED[*CEGRID_.KE-1];
+    IU=CGRA01_.IEU[*CEGRID_.KE-1];
+L1:;
+    IT=(II+IU)/2;
+
+	if (*CEGRID_.XEL > CGRA01_.ERA[IT-1])
+		II=IT;
+	else
+		IU=IT;
+	if (IU-II > 1)
+		goto L1;
+	
+	XSE=exp(CGRA01_.XSRA[II-1][M-1]+(CGRA01_.XSRA[II+1-1][M-1]-CGRA01_.XSRA[II-1][M-1])*(*CEGRID_.XEL-CGRA01_.ERA[II-1])/(CGRA01_.ERA[II+1-1]-CGRA01_.ERA[II-1]));
+	
+	if (rand2_(1.0e0)*CGIMFP_.SGRA[*CEGRID_.KE-1][M-1] > XSE){
+		IEFF=0;
+    	CDT=1.0e0;
+		return;
+	}
+
+	IEFF=1;
+    QMAX=2.0e0*E*RREV;
+
+	if (QMAX < 1.0e-10){
+L2:;
+		CDT=1.0e0-2.0e0*rand2_(1.0e0);
+        G=0.5e0*(1.0e0+CDT*CDT);	
+		if (rand2_(2.0e0) > G)
+			goto L2;
+		return;
+	}
+	Q2MAX=fmin(QMAX*QMAX,CGRA03_.QRA[M-1][NP-1]);
+
+L3:;
+	RU=rand2_(3.0e0)*CGRA03_.PMAX[M-1][*CEGRID_.KE+1-1];
+
+	//Seleção do intervalo (busca binária dentro de limites pré-calculados).
+
+	ITN=RU*NPM1+1;
+    I=CGRA03_.ITLRA[M-1][ITN-1];
+    J=CGRA03_.ITURA[M-1][ITN-1];
+
+	if (J-I < 2)
+		goto L5;
+L4:;
+	K=(I+J)/2;
+	if (RU > CGRA03_.PRA[M-1][K-1])
+		I=K;
+	else
+		J=K;
+	if (J-I > 1)
+		goto L4;
+	
+	//Amostragem da distribuição cumulativa inversa racional.
+
+L5:;
+	RR=RU-CGRA03_.PRA[M-1][I-1];
+	if (RR > 1.0e-16){
+		D=CGRA03_.DPRA[M-1][I-1];
+        XX=CGRA03_.QRA[M-1][I-1]+((1.0e0+CGRA03_.ARA[M-1][I-1]+CGRA03_.BRA[M-1][I-1])*D*RR/(D*D+(CGRA03_.ARA[M-1][I-1]*D+CGRA03_.BRA[M-1][I-1]*RR)*RR))
+			*(CGRA03_.QRA[M-1][I+1-1]-CGRA03_.QRA[M-1][I-1]);
+	}else{
+		XX=CGRA03_.QRA[M-1][I-1];
+	}
+	if (XX > Q2MAX)
+		goto L3;
+	CDT=1.0e0-2.0e0*XX/Q2MAX;
+	//Rejeição
+	G=0.5e0*(1.0e0+CDT*CDT);
+	if (rand2_(4.0e0) > G)
+		goto L3;
 
 
 
+}
+
+void dirpol2_(double &CDT, double &DF, double &CONS, double &SP1, double &SP2, double &SP3, double &U, double &V, double &W){
+
+	/*
+	Esta sub-rotina calcula os cossenos de direção _e_ os Stokes
+	Parâmetros de um fóton polarizado após espalhamento com um dado polar
+	ângulo.
+
+	Entrada: U,V,W ... cossenos da direção inicial.
+	SP1,SP2,SP3 ... parâmetros Stokes iniciais.
+	CDT ..... cosseno do ângulo de dispersão polar.
+	CONS .... constante no PDF do ângulo azimutal.
+	Saída: U,V,W ... novos cossenos de direção.
+	SP1,SP2,SP3 ... novos parâmetros Stokes.
+	DF ...... ângulo de dispersão azimutal.
+	CDT e CONS permanecem inalterados.
+	*/
+
+	double PI=3.1415926535897932e0;
+	double TWOPI=2.0e0*PI;
+
+	double CDT2, CDT21, PHA, PHB, SP0MAX, SDF, CDF, S2DF, C2DF, SP3P, SP0P, UV, UVW, FNORM, SDT, SDTSDF, SDTCDF,SUV, UN, VN;
+
+	//Amostragem do ângulo de espalhamento azimutal.
+
+	CDT2=CDT*CDT;
+    CDT21=CDT2+1.0e0;
+    PHA=CDT21+CONS;
+    PHB=1.0e0-CDT2;
+    SP0MAX=PHA+PHB*sqrt(SP1*SP1+SP3*SP3+1.0e-35);
+L1:;
+	DF=rand2_(1.0e0)*TWOPI;
+    SDF=sin(DF);
+    CDF=cos(DF);
+    S2DF=2.0e0*SDF*CDF;
+    C2DF=CDF*CDF-SDF*SDF;
+    SP3P=S2DF*SP1+C2DF*SP3; //Parâmetro Stokes com novo zero azimute.
+    SP0P=PHA-PHB*SP3P;
+
+	if (rand2_(2.0e0)*SP0MAX > SP0P)
+		goto L1;
+
+	//Calcular novos parâmetros Stokes
+
+	UV=U*U+V*V;
+    UVW=UV+W*W;
+	if (fabs(UVW-1.0e0) > 1.0e-13){
+		FNORM=1.0e0/sqrt(UVW);
+        U=FNORM*U;
+        V=FNORM*V;
+        W=FNORM*W;
+        UV=U*U+V*V;
+	}
+
+	//Calcula a nova direção
+	if (1.0e0-fabs(CDT) > 1.0e-8)
+		SDT=sqrt(PHB);
+	else
+		SDT=sqrt(2.0e0*(1.0e0-fabs(CDT)));
+
+	if (SDT < 1.0e-13){
+		if (CDT < 0.0e0){
+			U=-U;
+          	V=-V;
+          	W=-W;
+		}
+	}else{
+		SDTSDF=SDT*SDF;
+        SDTCDF=SDT*CDF;
+		if (UV > 1.0e-26){
+			SUV=sqrt(UV);
+          	UN=U/SUV;
+          	VN=V/SUV;
+         	U=U*CDT+(UN*W*SDTCDF-VN*SDTSDF);
+          	V=V*CDT+(VN*W*SDTCDF+UN*SDTSDF);
+          	W=W*CDT-SUV*SDTCDF;
+		}else{
+			if (W > 0.0e0){
+				U=SDTCDF;
+            	V=SDTSDF;
+            	W=CDT;
+			}else{
+				U=-SDTCDF;
+            	V=-SDTSDF;
+            	W=-CDT;
+			}
+		}
+	}
+}
+
+void gcoa2_(double &E, double &DE, double &EP, double &CDT, double &ES, double &CDTS, int &M, int &IZZ, int &ISH){
+
+ /*
+	Amostragem aleatória de espalhamento incoerente (Compton) de fótons.
+
+	Argumentos de entrada:
+	E ..... energia do fóton incidente (eV).
+	M ..... material onde os fótons se propagam.
+	Argumento de saída:
+	DE .... perda de energia (eV).
+	EP .... energia do fóton espalhado (eV).
+	CDT ... cosseno do ângulo de espalhamento polar.
+	ES .... energia do elétron emitido (eV).
+	CDTS .. cosseno polar de direção do elétron.
+	IZZ ... número atômico do átomo onde ocorreu a dispersão.
+	ISH ... camada de elétrons atômica que foi ionizada.
+ */
+
+	double REV=5.10998928e5;
+	double RREV=1.0e0/REV;
+	double D2=1.4142135623731e0;
+	double D1=1.0e0/D2;
+	double D12=0.5e0;
+
+	static const int NOCO=512;
+
+	double RN[NOCO];
+	double PAC[NOCO];
+
+	double EK, EK2, EKS, EK1, TAUMIN, TAUM2, A1, A2, S0, AUX, PZOMC, RNI, TAU, CDT1, S, TST, JO, A, XQC, AF;
+	double FPZ, FPZMAX, T, B1, B2, Q2; 
+	int I2, ISHELL, I3;
+
+	EK=E*RREV;
+    EK2=EK+EK+1.0e0;
+    EKS=EK*EK;
+    EK1=EKS-EK2-1.0e0;
+    TAUMIN=1.0e0/EK2;
+    TAUM2=TAUMIN*TAUMIN;
+    A1=log(EK2);
+    A2=A1+2.0e0*EK*(1.0e0+EK)*TAUM2;
+
+	if (E > 5.0e6)
+		goto L4;
+
+	//Função de dispersão incoerente para theta=PI
+
+	S0=0.0e0;
+	for (int I = 1; I <= CGCO_.NOSCCO[M-1]; I++){
+		if (CGCO_.UICO[I-1][M-1] < E){
+			AUX=E*(E-CGCO_.UICO[I-1][M-1])*2.0e0;
+            PZOMC=CGCO_.FJ0[I-1][M-1]*(AUX-REV*CGCO_.UICO[I-1][M-1])
+     			/(REV*sqrt(AUX+AUX+pow(CGCO_.UICO[I-1][M-1],2)));
+			if (PZOMC > 0.0e0)
+				RNI=1.0e0-0.5e0*exp(D12-pow((D1+D2*PZOMC),2));
+			else
+				RNI=0.5e0*exp(D12-pow((D1-D2*PZOMC),2));
+			S0=S0+CGCO_.FCO[I-1][M-1]*RNI;
+		}
+	}
+
+	//Amostragem de tau.
+
+L1:;
+	if (rand2_(1.0e0)*A2 < A1)
+		TAU=pow(TAUMIN,rand2_(2.0e0));
+	else
+		TAU=sqrt(1.0e0+rand2_(3.0e0)*(TAUM2-1.0e0));
+	CDT1=(1.0e0-TAU)/(EK*TAU);
+
+	//Função de dispersão incoerente.
+	S=0.0e0;
+	for (int I = 1;I <= CGCO_.NOSCCO[M-1]; I++ ){
+		if (CGCO_.UICO[I-1][M-1] < E){
+			AUX=E*(E-CGCO_.UICO[I-1][M-1])*CDT1;
+			PZOMC=CGCO_.FJ0[I-1][M-1]*(AUX-REV*CGCO_.UICO[I-1][M-1])
+				/(REV*sqrt(AUX+AUX+pow(CGCO_.UICO[I-1][M-1],2)));
+			if (PZOMC > 0.0e0)
+				RN[I-1]=1.0e0-0.5e0*exp(D12-pow((D1+D2*PZOMC),2));
+			else
+				RN[I-1]=0.5e0*exp(D12-pow((D1-D2*PZOMC),2));
+			S=S+CGCO_.FCO[I-1][M-1]*RN[I-1];
+			PAC[I-1]=S;
+		}else{
+			PAC[I-1]=S;
+		}
+	}
+
+	//Funcao de Rejeição
+	TST=S*(1.0e0+TAU*(EK1+TAU*(EK2+TAU*EKS)))/(EKS*TAU*(1.0e0+TAU*TAU));
+	if (rand2_(4.0e0)*S0 > TST)
+		goto L1;
+	CDT=1.0e0-CDT1;
+
+	//Escudo do elétron alvo.
+
+L2:
+	TST=S*rand2_(5.0e0);
+	//Busca Binaria
+	if (TST < PAC[1-1]){
+		ISHELL=1;
+	}else{
+		ISHELL=1;
+        JO=CGCO_.NOSCCO[M-1]+1;
+L3:;
+    	I2=(ISHELL+JO)/2;
+		if (TST > PAC[I2-1])
+			ISHELL=I2;
+		else
+			JO=I2;
+		if (JO-ISHELL > 1)
+			goto L3;
+		ISHELL=ISHELL+1;
+	}
+
+	//Momento projetado do elétron alvo.
+	A=rand2_(6.0e0)*RN[ISHELL-1];
+	if (A < 0.5e0)
+	 	 PZOMC=(D1-sqrt(D12-log(A+A)))/(D2*CGCO_.FJ0[ISHELL-1][M-1]);
+	else
+		PZOMC=(sqrt(D12-log(2.0e0-A-A))-D1)/(D2*CGCO_.FJ0[ISHELL-1][M-1]);
+	if (PZOMC < -1.0e0)
+		goto L2;
+
+	//Rejeição F(EP).
+	XQC=1.0e0+TAU*(TAU-2.0e0*CDT);
+    AF=sqrt(XQC)*(1.0e0+TAU*(TAU-CDT)/XQC);
+
+	if (AF > 0.0e0)
+		FPZMAX=1.0e0+AF*0.2e0;
+	else	
+		FPZMAX=1.0e0-AF*0.2e0;
+
+	FPZ=1.0e0+AF*fmax(fmin(PZOMC,0.2e0),-0.2e0);
+	if (rand2_(7.0e0)*FPZMAX > FPZ)
+		goto L2;
+
+	//Energia do fóton espalhado
+	T=pow(PZOMC,2);
+    B1=1.0e0-T*TAU*TAU;
+    B2=1.0e0-T*TAU*CDT;
+	if (PZOMC > 0.0e0)
+		EP=E*(TAU/B1)*(B2+sqrt(fabs(B2*B2-B1*(1.0e0-T))));
+	else
+		EP=E*(TAU/B1)*(B2-sqrt(fabs(B2*B2-B1*(1.0e0-T))));
+	goto L6;
+
+	//Sem alargamento Doppler para E maior que 5 MeV.
+
+L4:;
+	if (rand2_(8.0e0)*A2 < A1)
+		TAU=pow(TAUMIN,rand2_(9.0e0));
+	else
+		TAU=sqrt(1.0e0+rand2_(10.0e0)*(TAUM2-1.0e0));
+
+	//Funcao de Rejeição
+	TST=(1.0e0+TAU*(EK1+TAU*(EK2+TAU*EKS)))/(EKS*TAU*(1.0e0+TAU*TAU));
+	if (rand2_(11.0e0) > TST)
+		goto L4;
+	EP=TAU*E;
+    CDT=1.0e0-(1.0e0-TAU)/(EK*TAU);
+
+	//Camada eletrônica alvo.
+	TST=rand2_(12.0e0);
+
+	//busca Binaria
+	if (TST < CGCO_.PTRSH[1-1][M-1]){
+		ISHELL=1;
+	}else{
+		ISHELL=1;
+        JO=CGCO_.NOSCCO[M-1]+1;
+L5:;
+    	I3=(ISHELL+JO)/2;
+		if (TST > CGCO_.PTRSH[I3-1][M-1])
+			ISHELL=I3;
+		else
+			JO=I3;
+		if (JO-ISHELL > 1)
+			goto L5;
+		ISHELL=ISHELL+1;
+	}
+
+	if (EP > (E-CGCO_.UICO[ISHELL-1][M-1]))
+		goto L4;
+
+L6:;
+	DE=E-EP;
+	if (CGCO_.KSCO[ISHELL-1][M-1] < 17){
+		if (CGCO_.UICO[ISHELL-1][M-1] > CECUTR_.ECUTR[M-1]){
+			ES=DE-CGCO_.UICO[ISHELL-1][M-1];
+		}else{
+			ES=DE;
+		}
+	}else{
+		ES=DE;
+	}
+
+	Q2=E*E+EP*(EP-2.0e0*E*CDT);
+	if (Q2 > 1.0e-12)
+		CDTS=(E-EP*CDT)/sqrt(Q2);
+	else
+		CDTS=1.0e0;
+
+	IZZ=CGCO_.KZCO[ISHELL-1][M-1];
+    ISH=CGCO_.KSCO[ISHELL-1][M-1];
+
+
+}
 
 
 
