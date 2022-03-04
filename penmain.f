@@ -1214,7 +1214,7 @@ C
 c      CALL PMRDR
 	  CALL pmrdr2
 	  
-	  CALL TABELAS
+	 
 	  
  
 	  
@@ -1231,7 +1231,8 @@ C
 C  ****  Simulation of a new shower and scoring.
 C
   101 CONTINUE
-      CALL SHOWER
+C     CALL SHOWER
+	  CALL SHOWER2
       IF(JOBEND.NE.0) GO TO 102  ! The simulation is completed.
 C
 C  ****  End the simulation after the allotted time or after completing
@@ -1268,6 +1269,9 @@ C
       WRITE(26,'(/3X,72(''-''))')
       CLOSE(26)
 C
+
+	  CALL TABELAS		
+
       STOP
       END
 
