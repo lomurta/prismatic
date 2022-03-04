@@ -1231,8 +1231,8 @@ C
 C  ****  Simulation of a new shower and scoring.
 C
   101 CONTINUE
-C     CALL SHOWER
-	  CALL SHOWER2
+      CALL SHOWER
+c	  CALL SHOWER2
       IF(JOBEND.NE.0) GO TO 102  ! The simulation is completed.
 C
 C  ****  End the simulation after the allotted time or after completing
@@ -1242,18 +1242,18 @@ C
       CALL TIMER(TSEC)
       IF(TSEC.LT.TSECA.AND.SHN.LT.DSHN) THEN
 C  ****  Write partial results after each dumping period.
-        IF(LDUMP) THEN
-          IF(TSEC-TSECAD.GT.DUMPP) THEN
-            TSIM=TSIM+CPUTIM()-CPUT0
-            CALL PMWRT(-1)
-            WRITE(6,1001) SHN
- 1001       FORMAT(3X,'Number of simulated showers =',1P,E14.7)
-            CALL TIMER(TSEC)
-            TSECAD=TSEC
-            CPUT0=CPUTIM()
-            GO TO 101
-          ENDIF
-        ENDIF
+c        IF(LDUMP) THEN
+c          IF(TSEC-TSECAD.GT.DUMPP) THEN
+c            TSIM=TSIM+CPUTIM()-CPUT0
+c            CALL PMWRT(-1)
+c            WRITE(6,1001) SHN
+c 1001       FORMAT(3X,'Number of simulated showers =',1P,E14.7)
+c            CALL TIMER(TSEC)
+c            TSECAD=TSEC
+c            CPUT0=CPUTIM()
+c            GO TO 101
+c          ENDIF
+c        ENDIF
         GO TO 101
       ENDIF
 C
@@ -1270,7 +1270,7 @@ C
       CLOSE(26)
 C
 
-	  CALL TABELAS		
+c	  CALL TABELAS		
 
       STOP
       END
@@ -3619,7 +3619,9 @@ C
           DEP=E*WGHT
           DEBO(IBODY)=DEBO(IBODY)-DEP  ! Energy is removed.
           IF(LDOSEM) THEN  ! Particle inside the dose box.
-            CALL SDOSE(-DEP,X,Y,Z,MAT,N)
+c			wdep=-DEP
+c			CALL SDOSE2(wdep, X, Y, Z, MAT, N)
+			CALL SDOSE(-DEP,X,Y,Z,MAT,N)
           ENDIF
         ELSE
           GO TO 202
@@ -4065,6 +4067,9 @@ C  ****  Parameters for sampling directions within a cone.
       COMMON/CGCONE/CPCT,CPST,SPCT,SPST,SPHI,CPHI,STHE,CTHE,CAPER
 C
       EXTERNAL RAND
+	  CALL GCONE2(UF, VF, WF)
+	  RETURN
+	  
 C  ****  Define a direction relative to the z-axis.
       WT=CAPER+(1.0D0-CAPER)*RAND(1.0D0)
       DF=TWOPI*RAND(2.0D0)
@@ -4849,6 +4854,9 @@ C
       SAVE NIDS
 C
 C  ************  Energy spectrum of entering particles.
+
+		CALL SIMDET2(N, ID)
+		RETURN
 C
         IF(LLE(ID).EQ.1) THEN
           IE=1.0D0+(LOG(E)-EL(ID))*RBSE(ID)
@@ -4910,6 +4918,8 @@ C                detector. Discrete collisions only.
 C
       ENTRY FIMDET(N,ID,DSEF)  !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 C
+		CALL FIMDET2(N,ID,DSEF)
+		RETURN
         IF(LLE(ID).EQ.1) THEN
           IE=1.0D0+(LOG(E)-EL(ID))*RBSE(ID)
         ELSE
@@ -4942,6 +4952,9 @@ C                detector. Continuous slowing down
 C
       ENTRY FIMDES(N,ID,EI,DECSD,DSEF)  !<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 C
+
+		CALL FIMDES2(N,ID,EI,DECSD,DSEF)
+		RETURN
         IF(EI.LT.EL(ID)) RETURN
         EIC=MIN(EI,EU(ID))
         EF=MAX(EI-DECSD,EL(ID))
@@ -5767,7 +5780,7 @@ C  *********************************************************************
 C
 C  Tallies the dose distribution within the dose box, writes and loads
 C  dump files, accumulates dump files from different runs, and writes
-C  results.
+C  results
 C
       USE PENELOPE_mod
       USE TRACK_mod
@@ -5786,6 +5799,9 @@ C  ----  Dose distribution (up to NDXM*NDYM*NDZM volume bins).
 C
       PARAMETER (NCS=5,RNCS=1.0D0/5.0D0)
       COMMON/CDOSE4/VMASS(NDXM,NDYM,NDZM)
+	  
+	  CALL SDOSE2(DEP,XD,YD,ZD,MATC,N)
+	  RETURN
 C
 C  ************  Dose distribution.
 C

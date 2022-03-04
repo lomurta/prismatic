@@ -1805,10 +1805,15 @@ C  the same name (but with different argument lists). To avoid conflict,
 C  it is advisable to declare RAND as an external function in all sub-
 C  programs that call it.
 C
+
+	  
       IMPLICIT DOUBLE PRECISION (A-H,O-Z), INTEGER*4 (I-N)
       PARAMETER (USCALE=1.0D0/2.147483563D9)
       COMMON/RSEED/ISEED1,ISEED2
 C
+
+	  RAND=RAND2(2.0D0)
+	  RETURN	
       I1=ISEED1/53668
       ISEED1=40014*(ISEED1-I1*53668)-I1*12211
       IF(ISEED1.LT.0) ISEED1=ISEED1+2147483563

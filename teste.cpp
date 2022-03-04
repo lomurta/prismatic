@@ -75,6 +75,9 @@ char SPCFLO[NDIM][20];
 char SPCAGE[NDIM][20];
 char SPCDEO[NDIM][20];
 
+int imprimiu=0;
+int wIPOLI=0;
+
 
 
 
@@ -1182,7 +1185,7 @@ void panar2_(double &ECUT);
 
 void direct2_(double &CDT, double &DF, double &U, double &V, double &W);
 
-void stores2_(double &EI, double &XI, double &YI, double &ZI, double &UI, double &VI, double &WI, double &WGHTI, int &KPARI, int *ILBI, int IPOLI);
+void stores2_(double &EI, double &XI, double &YI, double &ZI, double &UI, double &VI, double &WI, double &WGHTI, int &KPARI, int *ILBI, int &IPOLI);
 
 void sdose2_(double &DEP, double &XD, double &YD, double &ZD, int &MATC, int &N);
 
@@ -15656,7 +15659,7 @@ L71:;
 		}
 		NBZ=max(1,NBZ);
 		if (NBX > 0){
-			fprintf(IWR, "   ZL = %.6E  cm,  ZU = %.6E ' cm,  NDBZ = %.4d\n", ZLD,ZUD,NBZ);
+			fprintf(IWR, "   ZL = %.6E  cm,  ZU = %.6E ' cm,  NDBZ = %.3d\n", ZLD,ZUD,NBZ);
 		}else{
 			*CNT6_.LDOSEM=true;
          	IDOSE=2;
@@ -15724,7 +15727,7 @@ L73:;
 	}
 
 	if (*CNT6_.LDOSEM)
-		dose02_(XLD,XUD,YLD,YUD,ZLD,ZUD,NBX,NBY,NBZ,IDOSE, IWR);
+		dose02_(XLD,XUD,YLD,YUD,ZLD,ZUD,NBX,NBY,NBZ,IDOSE,IWR);
 
 
 
@@ -16638,7 +16641,7 @@ void dose02_(double &XL, double &XU,double &YL,double &YU,double &ZL,double &ZU,
         CDOSE3_.NDB[2-1]=2*(NBY/2)+1;
         CDOSE3_.NDB[3-1]=2*(NBZ/2)+1;
 	}else if (*CDOSE1_.KDOSE == 2){
-		CDOSE3_.DXL[1-1]=0;
+		CDOSE3_.DXL[1-1]=0.0e0;
 		CDOSE3_.DXL[2-1]=0.0e0;
         CDOSE3_.DXU[2-1]=1.0e0;
         CDOSE3_.NDB[1-1]=NBX;
@@ -16817,6 +16820,9 @@ void dose02_(double &XL, double &XU,double &YL,double &YU,double &ZL,double &ZU,
 					CDOSE4_.VMASS[K-1][J-1][I-1]=0.0e0;
 		}
 	} 
+
+
+//	printf("\n\ndose02\n\n");
 }
 
 void rand02_(int N){
@@ -18539,6 +18545,7 @@ L301:;
 		//Direção Inicial
 		if (*CSOUR0_.LSCONE){
 			gcone2_(*TRACK_mod_.U, *TRACK_mod_.V, *TRACK_mod_.W); //Feixe Conico
+			
 		}else{ //Feixe Retangular
 
 			*TRACK_mod_.W=*CSOUR0_.CTHL+rand2_(4.0e0)* *CSOUR0_.DCTH; 
@@ -18865,7 +18872,7 @@ L202:;
 								DF=TWOPI*rand2_(10.0e0);
 								US=cos(DF)*SDTS;
 								VS=sin(DF)*SDTS;
-								stores2_(*TRACK_mod_.E,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,*TRACK_mod_.KPAR,CXRSPL_.ILBA,0);
+								stores2_(*TRACK_mod_.E,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,*TRACK_mod_.KPAR,CXRSPL_.ILBA,wIPOLI);
 							}
 						}
 					}
@@ -18938,13 +18945,6 @@ L202:;
         CNT0_.AVE2[I-1]=CNT0_.AVE2[I-1]+pow(CNT0_.DAVE[I-1],2);
 	}
 
-
-
-
-
-
-
-
 }
 
 void cleans2_(){
@@ -18953,15 +18953,14 @@ void cleans2_(){
 
 	*SECST_.NSEC=0;
 
+/*	if (imprimiu==0){
+		printf("\n\ncleans2\n\n");
+		imprimiu++;
+	}*/
 
 }
 
-
 double rand2_(double DUMMY){ //gerador de numeros aleatorios
-
-
-
-
 	/*
 	Esta é uma versão adaptada da sub-rotina RANECU escrita por F. James
 	(Comput. Phys. Commun. 60 (1990) 329-344), que foi modificado para
@@ -19016,7 +19015,8 @@ void gcone2_(double &UF, double &VF, double &WF){
     DF=TWOPI*rand2_(2.0e0);
     SUV=sqrt(1.0e0-WT*WT);
     UT=SUV*cos(DF);
-    VT=SUV*cos(DF);
+    VT=SUV*sin(DF);
+
 
 	//Rotacao para a direção do eixo do feixe
 
@@ -19033,6 +19033,10 @@ void gcone2_(double &UF, double &VF, double &WF){
         VF=FNORM*VF;
         WF=FNORM*WF;
 	}
+	/*if (imprimiu==0){
+		printf("\n\ngcone2\n\n");
+		imprimiu++;
+	}*/
 }
 
 
@@ -19138,9 +19142,16 @@ void panar2_(double &ECUT){
     ILBA[4-1]=0;
     ILBA[5-1]=TRACK_mod_.ILB[5-1];
 	int WKPARP = 2;
-    stores2_(REV,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,WKPARP,ILBA,0);
+    stores2_(REV,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,WKPARP,ILBA,wIPOLI);
 	US = -US; VS = -VS; WS = -WS;
-    stores2_(REV,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,WKPARP,ILBA,0);
+    stores2_(REV,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,WKPARP,ILBA,wIPOLI);
+
+/*	if (imprimiu==0){
+		printf("\n\npanar2\n\n");
+		imprimiu++;
+	}*/
+
+
 }
 
 
@@ -19211,10 +19222,15 @@ void direct2_(double &CDT, double &DF, double &U, double &V, double &W){
 			}
 		}
 	}
+/*	if (imprimiu==0){
+		printf("\n\nDIRECT2\n\n");
+		imprimiu++;
+	}*/
+
 }
 
 
-void stores2_(double &EI, double &XI, double &YI, double &ZI, double &UI, double &VI, double &WI, double &WGHTI, int &KPARI, int *ILBI, int IPOLI){
+void stores2_(double &EI, double &XI, double &YI, double &ZI, double &UI, double &VI, double &WI, double &WGHTI, int &KPARI, int *ILBI, int &IPOLI){
 
 /*
 	Esta sub-rotina armazena o estado inicial de uma nova partícula secundária
@@ -19306,6 +19322,11 @@ void stores2_(double &EI, double &XI, double &YI, double &ZI, double &UI, double
 	}
 
 	SECST_.PAGES[IS-1]=*TRACK_mod_.PAGE;
+
+	/*	if (imprimiu==0){
+		printf("\n\nSTORES2\n\n");
+		imprimiu++;
+	}*/
 }
 
 void sdose2_(double &DEP, double &XD, double &YD, double &ZD, int &MATC, int &N){
@@ -19320,12 +19341,15 @@ void sdose2_(double &DEP, double &XD, double &YD, double &ZD, int &MATC, int &N)
 	double FSAFE=1.000000001e0;
 	double RNCS=1.0e0/5.0e0;
 	int NCS = 5;
+	static const int NDXM=201;
+	static const int NDYM=201;
+	static const int NDZM=201;
 
 	int I1, I2, I3;
 	double RD;
 
 	//Distribuição de Dose
-
+	//printf("\nKDOSE: %d\n", *CDOSE1_.KDOSE);
 	if (*CDOSE1_.KDOSE == 1){ //Caixa
 		if ((ZD > CDOSE3_.DXL[3-1]) && (ZD < CDOSE3_.DXU[3-1])){
 			I3=1.0e0+(ZD-CDOSE3_.DXL[3-1])*CDOSE3_.RBDOSE[3-1];
@@ -19393,6 +19417,13 @@ void sdose2_(double &DEP, double &XD, double &YD, double &ZD, int &MATC, int &N)
 			}
 		}
 	}
+
+/*		if (imprimiu==0){
+		printf("\n\nsdose2\n\n");
+		imprimiu++;
+	}*/
+
+
 }
 
 void start2_(){
@@ -19415,6 +19446,12 @@ void start2_(){
 	*CJUMP1_.MHINGE=0;
     *CJUMP1_.ELAST1=*TRACK_mod_.E+1.0e30;
     *CJUMP1_.ELAST2=*CJUMP1_.ELAST1;
+
+	/*	if (imprimiu==0){
+		printf("\n\nSTART2\n\n");
+		imprimiu++;
+	}*/
+
 }
 
 void jump2_(double &DSMAX, double &DS){
@@ -19434,14 +19471,15 @@ void jump2_(double &DSMAX, double &DS){
 	= DESOFT/passo_comprimento.
 	*/
 
-    double DSMAXP, DSMC, EDE0, VDE0, FSEDE, FSVDE, EDEM, VDEM, W21, ELOWER, XE1, KE1, XEK1, STLWR, EDE, VDE, SIGMA;
+    double DSMAXP, DSMC, EDE0, VDE0, FSEDE, FSVDE, EDEM, VDEM, W21, ELOWER, XE1, XEK1, STLWR, EDE, VDE, SIGMA;
 	double RU, EDE2, VDE3, PNULL;
+	int KE1;
 
 	if (*TRACK_mod_.KPAR == 1){ //eletrons
 		if (*CJUMP1_.MHINGE == 1){
 			if (*TRACK_mod_.E < *CJUMP1_.ELAST1){
 				*CEGRID_.XEL=log(*TRACK_mod_.E);
-            	*CEGRID_.XE=1.0e0+(*CEGRID_.XEL-*CEGRID_.DLEMP1)**CEGRID_.DLFC;
+            	*CEGRID_.XE=1.0e0+(*CEGRID_.XEL-*CEGRID_.DLEMP1)* *CEGRID_.DLFC;
             	*CEGRID_.KE=*CEGRID_.XE;
             	*CEGRID_.XEK=*CEGRID_.XE-*CEGRID_.KE;
 				int wvar = 1;
@@ -19454,7 +19492,7 @@ void jump2_(double &DSMAX, double &DS){
 		*PENELOPE_mod_.E0STEP=*TRACK_mod_.E;
 		if (*TRACK_mod_.E < *CJUMP1_.ELAST2){
 			*CEGRID_.XEL=log(*TRACK_mod_.E);
-            *CEGRID_.XE=1.0e0+(*CEGRID_.XEL-*CEGRID_.DLEMP1)**CEGRID_.DLFC;
+            *CEGRID_.XE=1.0e0+(*CEGRID_.XEL-*CEGRID_.DLEMP1)* *CEGRID_.DLFC;
             *CEGRID_.KE=*CEGRID_.XE;
             *CEGRID_.XEK=*CEGRID_.XE-*CEGRID_.KE;
 			int wvar = 2;
@@ -19511,7 +19549,7 @@ void jump2_(double &DSMAX, double &DS){
 			XE1=1.0e0+(log(ELOWER)-*CEGRID_.DLEMP1)* *CEGRID_.DLFC;
             KE1=XE1;
             XEK1=XE1-KE1;
-            STLWR=exp(CEIMFP_.SETOT[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CEIMFP_.SETOT[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.SETOT[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])*XEK1);
+            STLWR=exp(CEIMFP_.SETOT[KE1-1][*TRACK_mod_.MAT-1]+(CEIMFP_.SETOT[KE1+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.SETOT[KE1-1][*TRACK_mod_.MAT-1])*XEK1);
             *CJUMP0_.ST=fmax(*CJUMP0_.ST,STLWR);
 		}else{
 			*CJUMP1_.KSOFTI=0;
@@ -19626,7 +19664,7 @@ void jump2_(double &DSMAX, double &DS){
 		}
 
 		//Caminho livre médio rígido inverso (probabilidade de interação por unidade comprimento do caminho).
-		*CJUMP0_.ST=CJUMP0_.P[2-1]+CJUMP0_.P[3-1]+CJUMP0_.P[4-1]+CJUMP0_.P[5-1]+CJUMP0_.P[8-1];
+		*CJUMP0_.ST=CJUMP0_.P[2-1]+CJUMP0_.P[3-1]+CJUMP0_.P[4-1]+CJUMP0_.P[5-1]+CJUMP0_.P[6-1]+CJUMP0_.P[8-1];
         DSMAXP=DSMAX;
 
 		/*
@@ -19673,7 +19711,7 @@ void jump2_(double &DSMAX, double &DS){
 			XE1=1.0e0+(log(ELOWER)-*CEGRID_.DLEMP1)* *CEGRID_.DLFC;
             KE1=XE1;
             XEK1=XE1-KE1;
-            STLWR=exp(CPIMFP_.SPTOT[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CPIMFP_.SPTOT[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CPIMFP_.SPTOT[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])*XEK1);
+            STLWR=exp(CPIMFP_.SPTOT[KE1-1][*TRACK_mod_.MAT-1]+(CPIMFP_.SPTOT[KE1+1-1][*TRACK_mod_.MAT-1]-CPIMFP_.SPTOT[KE1-1][*TRACK_mod_.MAT-1])*XEK1);
             *CJUMP0_.ST=fmax(*CJUMP0_.ST,STLWR);
 		}else{
 			*CJUMP1_.KSOFTI=0;
@@ -19774,6 +19812,11 @@ void jump2_(double &DSMAX, double &DS){
 		DS=-log(rand2_(1.0e0))/ *CJUMP0_.ST;
 	}
 
+/*	if (imprimiu==0){
+		printf("\n\nJUMP2\n\n");
+		imprimiu++;
+	}*/
+
 }
 
 
@@ -19835,7 +19878,7 @@ void pimfp2_(int &IEND){
 
 	if (CPIMFP_.W1P[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1] > -78.3e0){
 		*CJUMP0_.W1=exp(CPIMFP_.W1P[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CPIMFP_.W1P[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CPIMFP_.W1P[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
-        *CJUMP0_.W2=exp(CPIMFP_.W2P[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CPIMFP_.W2P[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CPIMFP_.W1P[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
+        *CJUMP0_.W2=exp(CPIMFP_.W2P[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CPIMFP_.W2P[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CPIMFP_.W2P[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
 	}else{
 		*CJUMP0_.W1=0.0e0;
 		*CJUMP0_.W2=0.0e0;
@@ -19884,6 +19927,12 @@ void eimfp2_(int &IEND){
 }
 
 void gimfp2_(){
+	/*
+	Esta sub-rotina calcula os caminhos livres médios inversos para interações
+	de fótons com a energia atual no material M.
+	*/
+
+
 	CJUMP0_.P[1-1]=CGIMFP_.SGRA[*CEGRID_.KE-1][*TRACK_mod_.MAT-1];
     CJUMP0_.P[2-1]=exp(CGIMFP_.SGCO[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CGIMFP_.SGCO[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CGIMFP_.SGCO[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
     CJUMP0_.P[3-1]=CGIMFP_.SGPH[*CEGRID_.KE-1][*TRACK_mod_.MAT-1];
@@ -19935,6 +19984,8 @@ void fimdet2_(int &N, int &ID, double &DSEF){
 			CIMDET_.FLPP[*TRACK_mod_.KPAR-1][IE-1][ID-1]=CIMDET_.FLPP[*TRACK_mod_.KPAR-1][IE-1][ID-1]+*TRACK_mod_.WGHT*DSEF;
 		}
 	}
+
+
 }
 
 void fimdes2_(int &N, int &ID, double &EI, double &DECSD, double &DSEF ){
@@ -19943,6 +19994,11 @@ void fimdes2_(int &N, int &ID, double &EI, double &DECSD, double &DSEF ){
 	Distribuição de fluência de partículas dentro do
 	detector C. Desaceleração contínua
 	*/
+
+/*	if (imprimiu==0){
+		printf("\n\nFINDES2\n\n");
+		imprimiu++;
+	}*/
 
 	double FSAFE=1.000000001e0;
 	static const int NIDM=25;
@@ -20182,7 +20238,7 @@ L1300:;
         CHIST_.ILBA[4-1]=0;
         CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
 		int wvar = 1;
-        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,0);
+        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,wIPOLI);
 	}
 	//Nova energia e direção.
 	if (EP > PENELOPE_mod_.EABS[*TRACK_mod_.MAT][1-1]){
@@ -20215,7 +20271,7 @@ L1400:;
         CHIST_.ILBA[4-1]=0;
         CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
 		int wvar = 2;
-        stores2_(DE,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,0);
+        stores2_(DE,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,wIPOLI);
 	}
 	//Nova energia
 	*TRACK_mod_.E=*TRACK_mod_.E-DE;
@@ -20252,7 +20308,7 @@ L1500:;
         CHIST_.ILBA[4-1]=0;
         CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
 		int wvar = 1;
-        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,0);
+        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,wIPOLI);
 	}
 
 	//Nova energia e direção
@@ -20370,7 +20426,7 @@ L2200:;
         CHIST_.ILBA[4-1]=0;
         CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
 		int wKPARP = 1;
-        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wKPARP,CHIST_.ILBA,0);
+        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wKPARP,CHIST_.ILBA,wIPOLI);
 	}
 	TRACK_mod_.ILB[1-1]=TRACK_mod_.ILB[1-1]+1;
     TRACK_mod_.ILB[2-1]=*TRACK_mod_.KPAR;
@@ -20407,7 +20463,7 @@ L2300:;
         CHIST_.ILBA[4-1]=0;
         CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
 		int wKPARP = 1;
-        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wKPARP,CHIST_.ILBA,0);
+        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wKPARP,CHIST_.ILBA,wIPOLI);
 	}
 	if (ISA < 17){
 		CHIST_.ILBA[3-1]=ICOL;
@@ -20438,7 +20494,7 @@ L2400:;
         CHIST_.ILBA[4-1]=0;
         CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
 		int wKPARP = 1;
-        stores2_(EE,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wKPARP,CHIST_.ILBA,0);
+        stores2_(EE,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wKPARP,CHIST_.ILBA,wIPOLI);
 	}
 	//Positron
 	if (EP >  PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][3-1]){
@@ -20453,7 +20509,7 @@ L2400:;
         CHIST_.ILBA[4-1]=0;
         CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
 		int wKPARP = 3;
-        stores2_(EP,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wKPARP,CHIST_.ILBA,0);
+        stores2_(EP,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wKPARP,CHIST_.ILBA,wIPOLI);
 		//O pósitron carrega uma energia 'latente' de 1022 keV.
 		DE=DE-TREV;
 	}else{
@@ -20633,7 +20689,7 @@ L3300:;
         CHIST_.ILBA[4-1]=0;
         CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
 		int wvar = 1;
-        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,0);
+        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,wIPOLI);
 	}
 	//Nova energia e direção.
 	if (EP > PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][3-1]){
@@ -20667,7 +20723,7 @@ L3400:;
         CHIST_.ILBA[4-1]=0;
         CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
 		int wvar = 2;
-        stores2_(DE,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,0);
+        stores2_(DE,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,wIPOLI);
 	}
 	//Nova energia
 	*TRACK_mod_.E=*TRACK_mod_.E-DE;
@@ -20704,7 +20760,7 @@ L3500:;
         CHIST_.ILBA[4-1]=0;
         CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
 		int wvar = 1;
-        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,0);
+        stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,wIPOLI);
 	}
 
 	//Nova energia e direção
@@ -20735,7 +20791,7 @@ L3600:;
         CHIST_.ILBA[4-1]=0;
         CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
 		int wvar = 2;
-        stores2_(E1,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,0);
+        stores2_(E1,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,wIPOLI);
 	}
 	if (E2 > PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][2-1]){
 		DF=DF+PI;
@@ -20749,7 +20805,7 @@ L3600:;
         CHIST_.ILBA[4-1]=0;
         CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
 		int wvar = 2;
-        stores2_(E1,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,0);
+        stores2_(E1,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,wIPOLI);
 	}
 	DE=*TRACK_mod_.E+TREV;
     *TRACK_mod_.E=0.0e0;
@@ -20778,6 +20834,11 @@ void eela2_(double &A, double &B, double &RNDC, double &RMU){
 	RMU .... deflexão angular, =(1-CDT)/2.
 	*/
 
+	/*if (imprimiu==0){
+		printf("\n\nEELA2\n\n");
+		imprimiu++;
+	}*/
+
 	double A1, B1, RMUAV, RND0, RND, RNDMB, BB, RMUC, PW, RNDRC;
 
 	A1=A+1.0e0;
@@ -20792,7 +20853,6 @@ void eela2_(double &A, double &B, double &RNDC, double &RMU){
 
 		if (RND < RND0){
 			RMU=RND*A/(B1*A1-RND);
-
 		}else if (RND > RND0+B){
 			RNDMB=RND-B;
           	RMU=RNDMB*A/(B1*A1-RNDMB);
@@ -20827,6 +20887,11 @@ void eeld2_(double &RNDC, double &RMU){
  	RMU .... deflexão angular amostrada, =(1-CDT)/2.
 	
 	*/
+
+	/*if (imprimiu==0){
+		printf("\n\nEELD2\n\n");
+		imprimiu++;
+	}*/
 
 	static const int NP=128;
 	static const int NPM1=NP-1;
@@ -20900,6 +20965,11 @@ void eina2_(double &E, double &DELTA, double &DE, double &EP, double &CDT, doubl
 	IOSC .... índice do oscilador que foi 'ionizado'.
 	
 	*/
+
+	if (imprimiu==0){
+		printf("\n\nEINA2\n\n");
+		imprimiu++;
+	}
 
 	double REV=5.10998928e5;
 	bool LDIST;
@@ -21710,7 +21780,7 @@ L1:;
         CHIST_.ILBA[2-1]=*TRACK_mod_.KPAR;
         CHIST_.ILBA[4-1]=IZ*1000000+ISP*10000+IS1K*100+IS2K;
         CHIST_.ILBA[5-1]=TRACK_mod_.ILB[5-1];
-        stores2_(CRELAX_.ET[*CRELAX_.KS-1],*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,KPARS,CHIST_.ILBA,0);
+        stores2_(CRELAX_.ET[*CRELAX_.KS-1],*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,KPARS,CHIST_.ILBA,wIPOLI);
 	}
 
 	//Existem vagas não preenchidas nas conchas internas?

@@ -3140,6 +3140,8 @@ C
       IMPLICIT DOUBLE PRECISION (A-H,O-Z), INTEGER*4 (I-N)
       EXTERNAL RAND
 C
+	  CALL EELA2(A,B,RNDC,RMU)
+	  RETURN
       A1=A+1.0D0
       IF(B.GE.0.0D0) THEN
 C
@@ -3661,6 +3663,9 @@ C  ****  E/P inelastic collisions.
 C
       EXTERNAL RAND
 C
+
+	  CALL EINA2(E,DELTA,DE,EP,CDT,ES,CDTS,M,IOSC)
+	  RETURN
       WCCM=WCC(M)
       IF(WCCM.GT.E) THEN
         DE=0.0D0
@@ -6883,6 +6888,8 @@ C
       DIMENSION ILBA(5)
 C
       EXTERNAL RAND
+	  CALL PANAR2(ECUT)
+	  RETURN
 C
       IF(REV.LT.ECUT) RETURN
 C
@@ -9824,6 +9831,9 @@ C  ****  Electron simulation tables.
      2              ITLE(NP,NEGP,MAXMAT),ITUE(NP,NEGP,MAXMAT)
 C
       EXTERNAL RAND
+	  
+	  CALL EELD2(RNDC,RMU)
+	  RETURN
 C  ****  Energy grid point.
       PK=(XEL-DLEMP(KE))*DLFC
       IF(RAND(1.0D0).LT.PK) THEN
@@ -11126,6 +11136,7 @@ C
 C  This subroutine initializes the secondary stack. It must be called
 C  before starting the simulation of each primary track.
 C
+
       USE PENELOPE_mod
 C
       IMPLICIT DOUBLE PRECISION (A-H,O-Z), INTEGER*4 (I-N)
@@ -11134,6 +11145,9 @@ C  ****  Secondary stack.
      1   WS(NMS),WGHTS(NMS),SP1S(NMS),SP2S(NMS),SP3S(NMS),PTAUS(NMS),
      2   KS(NMS),IBODYS(NMS),MS(NMS),ILBS(5,NMS),IPOLS(NMS),NSEC
 C
+
+	  CALL CLEANS2
+	  RETURN	
       NSEC=0
       RETURN
       END
@@ -11157,6 +11171,8 @@ C  ****  Current state in class II simulation.
 C        MHINGE=0 (1) before (after) the hinge.
       COMMON/CJUMP1/ELAST1,ELAST2,MHINGE,KSOFTE,KSOFTI,KDELTA
 C
+	  CALL START2
+	  RETURN
       IF(E.LT.EMIN.OR.E.GT.0.99999999D0*EU) THEN
         WRITE(26,1000) KPAR,E,(ILB(J),J=1,5),EL,EU
  1000   FORMAT(/3X,'*** Energy out of range. KPAR = ',I2,',  E = ',
@@ -11217,6 +11233,8 @@ C  ****  Current state and IMFPs.
       COMMON/CJUMP1/ELAST1,ELAST2,MHINGE,KSOFTE,KSOFTI,KDELTA
 C
       EXTERNAL RAND
+	  CALL JUMP2(DSMAX,DS)
+	  RETURN
 C
       IF(KPAR.EQ.1) THEN
 C
@@ -12269,6 +12287,9 @@ C  Output: U,V,W ... new direction cosines.
 C          CDT and DF remain unchanged.
 C
       IMPLICIT DOUBLE PRECISION (A-H,O-Z), INTEGER*4 (I-N)
+	  
+	CALL DIRECT2(CDT,DF,U,V,W)
+	RETURN
 C
 C  ****  Ensure normalisation.
 C
@@ -12454,6 +12475,8 @@ C  ****  Secondary stack.
      2   KS(NMS),IBODYS(NMS),MS(NMS),ILBS(5,NMS),IPOLS(NMS),NSEC
       COMMON/CERSEC/IERSEC
 C
+	  CALL STORES2(EI,XI,YI,ZI,UI,VI,WI,WGHTI,KPARI,ILBI,IPOLI)	
+	  RETURN
       IF(NSEC.LT.NMS) THEN
         NSEC=NSEC+1
         IS=NSEC
