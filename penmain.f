@@ -4376,6 +4376,11 @@ C
 C  ************  Score contributions of a new particle.
 C
 C  ****  Energy distribution of emerging particles.
+
+
+	  CALL TENANG2(IEXIT,N)
+	  RETURN
+	  
       IF(LLE.EQ.1) THEN
         KEn=1.0D0+(LOG(E)-EL)*RBSE
       ELSE
@@ -5571,9 +5576,13 @@ C
       COMMON/CENDET/EL(NIDM),EU(NIDM),BSE(NIDM),RBSE(NIDM),
      1  EDEP(NIDM),EDEP2(NIDM),DET(NIDM,NBEM),
      1  NE(NIDM),LLE(NIDM),NID
-C
+	 
+C 	  
       DATA NIDS/0/
       SAVE NIDS
+	  
+	  CALL SENDET2(ED,ID)
+	  RETURN
 C
 C  ************  Deposited energy spectrum.
 C                ED includes the particle weight.

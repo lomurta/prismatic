@@ -18996,7 +18996,6 @@ double rand2_(double DUMMY){ //gerador de numeros aleatorios
 
 }
 
-
 void gcone2_(double &UF, double &VF, double &WF){
 
 	/*
@@ -19038,7 +19037,6 @@ void gcone2_(double &UF, double &VF, double &WF){
 		imprimiu++;
 	}*/
 }
-
 
 void simdet2_(int &N, int &ID){
 
@@ -19110,7 +19108,6 @@ void simdet2_(int &N, int &ID){
 
 }
 
-
 void panar2_(double &ECUT){
 
 	/*Simulação da aniquilação de pósitrons em repouso. quanta de aniquilação
@@ -19153,7 +19150,6 @@ void panar2_(double &ECUT){
 
 
 }
-
 
 void direct2_(double &CDT, double &DF, double &U, double &V, double &W){
 
@@ -19228,7 +19224,6 @@ void direct2_(double &CDT, double &DF, double &U, double &V, double &W){
 	}*/
 
 }
-
 
 void stores2_(double &EI, double &XI, double &YI, double &ZI, double &UI, double &VI, double &WI, double &WGHTI, int &KPARI, int *ILBI, int &IPOLI){
 
@@ -19819,7 +19814,6 @@ void jump2_(double &DSMAX, double &DS){
 
 }
 
-
 double rndg32_(){
 
 	/*
@@ -19857,7 +19851,6 @@ double rndg32_(){
 	return resultado;
 
 }
-
 
 void pimfp2_(int &IEND){
 	/*
@@ -20051,8 +20044,6 @@ void fimdes2_(int &N, int &ID, double &EI, double &DECSD, double &DSEF ){
 
 }
 
-
-
 void knock2_(double &DE, int &ICOL){
 
 	/*
@@ -20064,6 +20055,11 @@ void knock2_(double &DE, int &ICOL){
 	antes e depois da interação.
 	ICOL ... tipo de interação sofrida pela partícula.
 	*/
+
+	if (imprimiu==0){
+		printf("\n\nKNOCK2\n\n");
+		imprimiu++;
+	}
 
 	double PI=3.1415926535897932e0;
 	double TWOPI=PI+PI; 
@@ -20111,15 +20107,16 @@ L1000:;
 			return;
 		}
 		*PENELOPE_mod_.E0STEP=*PENELOPE_mod_.E0STEP-*PENELOPE_mod_.SSOFT*(*CJUMP0_.DST-*CJUMP0_.DSR);
-		if (*CJUMP1_.KSOFTE == 0){
-			*CEGRID_.XEL=log(*PENELOPE_mod_.E0STEP);
-        	*CEGRID_.XE=1.0e0+(*CEGRID_.XEL-*CEGRID_.DLEMP1)* *CEGRID_.DLFC;
-        	*CEGRID_.KE=*CEGRID_.XE;
-        	*CEGRID_.XEK=*CEGRID_.XE-*CEGRID_.KE;
-		}else{
-			DE=0.0e0;
-		}
+		if (*CJUMP1_.KSOFTE == 0)
+			return;
+		*CEGRID_.XEL=log(*PENELOPE_mod_.E0STEP);
+        *CEGRID_.XE=1.0e0+(*CEGRID_.XEL-*CEGRID_.DLEMP1)* *CEGRID_.DLFC;
+        *CEGRID_.KE=*CEGRID_.XE;
+        *CEGRID_.XEK=*CEGRID_.XE-*CEGRID_.KE;
+	}else{
+		DE=0.0e0;
 	}
+	
 
 	//Deflexão Angular
 	if (CEIMFP_.T1E[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1] > -78.3e0){
@@ -20168,20 +20165,20 @@ L1100:;
     SS=CJUMP0_.P[2-1];
 	if (SS > STS)
 		goto L1200;
+
 	SS=SS+CJUMP0_.P[3-1];
-	
 	if (SS > STS)
 		goto L1300;
-	SS=SS+CJUMP0_.P[4-1];
 
+	SS=SS+CJUMP0_.P[4-1];
 	if (SS > STS)
 		goto L1400;
-	SS=SS+CJUMP0_.P[5-1];
 
+	SS=SS+CJUMP0_.P[5-1];
 	if (SS > STS)
 		goto L1500;
-	SS=SS+CJUMP0_.P[8-1];
 
+	SS=SS+CJUMP0_.P[8-1];
 	if (SS > STS)
 		goto L1800;
 
@@ -20203,7 +20200,6 @@ L1200:;
         TA=exp(CEIMFP_.AE[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CEIMFP_.AE[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.AE[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
         TB=CEIMFP_.BE[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CEIMFP_.BE[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CEIMFP_.BE[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK;
         eela2_(TA,TB,TRNDC,RMU);
-	
 	} else{
 		//Implementacao do modelo alternativo utilzando  ELSEPA database
 		TRNDC=CELSEP_.RNDCED[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CELSEP_.RNDCED[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CELSEP_.RNDCED[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK;
@@ -20241,7 +20237,7 @@ L1300:;
         stores2_(ES,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,US,VS,WS,*TRACK_mod_.WGHT,wvar,CHIST_.ILBA,wIPOLI);
 	}
 	//Nova energia e direção.
-	if (EP > PENELOPE_mod_.EABS[*TRACK_mod_.MAT][1-1]){
+	if (EP > PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][1-1]){
 		*TRACK_mod_.E=EP;
         direct2_(CDT,DF,*TRACK_mod_.U,*TRACK_mod_.V,*TRACK_mod_.W);
 	}else{
@@ -20275,7 +20271,7 @@ L1400:;
 	}
 	//Nova energia
 	*TRACK_mod_.E=*TRACK_mod_.E-DE;
-	if (*TRACK_mod_.E < PENELOPE_mod_.EABS[*TRACK_mod_.MAT][1-1]){
+	if (*TRACK_mod_.E < PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][1-1]){
 		DE=*TRACK_mod_.E+DE;
         *TRACK_mod_.E=0.0e0;
 	}
@@ -20433,7 +20429,6 @@ L2200:;
     TRACK_mod_.ILB[3-1]=ICOL;
 	return;
 
-
 	//Absorção Fotoeletrica ICOL=3
 
 L2300:;
@@ -20541,7 +20536,7 @@ L3000:;
 	if (*CJUMP1_.MHINGE == 1)
 		goto L3100;
 
-	//Eletrons 
+
 	//Dobradiça, evento suave artificial (ICOL=1).
 
 	ICOL=1;
@@ -20559,15 +20554,17 @@ L3000:;
 			return;
 		}
 		*PENELOPE_mod_.E0STEP=*PENELOPE_mod_.E0STEP-*PENELOPE_mod_.SSOFT*(*CJUMP0_.DST-*CJUMP0_.DSR);
-		if (*CJUMP1_.KSOFTE == 0){
-			*CEGRID_.XEL=log(*PENELOPE_mod_.E0STEP);
-        	*CEGRID_.XE=1.0e0+(*CEGRID_.XEL-*CEGRID_.DLEMP1)* *CEGRID_.DLFC;
-        	*CEGRID_.KE=*CEGRID_.XE;
-        	*CEGRID_.XEK=*CEGRID_.XE-*CEGRID_.KE;
-		}else{
-			DE=0.0e0;
-		}
+		if (*CJUMP1_.KSOFTE == 0)
+			return;
+
+		*CEGRID_.XEL=log(*PENELOPE_mod_.E0STEP);
+        *CEGRID_.XE=1.0e0+(*CEGRID_.XEL-*CEGRID_.DLEMP1)* *CEGRID_.DLFC;
+        *CEGRID_.KE=*CEGRID_.XE;
+        *CEGRID_.XEK=*CEGRID_.XE-*CEGRID_.KE;
+	}else{
+		DE=0.0e0;
 	}
+	
 
 	//Deflexão Angular
 	if (CPIMFP_.T1P[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1] > -78.3e0){
@@ -20727,7 +20724,7 @@ L3400:;
 	}
 	//Nova energia
 	*TRACK_mod_.E=*TRACK_mod_.E-DE;
-	if (*TRACK_mod_.E < PENELOPE_mod_.EABS[*TRACK_mod_.MAT][2-1]){ //Aniquilação em repouso.
+	if (*TRACK_mod_.E < PENELOPE_mod_.EABS[*TRACK_mod_.MAT-1][2-1]){ //Aniquilação em repouso.
 		DE=*TRACK_mod_.E+DE+TREV;
         *TRACK_mod_.E=0.0e0;
 	}
@@ -22532,10 +22529,10 @@ void schiff2_(double &B, double &G1, double &G2){
 	seção transversal para produção de pares.
 	*/
 
-	if (imprimiu==0){
+	/*if (imprimiu==0){
 		printf("\n\nSCHIFF2\n\n");
 		imprimiu++;
-	}
+	}*/
 
 	double PI=3.1415926535897932e0;
 	double TWOPI=PI+PI;
@@ -22576,6 +22573,11 @@ void peld2_(double &RNDC, double &RMU){
  	RMU .... deflexão angular amostrada, =(1-CDT)/2.
 	
 	*/
+
+	/*if (imprimiu==0){
+		printf("\n\nPELD2\n\n");
+		imprimiu++;
+	}*/
 
 	static const int NP=128;
 	static const int NPM1=NP-1;
@@ -22649,6 +22651,11 @@ void pina2_(double &E, double &DELTA, double &DE, double &EP, double &CDT, doubl
 	IOSC .... índice do oscilador que foi 'ionizado'.
 	
 	*/
+
+	/*if (imprimiu==0){
+		printf("\n\nPINA2\n\n");
+		imprimiu++;
+	}*/
 
 	double REV=5.10998928e5;
 	bool LDIST;
@@ -22734,8 +22741,6 @@ L1:;
 		}
 		if (WCCM > WM)
 		    LDIST=false;
-
-		
         WCMAX=E;
         WDMAX=fmin(WM,WCMAX);
         if (WTHR > WDMAX) 
@@ -22799,7 +22804,6 @@ L1:;
 
 	//Colisoes Fechadas
 	RCL=WTHR/E;
-
 	RL1=1.0e0-RCL;
       XHC=((1.0e0/RCL-1.0e0)+BHA1*log(RCL)+BHA2*RL1
      	 +(BHA3/2.0e0)*(pow(RCL,2)-1.0e0)+(BHA4/3.0e0)*(1.0e0-pow(RCL,3)))/E;
@@ -22911,6 +22915,10 @@ void psia2_(double &E, double &DELTA, double &DE, double &EP, double &CDT, doubl
 	ISH ..... camada de elétrons atômicos que foi ionizada.
 */
 
+	/*if (imprimiu==0){
+		printf("\n\nPSIA2\n\n");
+		imprimiu++;
+	}*/
 	double REV=5.10998928e5;
 	double RREV=1.0e0/REV;
 
@@ -22947,7 +22955,7 @@ L1:;
 	}else{
 		JO=IT;
 	}
-	if (JO-IO > 1)
+	if ((JO-IO) > 1)
 		goto L1;
 	
 	IOSC=CPSIAC_.IPSI[IO-1][M-1];
@@ -23112,6 +23120,11 @@ void pana2_(double &E, double &E1, double &CDT1, double &E2, double &CDT2, int &
 	dos dois fótons de aniquilação.
 	*/
 
+/*	if (imprimiu==0){
+		printf("\n\nPANA2\n\n");
+		imprimiu++;
+	}*/
+
 	double REV=5.10998928e5;
 	double TREV=2.0e0*REV;
 
@@ -23168,6 +23181,11 @@ void tenang2_(int &IEXIT, int &N){
 	é executado e grava os resultados.
 	*/
 
+	/*if (imprimiu==0){
+		printf("\n\nTENANG2\n\n");
+		imprimiu++;
+	}*/
+
 	double PI=3.1415926535897932e0;
 	double TWOPI=2.0e0*PI;
 	double RA2DE=180.0e0/PI;
@@ -23196,7 +23214,6 @@ void tenang2_(int &IEXIT, int &N){
 			CENANG_.PDE2[KEn-1][IEXIT-1][*TRACK_mod_.KPAR-1]=CENANG_.PDE2[KEn-1][IEXIT-1][*TRACK_mod_.KPAR-1]+pow(CENANG_.PDEP[KEn-1][IEXIT-1][*TRACK_mod_.KPAR-1],2);
 			CENANG_.PDEP[KEn-1][IEXIT-1][*TRACK_mod_.KPAR-1]=*TRACK_mod_.WGHT;
 			CENANG_.LPDE[KEn-1][IEXIT-1][*TRACK_mod_.KPAR-1]=N;	
-	
 		}else{
 			CENANG_.PDEP[KEn-1][IEXIT-1][*TRACK_mod_.KPAR-1]=CENANG_.PDEP[KEn-1][IEXIT-1][*TRACK_mod_.KPAR-1]+*TRACK_mod_.WGHT;
 		}
@@ -23234,6 +23251,11 @@ void tenang2_(int &IEXIT, int &N){
 
 void sendet2_(double &ED, int &ID){
 
+    /*if (imprimiu==0){
+		printf("\n\nSENDET2\n\n");
+		imprimiu++;
+	}*/
+
 	/*
 	Espectro de energia depositada.
 	ED inclui o peso da partícula.
@@ -23266,6 +23288,11 @@ void secpar2_(int &LEFT){
 	LEFT é o número de partículas na pilha secundária na chamada
 	hora . Quando LEFT=0, a simulação do chuveiro foi concluída.
 	*/
+
+ 	/*if (imprimiu==0){
+		printf("\n\nSECPAR2\n\n");
+		imprimiu++;
+	}*/
 
 	if (*SECST_.NSEC > 0){
 		LEFT=*SECST_.NSEC;

@@ -4367,6 +4367,10 @@ C  ****  E/P inelastic collisions.
 C
       EXTERNAL RAND
 C
+
+	  CALL PINA2(E,DELTA,DE,EP,CDT,ES,CDTS,M,IOSC)
+	  RETURN
+	  
       WCCM=WCC(M)
       IF(WCCM.GT.E) THEN
         DE=0.0D0
@@ -5546,6 +5550,9 @@ C  ****  E/P inelastic collisions.
 C
       EXTERNAL RAND
 C
+
+	  CALL PSIA2(E,DELTA,DE,EP,CDT,ES,CDTS,M,IZZ,ISH)
+	  RETURN
 C  ****  Energy grid point.
       PK=(XEL-DLEMP(KE))*DLFC
       IF(RAND(1.0D0).LT.PK) THEN
@@ -6933,6 +6940,9 @@ C
       PARAMETER (TREV=2.0D0*REV)
 C
       EXTERNAL RAND
+	  
+	  CALL PANA2(E,E1,CDT1,E2,CDT2,M)
+	  RETURN
 C
 C  ****  Slow positrons (assumed at rest).
 C
@@ -8545,6 +8555,8 @@ C
       PARAMETER (PI=3.1415926535897932D0, TWOPI=PI+PI)
 	  
 	  CALL SCHIFF2(B,G1,G2)
+	  RETURN
+	  
       B2=B*B
       F1=2.0D0-2.0D0*LOG(1.0D0+B2)
       F2=F1-6.666666666666666D-1
@@ -9932,6 +9944,10 @@ C  ****  Positron simulation tables.
      2              ITLP(NP,NEGP,MAXMAT),ITUP(NP,NEGP,MAXMAT)
 C
       EXTERNAL RAND
+	  
+	  CALL PELD2(RNDC,RMU)
+	  RETURN
+	  
 C  ****  Energy grid point.
       PK=(XEL-DLEMP(KE))*DLFC
       IF(RAND(1.0D0).LT.PK) THEN
@@ -11667,6 +11683,10 @@ C  ****  Current state and IMFPs.
       COMMON/CJUMP1/ELAST1,ELAST2,MHINGE,KSOFTE,KSOFTI,KDELTA
 C
       EXTERNAL RAND
+	  CALL KNOCK2(DE,ICOL)
+	  RETURN
+	  
+	  
 C
       IF(KPAR.EQ.1) THEN
         GO TO 1000
@@ -12612,6 +12632,10 @@ C  ****  Secondary stack.
      1   WS(NMS),WGHTS(NMS),SP1S(NMS),SP2S(NMS),SP3S(NMS),PAGES(NMS),
      2   KS(NMS),IBODYS(NMS),MS(NMS),ILBS(5,NMS),IPOLS(NMS),NSEC
 C
+
+	  CALL SECPAR2(LEFT)
+	  RETURN
+	  
       IF(NSEC.GT.0) THEN
         LEFT=NSEC
         E=ES(NSEC)
