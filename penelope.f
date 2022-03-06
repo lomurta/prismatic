@@ -5052,6 +5052,9 @@ C  ****  E/P inelastic collisions.
       COMMON/CESIAC/ESIAC(MAXMAT,NEGP,NO),IESI(MAXMAT,NO),NESI(MAXMAT)
 C
       EXTERNAL RAND
+	  
+	  CALL ESIA2(E,DELTA,DE,EP,CDT,ES,CDTS,M,IZZ,ISH)
+	  RETURN
 C
 C  ****  Energy grid point.
       PK=(XEL-DLEMP(KE))*DLFC
@@ -6009,6 +6012,8 @@ C  ****  Bremsstrahlung emission.
 C
       EXTERNAL RAND
 C
+	  CALL EBRA2(E,W,M)
+	  RETURN
       IF(WCR(M).GT.E) THEN
         W=0.0D0
         RETURN
@@ -6577,6 +6582,9 @@ C  ****  Bremsstrahlung angular distributions.
      1              ZBEQ(MAXMAT)
 C
       EXTERNAL RAND
+	  CALL EBRAA2(E,DE,CDT,M)
+	  RETURN
+	  
 C
 C  ****  Distribution parameters.
 C
@@ -7017,6 +7025,10 @@ C  ****  Rayleigh scattering.
      2  ITLRA(NP,MAXMAT),ITURA(NP,MAXMAT)
 C
       EXTERNAL RAND
+	  
+	  CALL GRAA2(E,CDT,IEFF,M)
+	  RETURN
+	  
 C
 C  ****  Binary search.
 C
@@ -7584,6 +7596,10 @@ C
       DIMENSION RN(NOCO),PAC(NOCO)
       EXTERNAL RAND
 C
+
+	  CALL GCOA2(E,DE,EP,CDT,ES,CDTS,M,IZZ,ISH)
+	  RETURN 
+	  
       EK=E*RREV
       EK2=EK+EK+1.0D0
       EKS=EK*EK
@@ -7923,6 +7939,10 @@ C  ****  Photoelectric cross sections.
       DIMENSION ACP(35),IP(35)
 C
       EXTERNAL RAND
+	  
+	  CALL GPHA2(ES,IZZ,ISH)
+	  RETURN
+	  
 C
 C  ****  Partial attenuation coefficients.
 C
@@ -8030,6 +8050,10 @@ C
       PARAMETER (REV=5.10998928D5)  ! Electron rest energy (eV)
       EXTERNAL RAND
 C
+
+	  CALL SAUTER2(ES,CDTS)
+	  RETURN
+	  
       IF(ES.GT.1.0D9) THEN
         CDTS=1.0D0
         RETURN
@@ -8424,6 +8448,9 @@ C  ****  Pair-production cross section parameters.
       COMMON/CGPP01/TRIP(MAXMAT,NEGP)
 C
       EXTERNAL RAND
+	  
+	  CALL GPPA2(EE,CDTE,EP,CDTP,IZZ,ISH)
+	  RETURN
 C
       EKI=REV/E
       IF(E.LT.1.1D6) THEN
@@ -8516,6 +8543,8 @@ C  cross section for pair production.
 C
       IMPLICIT DOUBLE PRECISION (A-H,O-Z), INTEGER*4 (I-N)
       PARAMETER (PI=3.1415926535897932D0, TWOPI=PI+PI)
+	  
+	  CALL SCHIFF2(B,G1,G2)
       B2=B*B
       F1=2.0D0-2.0D0*LOG(1.0D0+B2)
       F2=F1-6.666666666666666D-1
@@ -8716,6 +8745,10 @@ C
 C
 C  ****  Initialisation.
 C
+
+	  CALL RELAX2(IZ,IS)
+	  RETURN
+		
       IF(IZ.LT.3.OR.IS.GT.16) RETURN
 C  ****  If the shell ionisation energy is less than ECUTR, the cascade
 C        is not followed.
@@ -12366,6 +12399,10 @@ C
 C
 C  ****  Sampling the azimuthal scattering angle.
 C
+
+	  CALL DIRPOL2(CDT,DF,CONS,SP1,SP2,SP3,U,V,W)
+	  RETURN 
+	  
       CDT2=CDT*CDT
       CDT21=CDT2+1.0D0
       PHA=CDT21+CONS

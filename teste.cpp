@@ -20966,10 +20966,10 @@ void eina2_(double &E, double &DELTA, double &DE, double &EP, double &CDT, doubl
 	
 	*/
 
-	if (imprimiu==0){
+	/*if (imprimiu==0){
 		printf("\n\nEINA2\n\n");
 		imprimiu++;
-	}
+	}*/
 
 	double REV=5.10998928e5;
 	bool LDIST;
@@ -21227,6 +21227,12 @@ void ebra2_(double &E, double &W, int &M){
 	material M.
  */
 
+	/*if (imprimiu==0){
+		printf("\n\nEBRA2\n\n");
+		imprimiu++;
+	}*/
+
+
 	static const int NBW=32;
 	int IE, I, J, K;
 	double PT, W1, W2, DW, B, A, PMAX;
@@ -21259,8 +21265,12 @@ L2:;
 		J=K;
 	}
 
-	if (J-I > 1)
+	if ((J-I) > 1){
+	//	printf("loop ebra2 gotoL2\n");
+	//	printf("PT= %f, PACB= %f, I= %d, J= %d, K= %d\n\n", PT,  CEBR_.PACB[K-1][IE-1][M-1], I, J, K );
 		goto L2;
+
+	}
 
 	//Amostragem da energia do fóton (método de rejeição).
 	W1=CEBR_.WB[I-1];
@@ -21279,11 +21289,17 @@ L2:;
 	PMAX=fmax(A+B*W1,A+B*W2);
 L3:;
 	W=W1*pow((W2/W1),rand2_(3.0e0));
-	if ((rand2_(4.0e0)*PMAX) > (A+B*W))
+	if ((rand2_(4.0e0)*PMAX) > (A+B*W)){
+	//	printf("loop ebra2 gotoL3\n");
 		goto L3;
+	}
 	W=W*E;
-	if (W < PENELOPE_mod_.WCR[M-1]);
+	if (W < PENELOPE_mod_.WCR[M-1]){
+	//	printf("loop ebra2 gotoL1\n");
 		goto L1;
+		
+
+	}
 
 }
 
@@ -21301,6 +21317,11 @@ void ebraa2_(double &E, double &DE, double &CDT, int &M){
 	Parâmetro de saída:
 	CDT ... cosseno do ângulo de emissão polar.
 	*/
+
+	/*if (imprimiu==0){
+		printf("\n\nEBRAA2\n\n");
+		imprimiu++;
+	}*/
 
 	double REV=5.10998928e5;
 	double TREV=2.0e0*REV;
@@ -21344,8 +21365,8 @@ L10:;
 	}else{
 		IE1=IET;
 	}
-	if (IE1-IE > 1)
-		goto L1;
+	if ((IE1-IE) > 1)
+		goto L10;
 L20:;
 
 	RK=1.0e0+20.0e0*DE/E;
@@ -21378,7 +21399,7 @@ L1:;
 L2:;
 		CDT=2.0e0*rand2_(4.0e0)-1.0e0;
 		if (rand2_(5.0e0) > 1.0e0-CDT*CDT)
-		goto L2;
+			goto L2;
 	}
 	CDT=(CDT+BETAP)/(1.0e0+BETAP*CDT);
 
@@ -21404,6 +21425,11 @@ void esia2_(double &E, double &DELTA, double &DE, double &EP, double &CDT, doubl
 	IZZ ..... número atômico do elemento onde a ionização ocorreu.
 	ISH ..... camada de elétrons atômicos que foi ionizada.
 */
+
+/*	if (imprimiu==0){
+		printf("\n\nESIA2\n\n");
+		imprimiu++;
+	}*/
 
 	double REV=5.10998928e5;
 	double RREV=1.0e0/REV;
@@ -21441,7 +21467,7 @@ L1:;
 	}else{
 		JO=IT;
 	}
-	if (JO-IO > 1)
+	if ((JO-IO) > 1)
 		goto L1;
 	
 	IOSC=CESIAC_.IESI[IO-1][M-1];
@@ -21456,7 +21482,7 @@ L1:;
 		WTHR=WK;
 	}
 
-	if (E < WTHR+1.0e-6){
+	if (E < (WTHR+1.0e-6)){
 		DE=UK;
         EP=E-DE;
         CDT=1.0e0;
@@ -21501,7 +21527,7 @@ L1:;
 	CPPS=(E-WKP)*(E-WKP+TREV);
     CPP=sqrt(CPPS);
 
-	if (WKP > 1.0e-6*E){
+	if (WKP > (1.0e-6*E)){
 		QM=sqrt(pow((CP-CPP),2)+REV*REV)-REV;
 	}else{
 		QM=pow(WKP,2)/(BETA2*TREV);
@@ -21549,7 +21575,7 @@ L1:;
         ARCL=A*0.5e0*RCL;
 L2:;
 		FB=(1.0e0+ARCL)*rand2_(4.0e0);
-		if (FB <1.0e0){
+		if (FB < 1.0e0){
 			RK=RCL/(1.0e0-FB*(1.0e0-(RCL+RCL)));
 		}else{
 			RK=RCL+(FB-1.0e0)*(0.5e0-RCL)/ARCL;
@@ -21663,6 +21689,11 @@ void relax2_(int &IZ, int &IS){
      10 = N1 (4s1/2),     20 = O4 (5d3/2),     30 = outer shells.
   ---------------------------------------------------------------------
     */
+
+  /* 	if (imprimiu==0){
+		printf("\n\nRELAX2\n\n");
+		imprimiu++;
+	}*/
 
    double PI=3.1415926535897932e0;
    double TWOPI=PI+PI;
@@ -21802,6 +21833,11 @@ void eaux2_(){
 
 void graa2_(double &E, double &CDT, int &IEFF, int &M){
 
+	/*if (imprimiu==0){
+		printf("\n\nGRAA2\n\n");
+		imprimiu++;
+	}*/
+
 	//Amostragem aleatória de espalhamento coerente (Rayleigh)
 
 	double REV=5.10998928e5;
@@ -21858,7 +21894,7 @@ L3:;
     I=CGRA03_.ITLRA[M-1][ITN-1];
     J=CGRA03_.ITURA[M-1][ITN-1];
 
-	if (J-I < 2)
+	if ((J-I) < 2)
 		goto L5;
 L4:;
 	K=(I+J)/2;
@@ -21866,7 +21902,7 @@ L4:;
 		I=K;
 	else
 		J=K;
-	if (J-I > 1)
+	if ((J-I) > 1)
 		goto L4;
 	
 	//Amostragem da distribuição cumulativa inversa racional.
@@ -21909,10 +21945,15 @@ void dirpol2_(double &CDT, double &DF, double &CONS, double &SP1, double &SP2, d
 	CDT e CONS permanecem inalterados.
 	*/
 
+	if (imprimiu==0){
+		printf("\n\nDIRPOL2\n\n");
+		imprimiu++;
+	}
+
 	double PI=3.1415926535897932e0;
 	double TWOPI=2.0e0*PI;
 
-	double CDT2, CDT21, PHA, PHB, SP0MAX, SDF, CDF, S2DF, C2DF, SP3P, SP0P, UV, UVW, FNORM, SDT, SDTSDF, SDTCDF,SUV, UN, VN;
+	double SP1P, RSP0, CDT2, CDT21, PHA, PHB, SP0MAX, SDF, CDF, S2DF, C2DF, SP3P, SP0P, UV, UVW, FNORM, SDT, SDTSDF, SDTCDF,SUV, UN, VN;
 
 	//Amostragem do ângulo de espalhamento azimutal.
 
@@ -21934,7 +21975,13 @@ L1:;
 		goto L1;
 
 	//Calcular novos parâmetros Stokes
+ 	SP1P=C2DF*SP1-S2DF*SP3; //Parâmetro Stokes com novo zero azimute.
+    RSP0=1.0e0/SP0P;
+    SP1=2.0e0*CDT*SP1P*RSP0;
+    SP2=(2.0e0+CONS)*CDT*SP2*RSP0;
+    SP3=(CDT21*SP3P-PHB)*RSP0;
 
+    //Garanta a normalizacao
 	UV=U*U+V*V;
     UVW=UV+W*W;
 	if (fabs(UVW-1.0e0) > 1.0e-13){
@@ -21998,6 +22045,11 @@ void gcoa2_(double &E, double &DE, double &EP, double &CDT, double &ES, double &
 	IZZ ... número atômico do átomo onde ocorreu a dispersão.
 	ISH ... camada de elétrons atômica que foi ionizada.
  */
+
+/*	if (imprimiu==0){
+		printf("\n\nGCOA2\n\n");
+		imprimiu++;
+	}*/
 
 	double REV=5.10998928e5;
 	double RREV=1.0e0/REV;
@@ -22207,6 +22259,11 @@ void  gpha2_(double &ES, int &IZZ, int &ISH){
 	inalterado.
  */
 
+	/*if (imprimiu==0){
+		printf("\n\nGPHA2\n\n");
+		imprimiu++;
+	}*/
+
 	static const int NTP=12000;
 	double ACP[35];
 	double IP[35];
@@ -22307,8 +22364,6 @@ L3:;
 		ES=*TRACK_mod_.E;
 	}
 
-
-
 }
 
 void sauter2_(double &ES, double &CDTS){
@@ -22317,6 +22372,11 @@ void sauter2_(double &ES, double &CDTS){
 	Amostragem aleatória da direção inicial dos fotoelétrons do
 	Distribuição Sauter.
 	*/
+
+	/*if (imprimiu==0){
+		printf("\n\nSAUTER2\n\n");
+		imprimiu++;
+	}*/
 
 	double REV=5.10998928e5;
 
@@ -22357,6 +22417,12 @@ void gppa2_(double &EE, double &CDTE, double &EP, double &CDTP, int &IZZ, int &I
 	IZZ ... número atômico do átomo onde ocorreu a absorção.
 	ISH .... camada de elétrons atômicos que foi ionizada.
  */
+
+	/*if (imprimiu==0){
+		printf("\n\nGPPA2\n\n");
+		imprimiu++;
+	}*/
+
 	double REV=5.10998928e5;
 	double SL=137.035999074e0;
 	double  TREV=2.0e0*REV;
@@ -22465,6 +22531,11 @@ void schiff2_(double &B, double &G1, double &G2){
 	Funções de triagem F1(B) e F2(B) no diferencial Bethe-Heitler
 	seção transversal para produção de pares.
 	*/
+
+	if (imprimiu==0){
+		printf("\n\nSCHIFF2\n\n");
+		imprimiu++;
+	}
 
 	double PI=3.1415926535897932e0;
 	double TWOPI=PI+PI;
