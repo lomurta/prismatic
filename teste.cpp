@@ -1257,6 +1257,10 @@ void sendet2_(double &ED, int &ID);
 
 void secpar2_(int &LEFT);
 
+void enangd2_(FILE *IWR);
+
+void imdetd2_(FILE *IWR);
+
 }
 
 
@@ -18910,7 +18914,7 @@ L202:;
 		for (int KD = 1; KD <= *CNT5_.NED; KD++){
 			CNT5_.DEDE[KD-1]=0.0e0;
 		}
-		for (int KB =1; KB <= *PENGEOM_mod_.NBODY; KB++){
+		for (int KB=1; KB <= *PENGEOM_mod_.NBODY; KB++){
 			IDET=CNT5_.KBDE[KB-1];
 			if (IDET != 0)
 				CNT5_.DEDE[IDET-1]=CNT5_.DEDE[IDET-1]+CNT1_.DEBO[KB-1];
@@ -23325,6 +23329,355 @@ void secpar2_(int &LEFT){
 		LEFT=0;
 	}
 }
+
+
+void pmwrt2(int &ICLOSE){
+	/*
+	Calcula médias e grava resultados em arquivos de saída.
+
+	ICLOSE é um sinalizador de fechamento, que é usado somente quando o espaço de fase
+	O arquivo de um detector de impacto está sendo gerado.
+	-- Quando ICLOSE .GT. 0, as partículas restantes no buffer são
+	transferido para o psf e a unidade de saída do psf é fechada.
+	-- Se ICLOSE .LT. 0, as partículas são movidas para o psf, mas o psf
+	A unidade de saída C permanece aberta
+		*/
+
+	double PI=3.1415926535897932e0;
+	double RA2DE=180.0e0/PI;
+
+	double WSEC[3][3];
+	double WSEC2[3][3];
+	double WAVE2[2], WAVE[2], WAVW2[2],WAVW[2],WAVA2[2],WAVA[2];
+
+	//Se 'DUMPTO' estiver ativo, grave os contadores em um arquivo de despejo.
+
+	if (*CDUMP_.LDUMP){
+		FILE* IWR = fopen(CDUMP_.PFILED, "w");
+		if (IWR == NULL){
+			printf("Não foi possível abrir o arquivo %s", CDUMP_.PFILED);
+			exit(0);
+		}
+
+		fprintf(IWR, "	%.16f		%.16f\n", *CNTRL_.SHN,*CNTRL_.TSIM);
+		fprintf(IWR, "%s\n",  CTITLE_.TITLE);
+		fprintf(IWR, "	%d		%d\n", *RSEED_.ISEED1, *RSEED_.ISEED2);
+		fprintf(IWR, "	%d		%.16f\n", *CSOUR4_.NPSN,*CSOUR4_.RLREAD);
+		fprintf(IWR, "	%d\n", *CSOUR0_.KPARP);
+		if (*CSOUR0_.KPARP == 0){
+			fprintf(IWR, "	%d		%16.f		%16.f\n", *CNT3_.NSDE,*CNT3_.DSDE,*CNT3_.RDSDE);
+			for (int I = 1; I <= *CNT3_.NSDE; I++){
+				for (int K = 1; K <= 3; K++){
+					fprintf(IWR, "	%11.f	",CNT3_.SEDS[I-1][K-1]);
+				}
+			}
+			fprintf(IWR, "\n");
+
+			for (int I = 1; I <= *CNT3_.NSDE; I++){
+				for (int K = 1; K <= 3; K++){
+					fprintf(IWR, "	%16.f	",CNT3_.SEDS2[I-1][K-1]);
+				}
+			}
+			fprintf(IWR, "\n");
+		}else{
+			fprintf(IWR, "	%d	\n", *CNT2_.NSEB);
+			for (int I = 1; I <= *CNT2_.NSEB+1; I++){
+				fprintf(IWR, "	%.16f	", CSOUR2_.ESRC[I-1]);
+			}
+			fprintf(IWR, "\n");
+
+			for (int I = 1; I <= *CNT2_.NSEB+1; I++){
+				fprintf(IWR, "	%.16f	", CSOUR2_.PSRC[I-1]);
+			}
+			fprintf(IWR, "\n");
+
+			for (int I = 1; I <= *CNT2_.NSEB+1; I++){
+				fprintf(IWR, "	%.16f	", CNT2_.SHIST[I-1]);
+			}
+			fprintf(IWR, "\n");
+		}
+		for (int I = 1; I <= 3; I++){
+			fprintf(IWR, "	%.16f	", CNT0_.PRIM[I-1]);
+		}
+		fprintf(IWR, "\n");
+
+		for (int I = 1; I <= 3; I++){
+			fprintf(IWR, "	%.16f	", CNT0_.PRIM2[I-1]);
+		}
+		fprintf(IWR, "\n");
+
+		for (int I = 1; I <= 3; I++){
+			for (int K = 1; K <= 3; K++){
+				fprintf(IWR, "	%.16f	", CNT0_.SEC[I-1][K-1]);
+			}
+		}
+		fprintf(IWR, "\n");
+
+		for (int I = 1; I <= 3; I++){
+			for (int K = 1; K <= 3; K++){
+				fprintf(IWR, "	%.16f	", CNT0_.SEC2[I-1][K-1]);
+			}
+		}
+		fprintf(IWR, "\n");
+
+		for (int I = 1; I <= 2; I++){
+			fprintf(IWR, "	%.16f	", CNT0_.AVW[I-1]);
+		}
+		fprintf(IWR, "\n");
+
+		for (int I = 1; I <= 2; I++){
+			fprintf(IWR, "	%.16f	", CNT0_.AVW2[I-1]);
+		}
+		fprintf(IWR, "\n");
+
+		for (int I = 1; I <= 2; I++){
+			fprintf(IWR, "	%.16f	", CNT0_.AVA[I-1]);
+		}
+		fprintf(IWR, "\n");
+
+		for (int I = 1; I <= 2; I++){
+			fprintf(IWR, "	%.16f	", CNT0_.AVA2[I-1]);
+		}
+		fprintf(IWR, "\n");
+
+		for (int I = 1; I <= 2; I++){
+			fprintf(IWR, "	%.16f	", CNT0_.AVE[I-1]);
+		}
+		fprintf(IWR, "\n");
+
+		for (int I = 1; I <= 2; I++){
+			fprintf(IWR, "	%.16f	", CNT0_.AVE2[I-1]);
+		}
+		fprintf(IWR, "\n");
+
+		fprintf(IWR, " 	%d	\n", *PENGEOM_mod_.NBODY);
+
+		for (int I = 1; I <= *PENGEOM_mod_.NBODY; I++){
+			fprintf(IWR, "	%.16f	", CNT1_.TDEBO[I-1]);
+		}
+		fprintf(IWR, "\n");
+
+		for (int I = 1; I <= *PENGEOM_mod_.NBODY; I++){
+			fprintf(IWR, "	%.16f	", CNT1_.TDEBO2[I-1]);
+		}
+		fprintf(IWR, "\n");
+
+		//Energia e distribuições angulares.
+		enangd2_(IWR);
+		fprintf(IWR, "%d	%d	%d	\n", *CNT4_.NID,*CNT5_.NED,*CNT6_.LDOSEM);
+		if (*CNT4_.NID > 0){
+			fprintf(IWR, "	%.16f	%.16f\n", *CNT4_.RLAST,*CNT4_.RWRITE);
+			imdetd2_(IWR); //Detectores de Impacto
+		}
+	}
+}
+
+
+void enangd2_(FILE *IWR){
+
+	//Transferir contadores parciais para contadores globais.
+
+	for (int KP = 1; KP <= 3; KP++){
+		for (int IEX =1; IEX <=2; IEX++){
+			for (int KEn = 1; KEn <= *CENANG_.NE; KEn++){
+				CENANG_.PDE[KEn-1][IEX-1][KP-1]=CENANG_.PDE[KEn-1][IEX-1][KP-1]+CENANG_.PDEP[KEn-1][IEX-1][KP-1];
+              	CENANG_.PDE2[KEn-1][IEX-1][KP-1]=CENANG_.PDE2[KEn-1][IEX-1][KP-1]+pow(CENANG_.PDEP[KEn-1][IEX-1][KP-1],2);
+              	CENANG_.PDEP[KEn-1][IEX-1][KP-1]=0.0e0;
+              	CENANG_.LPDE[KEn-1][IEX-1][KP-1]=0;
+			}
+		}
+	}
+
+	for (int KP = 1; KP <= 3; KP++){
+		for (int KTH =1; KTH <= *CENANG_.NTH; KTH++){
+			for (int KPH = 1; KPH <= *CENANG_.NPH; KPH++){
+				CENANG_.PDA[KPH-1][KTH-1][KP-1]=CENANG_.PDA[KPH-1][KTH-1][KP-1]+CENANG_.PDAP[KPH-1][KTH-1][KP-1];
+              	CENANG_.PDA2[KPH-1][KTH-1][KP-1]=CENANG_.PDA2[KPH-1][KTH-1][KP-1]+pow(CENANG_.PDAP[KPH-1][KTH-1][KP-1],2);
+              	CENANG_.PDAP[KPH-1][KTH-1][KP-1]=0.0e0;
+              	CENANG_.LPDA[KPH-1][KTH-1][KP-1]=0;
+			}
+		}
+	}
+
+	//Escreva parâmetros e contadores.
+
+	fprintf(IWR, "	%d		%.15f	%.15f	%.15f	%.15f 	%d\n", *CENANG_.NE, *CENANG_.EL,*CENANG_.EU,*CENANG_.BSE,*CENANG_.RBSE,*CENANG_.LLE);
+	for (int I = 1; I <= 3; I++){
+		for (int J =1; J <= 2; J++){
+			for (int K = 1; K <= NE; K++){
+				fprintf(IWR,"	%.16f    ", CENANG_.PDE[K-1][J-1][I-1]);
+			}
+		}
+	}
+	fprintf(IWR,"\n");
+
+	for (int I = 1; I <= 3; I++){
+		for (int J =1; J <= 2; J++){
+			for (int K = 1; K <= *CENANG_.NE; K++){
+				fprintf(IWR,"	%.16f    ", CENANG_.PDE2[K-1][J-1][I-1]);
+			}
+		}
+	}
+	fprintf(IWR,"\n");
+
+	fprintf(IWR, "	%d		%.15f	%.15f	%.15f	%.15f 	%d    %.15f	%.15f 	%d	\n", *CENANG_.NTH,*CENANG_.THL,*CENANG_.THU,*CENANG_.BSTH,*CENANG_.RBSTH,*CENANG_.NPH,*CENANG_.BSPH,*CENANG_.RBSPH,*CENANG_.LLTH);
+	
+	for (int I = 1; I <= 3; I++){
+		for (int J =1; J <= *CENANG_.NTH; J++){
+			for (int K = 1; K <= *CENANG_.NPH; K++){
+				fprintf(IWR,"	%.16f    ", CENANG_.PDA[K-1][J-1][I-1]);
+			}
+		}
+	}
+	fprintf(IWR,"\n");
+
+	for (int I = 1; I <= 3; I++){
+		for (int J =1; J <= *CENANG_.NTH; J++){
+			for (int K = 1; K <= *CENANG_.NPH; K++){
+				fprintf(IWR,"	%.16f    ", CENANG_.PDA2[K-1][J-1][I-1]);
+			}
+		}
+	}
+	fprintf(IWR,"\n");
+
+
+}
+
+void imdetd2_(FILE *IWR){
+	//Transferir contadores parciais para contadores globais.
+	for (int I = 1; I <= *CIMDET_.NID; I++){
+		CIMDET_.EDEP[I-1]=CIMDET_.EDEP[I-1]+CIMDET_.EDEPP[I-1];
+        CIMDET_.EDEP2[I-1]=CIMDET_.EDEP2[I-1]+pow(CIMDET_.EDEPP[I-1],2);
+        CIMDET_.EDEPP[I-1]=0.0e0;
+        CIMDET_.LEDEP[I-1]=0;
+		for (int J = 1; J <= CIMDET_.NE[I-1]; J++){
+			CIMDET_.DIT[J-1][I-1]=CIMDET_.DIT[J-1][I-1]+CIMDET_.DITP[J-1][I-1];
+            CIMDET_.DIT2[J-1][I-1]=CIMDET_.DIT2[J-1][I-1]+pow(CIMDET_.DITP[J-1][I-1],2);
+            CIMDET_.DITP[J-1][I-1]=0.0e0;
+            CIMDET_.LDIT[J-1][I-1]=0;
+			for (int K = 1; K <= 3; K++){
+				CIMDET_.DIP[K-1][J-1][I-1]=CIMDET_.DIP[K-1][J-1][I-1]+CIMDET_.DIPP[K-1][J-1][I-1];
+              	CIMDET_.DIP2[K-1][J-1][I-1]=CIMDET_.DIP2[K-1][J-1][I-1]+pow(CIMDET_.DIPP[K-1][J-1][I-1],2);
+              	CIMDET_.DIPP[K-1][J-1][I-1]=0.0e0;
+             	CIMDET_.LDIP[K-1][J-1][I-1]=0;
+			}
+		}
+	}
+
+	for (int I =1; I <= *CIMDET_.NID; I++){
+		for (int J = 1; J <= CIMDET_.NE[I-1]; J++){
+			CIMDET_.FLT[J-1][I-1]=CIMDET_.FLT[J-1][I-1]+CIMDET_.FLTP[J-1][I-1];
+            CIMDET_.FLT2[J-1][I-1]=CIMDET_.FLT2[J-1][I-1]+pow(CIMDET_.FLTP[J-1][I-1],2);
+            CIMDET_.FLTP[J-1][I-1]=0.0e0;
+            CIMDET_.LFLT[J-1][I-1]=0;
+			for (int K = 1; K <= 3; K++){
+				CIMDET_.FLP[K-1][J-1][I-1]=CIMDET_.FLP[K-1][J-1][I-1]+CIMDET_.FLPP[K-1][J-1][I-1];
+              	CIMDET_.FLP2[K-1][J-1][I-1]=CIMDET_.FLP2[K-1][J-1][I-1]+pow(CIMDET_.FLPP[K-1][J-1][I-1],2);
+              	CIMDET_.FLPP[K-1][J-1][I-1]=0.0e0;
+              	CIMDET_.LFLP[K-1][J-1][I-1]=0;
+			}
+		}
+	}
+
+	for (int I = 1; I <= *CIMDET_.NID; I++){
+		for (int J = 1; J <= CIMDET_.NAGE[I-1]; J++){
+			CIMDET_.AGE[J-1][I-1]=CIMDET_.AGE[J-1][I-1]+CIMDET_.AGEP[J-1][I-1];
+            CIMDET_.AGE2[J-1][I-1]=CIMDET_.AGE2[J-1][I-1]+pow(CIMDET_.AGEP[J-1][I-1],2);
+            CIMDET_.AGEP[J-1][I-1]=0.0e0;
+            CIMDET_.LAGEA[J-1][I-1]=0;
+		}
+	}
+
+	//Escrevendo paramentros e contadores
+
+	fprintf(IWR, "	%d	\n", *CIMDET_.NID);
+	for (int I = 1; I <= *CIMDET_.NID; I++){
+		fprintf(IWR, "	%.16f	", CIMDET_.EDEP[I-1]);
+	}
+	fprintf(IWR, "\n");
+
+	for (int I = 1; I <= *CIMDET_.NID; I++){
+		fprintf(IWR, "	%.16f	", CIMDET_.EDEP2[I-1]);
+	}
+	fprintf(IWR, "\n");
+
+	for (int I = 1; I <= *CIMDET_.NID; I++){
+		fprintf(IWR, "	%.16f	", CIMDET_.IDCUT[I-1]);
+	}
+	fprintf(IWR, "\n");
+
+	for (int I = 1; I <= *CIMDET_.NID; I++){
+		fprintf(IWR, "	%s	\n", SPCDIO[I-1]);
+		fprintf(IWR, "	%.16f	%.16f	%.16f	%.16f	%.16f	%.d\n", CIMDET_.NE[I-1],CIMDET_.EL[I-1],CIMDET_.EU[I-1],CIMDET_.BSE[I-1],CIMDET_.RBSE[I-1],CIMDET_.LLE[I-1]);
+		for (int J=1; J <= CIMDET_.NE[I-1]; J++){
+			fprintf(IWR, "	%.16f	", CIMDET_.DIT[I-1][J-1]);
+		}
+		fprintf(IWR,"\n");
+
+		for (int J=1; J <= CIMDET_.NE[I-1]; J++){
+			fprintf(IWR, "	%.16f	", CIMDET_.DIT2[I-1][J-1]);
+		}
+		fprintf(IWR,"\n");
+
+		for (int J=1; J <= CIMDET_.NE[I-1]; J++){
+			for (int K = 1; K <= 3; K++){
+				fprintf(IWR, "	%.16f	", CIMDET_.DIP[K-1][I-1][J-1]);
+			}
+		}
+		fprintf(IWR,"\n");
+
+		for (int J=1; J <= CIMDET_.NE[I-1]; J++){
+			for (int K = 1; K <= 3; K++){
+				fprintf(IWR, "	%.16f	", CIMDET_.DIP2[K-1][I-1][J-1]);
+			}
+		}
+		fprintf(IWR,"\n");
+
+		if (CIMDET_.IDCUT[I-1] == 2){
+			fprintf(IWR, " 	%s	\n", SPCFLO[I-1]);
+			for (int J=1; J <= CIMDET_.NE[I-1]; J++){
+				fprintf(IWR, "	%.16f	", CIMDET_.FLT[I-1][J-1]);
+			}
+			fprintf(IWR,"\n");
+
+			for (int J=1; J <= CIMDET_.NE[I-1]; J++){
+				fprintf(IWR, "	%.16f	", CIMDET_.FLT2[I-1][J-1]);
+			}
+			fprintf(IWR,"\n");
+
+			for (int J=1; J <= CIMDET_.NE[I-1]; J++){
+				for (int K = 1; K <= 3; K++){
+					fprintf(IWR, "	%.16f	", CIMDET_.FLP[K-1][I-1][J-1]);
+				}
+			}
+			fprintf(IWR,"\n");
+
+			for (int J=1; J <= CIMDET_.NE[I-1]; J++){
+				for (int K = 1; K <= 3; K++){
+					fprintf(IWR, "	%.16f	", CIMDET_.FLP2[K-1][I-1][J-1]);
+				}
+			}
+			fprintf(IWR,"\n");
+		}
+
+		fprintf(IWR, "		%d		%.16f		%.16f		%.16f		%d	\n", CIMDET_.NAGE[I-1],CIMDET_.AGEL[I-1],CIMDET_.AGE[I-1],CIMDET_.BAGE[I-1],CIMDET_.RBAGE[I-1],CIMDET_.LLAGE[I-1]);
+		if (CIMDET_.NAGE[I-1] > 0){
+			fprintf(IWR, "		%s	\n",SPCAGE[I-1] );
+			
+			for (int J=1; J <= CIMDET_.NAGE[I-1]; J++){
+				fprintf(IWR, "	%.16f	", CIMDET_.AGE[I-1][J-1]);
+			}
+			fprintf(IWR,"\n");
+
+			for (int J=1; J <= CIMDET_.NAGE[I-1]; J++){
+				fprintf(IWR, "	%.16f	", CIMDET_.AGE2[I-1][J-1]);
+			}
+			fprintf(IWR,"\n");
+		}
+	}
+
+}
+
 
 
 
