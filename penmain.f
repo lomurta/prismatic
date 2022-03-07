@@ -1231,8 +1231,8 @@ C
 C  ****  Simulation of a new shower and scoring.
 C
   101 CONTINUE
-      CALL SHOWER
-c	  CALL SHOWER2
+c      CALL SHOWER
+	  CALL SHOWER2
       IF(JOBEND.NE.0) GO TO 102  ! The simulation is completed.
 C
 C  ****  End the simulation after the allotted time or after completing
@@ -3155,6 +3155,9 @@ C
       PARAMETER (PI=3.1415926535897932D0, TWOPI=2.0D0*PI)
       INCLUDE 'pmcomms.f'
       EXTERNAL RAND
+	  
+	  CALL SHOWER2()
+	  RETURN
 C
 C  ------------------------  Shower simulation starts here.
 C

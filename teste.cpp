@@ -18454,6 +18454,11 @@ void shower2_(){
 	//Simula uma nova particula e registra as quantidades relevantes.
 	//printf("shower2\n");
 
+		if (imprimiu==0){
+		printf("\n\nSHOWER2\n\n");
+		imprimiu++;
+	}
+
 	bool LINTF;
 
 	double REV=5.10998928e5;
@@ -18468,7 +18473,7 @@ void shower2_(){
 
 	//Contadores de particulas primarias
 
-L100:;
+L101:;
 	for (int I = 1; I <= 3; I++){
 		CNT0_.DPRIM[I-1]=0.0e0;
 		for (int K = 1; K <= 3; K++){
@@ -20056,10 +20061,10 @@ void knock2_(double &DE, int &ICOL){
 	ICOL ... tipo de interação sofrida pela partícula.
 	*/
 
-	if (imprimiu==0){
+/*	if (imprimiu==0){
 		printf("\n\nKNOCK2\n\n");
 		imprimiu++;
-	}
+	}*/
 
 	double PI=3.1415926535897932e0;
 	double TWOPI=PI+PI; 
