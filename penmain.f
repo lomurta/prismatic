@@ -1260,7 +1260,7 @@ C
   102 CONTINUE
       TSIM=TSIM+CPUTIM()-CPUT0
   103 CONTINUE
-      CALL PMWRT(1)
+      CALL PMWRT2(1)
       WRITE(6,1002) SHN
  1002 FORMAT(3X,'Number of simulated showers =',1P,E14.7,
      1  /3X,'*** END ***')

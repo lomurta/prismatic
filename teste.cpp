@@ -1257,9 +1257,17 @@ void sendet2_(double &ED, int &ID);
 
 void secpar2_(int &LEFT);
 
+void pmwrt2_(int &ICLOSE);
+
 void enangd2_(FILE *IWR);
 
 void imdetd2_(FILE *IWR);
+
+void endetd2_(FILE *IWR);
+
+void dosed2_(FILE *IWR);
+
+void enangw2_(double &SHN);
 
 }
 
@@ -23331,7 +23339,7 @@ void secpar2_(int &LEFT){
 }
 
 
-void pmwrt2(int &ICLOSE){
+void pmwrt2_(int &ICLOSE){
 	/*
 	Calcula médias e grava resultados em arquivos de saída.
 
@@ -23345,6 +23353,8 @@ void pmwrt2(int &ICLOSE){
 
 	double PI=3.1415926535897932e0;
 	double RA2DE=180.0e0/PI;
+
+	double FT, ERR1, ERR2, ERR, FB, FA, DF, QER, QAV, EFFIC, PTOT, YAV, YERR, EINTL, FACT;
 
 	double WSEC[3][3];
 	double WSEC2[3][3];
@@ -23464,12 +23474,194 @@ void pmwrt2(int &ICLOSE){
 
 		//Energia e distribuições angulares.
 		enangd2_(IWR);
-		fprintf(IWR, "%d	%d	%d	\n", *CNT4_.NID,*CNT5_.NED,*CNT6_.LDOSEM);
+		fprintf(IWR, "	%d	%d	%d	\n", *CNT4_.NID,*CNT5_.NED,*CNT6_.LDOSEM);
 		if (*CNT4_.NID > 0){
 			fprintf(IWR, "	%.16f	%.16f\n", *CNT4_.RLAST,*CNT4_.RWRITE);
 			imdetd2_(IWR); //Detectores de Impacto
 		}
+
+		if (*CNT5_.NED > 0){
+			endetd2_(IWR); //Deposito de energia nos detectores
+		}
+
+		if (*CNT6_.LDOSEM){
+			dosed2_(IWR);
+		}
+
+		fprintf(IWR, "\n   *** END ***\n");
+		fclose(IWR);
 	}
+
+	//Escrevendo os resultados da Simulação
+
+	// IEXIT: 1=upbound, 2=downbound, 3=absorbed.
+
+	FILE* IWR2 = fopen("penmain-res2.dat", "w");
+	if (IWR2 == NULL){
+		printf("Não foi possível abrir o arquivo penmain-res2.dat");
+		exit(0);
+	}
+	fprintf(IWR2,"\n\n   ***********************************\n");
+	fprintf(IWR2,"   **   Program PENMAIN2. Results.  **\n");
+	fprintf(IWR2,"   ***********************************\n\n");
+
+	fprintf(IWR2,"   Date and time: %s\n\n", CDATE_.DATE23);
+	fprintf(IWR2, "   %s\n\n", CTITLE_.TITLE);
+
+	fprintf(IWR2, "   Simulation time ......................... %.6E sec\n", *CNTRL_.TSIM);
+	double TAVS=*CNTRL_.SHN / *CNTRL_.TSIM;
+	fprintf(IWR2, "   Simulation speed ........................ %.6E sec\n\n\n", *CNTRL_.TSIM);
+
+	fprintf(IWR2, "   Simulated primary particles ............. %.6E sec\n\n", *CNTRL_.SHN);
+	if (*CSOUR0_.KPARP == 1)
+		fprintf(IWR2,"   Primary particles: electrons\n\n");
+	if (*CSOUR0_.KPARP == 2)
+		fprintf(IWR2,"   Primary particles: photons\n\n");
+	if (*CSOUR0_.KPARP == 3)
+		fprintf(IWR2,"   Primary particles: positrons\n\n");
+	if (*CSOUR0_.KPARP == 0)
+		fprintf(IWR2,"   Primary particles: set by the user subroutine SOURCE\n");
+
+	fprintf(IWR2, "   Upbound primary particles ............... %.6E\n", CNT0_.PRIM[1-1]);
+	fprintf(IWR2, "   Downbound primary particles ............. %.6E\n", CNT0_.PRIM[2-1]);
+	fprintf(IWR2, "   Absorbed primary particles .............. %.6E\n\n", CNT0_.PRIM[3-1]);
+
+	double FNT=1.0e0/ *CNTRL_.SHN;
+	if (*CSOUR0_.KPARP != 0){
+		FT=(CNT0_.PRIM[1-1]+CNT0_.SEC[1-1][*CSOUR0_.KPARP-1])*FNT;
+        ERR1=3.0e0*FNT*sqrt(fabs(CNT0_.PRIM2[1-1]-pow(CNT0_.PRIM[1-1],2)*FNT));
+        ERR2=3.0e0*FNT*sqrt(fabs(CNT0_.SEC2[1-1][*CSOUR0_.KPARP-1]-pow(CNT0_.SEC[1-1][*CSOUR0_.KPARP-1],2)*FNT));
+        ERR=ERR1+ERR2;
+		fprintf(IWR2, "   Upbound fraction ................... %.6E +- %.1E\n", FT, ERR);
+
+		FB=(CNT0_.PRIM[2-1]+CNT0_.SEC[2-1][*CSOUR0_.KPARP-1])*FNT;
+        ERR1=3.0e0*FNT*sqrt(fabs(CNT0_.PRIM2[2-1]-pow(CNT0_.PRIM[2-1],2)*FNT));
+        ERR2=3.0e0*FNT*sqrt(fabs(CNT0_.SEC2[2-1][*CSOUR0_.KPARP-1]-pow(CNT0_.SEC[2-1][*CSOUR0_.KPARP-1],2)*FNT));
+        ERR=ERR1+ERR2;
+		fprintf(IWR2, "   Downbound fraction ................. %.6E +- %.1E\n", FB, ERR);
+
+		FA=CNT0_.PRIM[3-1]*FNT;
+        ERR=3.0e0*FNT*sqrt(fabs(CNT0_.PRIM2[3-1]-pow(CNT0_.PRIM[3-1],2)*FNT));
+		fprintf(IWR2, "   Absorption fraction ................ %.6E +- %.1E\n\n", FA, ERR);
+	}
+
+	for (int K =1; K <= 3; K++){
+		for (int I = 1; I <= 3; I++){
+			WSEC2[I-1][K-1]=3.0e0*FNT*sqrt(fabs(CNT0_.SEC2[I-1][K-1]-pow(CNT0_.SEC[I-1][K-1],2)*FNT));
+         	WSEC[I-1][K-1]=CNT0_.SEC[I-1][K-1]*FNT;
+		}
+	}
+
+	fprintf(IWR2,"   Secondary-particle generation probabilities:\n" );
+	fprintf(IWR2,"                   ----------------------------------------------\n" );
+	fprintf(IWR2, "                   |  electrons   |   photons    |  positrons   |\n");
+	fprintf(IWR2, "   --------------------------------------------------------------\n");
+	fprintf(IWR2, "   |   upbound     | %.6E | %.6E | %.6E |\n", WSEC[1-1][1-1],WSEC[1-1][2-1],WSEC[1-1][3-1]);
+	fprintf(IWR2, "   |               | +- %.1E | +- %.1E | +- %.1E |\n",  WSEC2[1-1][1-1],WSEC2[1-1][2-1],WSEC2[1-1][3-1]);
+    fprintf(IWR2, "   --------------------------------------------------------------\n");
+	fprintf(IWR2, "   |   downbound   | %.6E | %.6E | %.6E |\n", WSEC[2-1][1-1],WSEC[2-1][2-1],WSEC[2-1][3-1]);
+	fprintf(IWR2, "   |               | +- %.1E | +- %.1E | +- %.1E |\n",  WSEC2[2-1][1-1],WSEC2[2-1][2-1],WSEC2[2-1][3-1]);
+    fprintf(IWR2, "   --------------------------------------------------------------\n");
+	fprintf(IWR2, "   |   absorbed    | %.6E | %.6E | %.6E |\n", WSEC[3-1][1-1],WSEC[3-1][2-1],WSEC[3-1][3-1]);
+	fprintf(IWR2, "   |               | +- %.1E | +- %.1E | +- %.1E |\n",  WSEC2[3-1][1-1],WSEC2[3-1][2-1],WSEC2[3-1][3-1]);
+    fprintf(IWR2, "   --------------------------------------------------------------\n\n");
+
+	for (int I = 1; I <=2; I++){
+		DF=1.0e0/fmax(CNT0_.PRIM[I-1],1.0e0);
+        WAVE2[I-1]=3.0e0*DF*sqrt(fabs(CNT0_.AVE2[I-1]-pow(CNT0_.AVE[I-1],2)*DF));
+        WAVE[I-1]=CNT0_.AVE[I-1]*DF;
+        WAVW2[I-1]=3.0e0*DF*sqrt(fabs(CNT0_.AVW2[I-1]-pow(CNT0_.AVW[I-1],2)*DF));
+        WAVW[I-1]=CNT0_.AVW[I-1]*DF;
+        WAVA2[I-1]=3.0e0*DF*RA2DE*sqrt(fabs(CNT0_.AVA2[I-1]-pow(CNT0_.AVA[I-1],2)*DF));
+        WAVA[I-1]=CNT0_.AVA[I-1]*RA2DE*DF;
+	}
+
+	fprintf(IWR2, "   Average final energy:\n");
+	fprintf(IWR2, "      Upbound primary particles ....... %.6E +- %.1E eV\n", WAVE[1-1],WAVE2[1-1]);
+	fprintf(IWR2, "      Downbound primary particles ..... %.6E +- %.1E eV\n\n", WAVE[2-1],WAVE2[2-1]);
+
+	fprintf(IWR2, "   Mean value of the polar cosine of the exit\n");
+	fprintf(IWR2, "      Upbound primary particles ....... %.6E +- %.1E eV\n", WAVW[1-1],WAVW2[1-1]);
+	fprintf(IWR2, "      Downbound primary particles ..... %.6E +- %.1E eV\n\n", WAVW[2-1],WAVW2[2-1]);
+
+	fprintf(IWR2, "   Mean value of the polar angle of the exit dir\n");
+	fprintf(IWR2, "      Upbound primary particles ....... %.6E +- %.1E eV\n", WAVA[1-1],WAVA2[1-1]);
+	fprintf(IWR2, "      Downbound primary particles ..... %.6E +- %.1E eV\n\n", WAVA[2-1],WAVA2[2-1]);
+
+	//Energias médias depositadas nos corpos..
+
+	DF=1.0e0/ *CNTRL_.SHN;
+
+	fprintf(IWR2, "Average deposited energies (bodies):\n");
+	for (int KB = 1; KB <= *PENGEOM_mod_.NBODY; KB++){
+		if (PENGEOM_mod_.MATER[KB-1] != 0){
+			QER=3.0e0*DF*sqrt(fabs(CNT1_.TDEBO2[KB-1]-pow(CNT1_.TDEBO[KB-1],2)*DF));
+          	QAV=CNT1_.TDEBO[KB-1]*DF;
+			  if (QER > 1.0e-10*fabs(QAV)){
+				  EFFIC=pow(QAV,2)/(pow((QER/3.0e0),2)* *CNTRL_.TSIM);
+			  }else{
+				  EFFIC=0.0e0;
+			  }
+			  fprintf(IWR2, "      Body %4d ...... %.6E +- %.1E eV    (effic. = %.2E)\n", KB,QAV,QER,EFFIC);
+		}
+	}
+
+	//Saída de detectores de impacto.
+	if (*CNT4_.NID > 0)
+		//imdetw2_(CNTRL_.SHN,CNTRL_.TSIM,IWR); Não será implementado detectores de impacto
+
+	//Saída de detectores de deposição de energia.
+	if (*CNT5_.NED > 0)
+		//endetw2_(CNTRL_.SHN,CNTRL_.TSIM,IWR); //nao será implementado dectores de deposicao de energia
+
+
+	//Espectro de energia da fonte (conforme definido no PENMAIN).
+	if (*CSOUR2_.LSPEC){
+		FILE* IWR3 = fopen("psource.dat", "w");
+		if (IWR3 == NULL){
+			printf("Não foi possível abrir o arquivo psource.dat");
+			exit(0);
+		}
+
+		fprintf(IWR3, " #  Results from PENMAIN. \n");
+		fprintf(IWR3, " #  Source energy spectrum.\n");
+		fprintf(IWR3, " #  1st column: E (eV). 2nd column: spectrum (1/eV).\n");
+		fprintf(IWR3, " #  3rd and 4th columns: simul. pdf limits (3SD, 1/eV).\n");
+		
+		PTOT=0.0e0;
+		fprintf(IWR3, " %.6E %.6E %.6E %.6E\n", CSOUR2_.ESRC[1-1],PTOT,PTOT,PTOT);
+		for (int KEn = 1; KEn <= *CNT2_.NSEB; KEn++){
+			PTOT=PTOT+CSOUR2_.PSRC[KEn-1];
+		}
+		for (int KEn = 1; KEn <= *CNT2_.NSEB; KEn++){
+			YAV=CNT2_.SHIST[KEn-1]*DF;
+          	YERR=3.0e0*sqrt(fabs(YAV*(1.0e0-YAV)*DF));
+          	EINTL=CSOUR2_.ESRC[KEn+1-1]-CSOUR2_.ESRC[KEn-1];
+			  if (EINTL > 1.0e-15){
+				  FACT=1.0e0/EINTL;
+			  }else{
+				  FACT=1.0e15;
+			  }
+			  fprintf(IWR3," %.6E %.6E %.6E %.6E\n", CSOUR2_.ESRC[KEn-1], CSOUR2_.PSRC[KEn-1]*FACT/PTOT, (YAV-YERR)*FACT,(YAV+YERR)*FACT);
+			  fprintf(IWR3," %.6E %.6E %.6E %.6E\n", CSOUR2_.ESRC[KEn+1-1], CSOUR2_.PSRC[KEn-1]*FACT/PTOT, (YAV-YERR)*FACT,(YAV+YERR)*FACT);
+		}
+		PTOT=0.0e0;
+		fprintf(IWR3, " %.6E %.6E %.6E %.6E\n", CSOUR2_.ESRC[*CNT2_.NSEB-1],PTOT,PTOT,PTOT);
+		fclose(IWR3);
+	}
+
+	/*Espectro de energia da fonte (resultado da simulação).
+	Não sera implementado pois parte da não especificação de uma particula primaria KPARP=0*/
+
+	//Energia e distribuições angulares de partículas emergentes.
+	enangw2_(*CNTRL_.SHN);
+
+	//Distribuição de dose
+
+
+
+
+
 }
 
 
@@ -23677,6 +23869,340 @@ void imdetd2_(FILE *IWR){
 	}
 
 }
+
+void endetd2_(FILE *IWR){
+	fprintf(IWR," 	%d	\n", *CENDET_.NID);
+	
+	for (int I = 1; I <= *CENDET_.NID; I++){
+			fprintf(IWR, "	%.16f	", CENDET_.EDEP[I-1]);
+		}
+	fprintf(IWR, "\n");
+
+	for (int I = 1; I <= *CENDET_.NID; I++){
+			fprintf(IWR, "	%.16f	", CENDET_.EDEP2[I-1]);
+		}
+	fprintf(IWR, "\n");
+
+	for (int I =1; I <= *CENDET_.NID; I++){
+		fprintf(IWR, "		%s	\n", SPCDEO[I-1]);
+		fprintf(IWR, "	%d		%.16f	%.16f		%.16f		%.16f		%d\n", CENDET_.NE[I-1],CENDET_.EL[I-1],CENDET_.EU[I-1],CENDET_.BSE[I-1],CENDET_.RBSE[I-1],CENDET_.LLE[I-1]);
+		for (int J = 1; J <= CENDET_.NE[I-1]; J++){
+			fprintf(IWR,"	%.16f	", CENDET_.DET[J-1][I-1]);
+		}
+		fprintf(IWR,"\n");
+	}
+}
+
+void dosed2_(FILE *IWR){
+	//Transferir contadores parciais para contadores globais.
+
+	for (int I3 =1; I3 <= CDOSE3_.NDB[3-1]; I3++){
+		for (int I2 =1; I2 <= CDOSE3_.NDB[2-1]; I2++){
+			for (int I1 =1; I1 <= CDOSE3_.NDB[1-1]; I1++){
+				CDOSE1_.DOSE[I3-1][I2-1][I1-1]=CDOSE1_.DOSE[I3-1][I2-1][I1-1]+CDOSE1_.DOSEP[I3-1][I2-1][I1-1];
+          		CDOSE1_.DOSE2[I3-1][I2-1][I1-1]=CDOSE1_.DOSE2[I3-1][I2-1][I1-1]+pow(CDOSE1_.DOSEP[I3-1][I2-1][I1-1],2);
+          		CDOSE1_.DOSEP[I3-1][I2-1][I1-1]=0.0e0;
+          		CDOSE1_.LDOSE[I3-1][I2-1][I1-1]=0;
+			}
+		}
+		CDOSE2_.DDOSE[I3-1]=CDOSE2_.DDOSE[I3-1]+CDOSE2_.DDOSEP[I3-1];
+        CDOSE2_.DDOSE2[I3-1]=CDOSE2_.DDOSE2[I3-1]+pow(CDOSE2_.DDOSEP[I3-1],2);
+        CDOSE2_.DDOSEP[I3-1]=0.0e0;
+        CDOSE2_.LDDOSE[I3-1]=0;
+	}
+
+	// Write parameters and counters.
+
+	for (int I =1; I <= 3; I++){
+		fprintf(IWR, "	%d	", CDOSE3_.NDB[I-1]);
+	}
+	fprintf(IWR,"\n");
+
+	for (int I =1; I <= 3; I++){
+		fprintf(IWR, "	%.16f	", CDOSE3_.DXL[I-1]);
+	}
+	fprintf(IWR,"\n");
+
+	for (int I =1; I <= 3; I++){
+		fprintf(IWR, "	%.16f	", CDOSE3_.DXU[I-1]);
+	}
+	fprintf(IWR,"\n");
+
+	for (int I =1; I <= 3; I++){
+		fprintf(IWR, "	%.16f	", CDOSE3_.BDOSE[I-1]);
+	}
+	for (int I =1; I <= 3; I++){
+		fprintf(IWR, "	%.16f	", CDOSE3_.RBDOSE[I-1]);
+	}
+	fprintf(IWR, "\n");
+
+	fprintf(IWR, "	%d	\n", *CDOSE1_.KDOSE);
+
+	for (int I3 =1; I3 <= CDOSE3_.NDB[3-1]; I3++){
+		for (int I2 =1; I2 <= CDOSE3_.NDB[2-1]; I2++){
+			for (int I1 =1; I1 <= CDOSE3_.NDB[1-1]; I1++){
+				fprintf(IWR, "	%.16f	", CDOSE4_.VMASS[I3-1][I2-1][I1-1]);
+			}
+		}
+	}
+	fprintf(IWR,"\n");
+
+	for (int I3 =1; I3 <= CDOSE3_.NDB[3-1]; I3++){
+		for (int I2 =1; I2 <= CDOSE3_.NDB[2-1]; I2++){
+			for (int I1 =1; I1 <= CDOSE3_.NDB[1-1]; I1++){
+				fprintf(IWR, "	%.16f	", CDOSE1_.DOSE[I3-1][I2-1][I1-1]);
+			}
+		}
+	}
+	fprintf(IWR,"\n");
+
+	for (int I3 =1; I3 <= CDOSE3_.NDB[3-1]; I3++){
+		for (int I2 =1; I2 <= CDOSE3_.NDB[2-1]; I2++){
+			for (int I1 =1; I1 <= CDOSE3_.NDB[1-1]; I1++){
+				fprintf(IWR, "	%.16f	", CDOSE1_.DOSE2[I3-1][I2-1][I1-1]);
+			}
+		}
+	}
+	fprintf(IWR,"\n");
+
+	for (int I3 =1; I3 <= CDOSE3_.NDB[3-1]; I3++){
+		fprintf(IWR, "	%.16f	", CDOSE2_.DDOSE[I3-1]);
+	}
+	fprintf(IWR, "\n");
+
+	for (int I3 =1; I3 <= CDOSE3_.NDB[3-1]; I3++){
+		fprintf(IWR, "	%.16f	", CDOSE2_.DDOSE2[I3-1]);
+	}
+	fprintf(IWR, "\n");
+
+}
+
+void enangw2_(double &SHN){
+
+
+	double PI=3.1415926535897932e0;
+	double TWOPI=2.0e0*PI;
+	double RA2DE=180.0e0/PI;
+	double DE2RA=PI/180.0e0;
+	double FSAFE=1.000000001e0;
+	static const int NBEM=1500; //
+	static const int NBTHM=1800; //numero maximo de caixas de energia.
+	static const int NBPHM=180; //numero maximo de caixas angulares
+
+	double DF, XLOW, XUPP, XX, BINS, YERR1, YAV1, YERR2, YAV2, YERR3, YAV3, DSANG, YY, S1, S2;
+
+	//Transferir contadores parciais para contadores globais.
+	for (int KP = 1; KP <= 3; KP++){
+		for (int IEX = 1; IEX <=2; IEX++){
+			for (int KEn = 1; KEn <= *CENANG_.NE; KEn++){
+				CENANG_.PDE[KEn-1][IEX-1][KP-1]=CENANG_.PDE[KEn-1][IEX-1][KP-1]+CENANG_.PDEP[KEn-1][IEX-1][KP-1];
+              	CENANG_.PDE2[KEn-1][IEX-1][KP-1]=CENANG_.PDE2[KEn-1][IEX-1][KP-1]+pow(CENANG_.PDEP[KEn-1][IEX-1][KP-1],2);
+              	CENANG_.PDEP[KEn-1][IEX-1][KP-1]=0.0e0;
+              	CENANG_.LPDE[KEn-1][IEX-1][KP-1]=0;
+			}
+		}
+	}
+
+	for (int KP =1; KP <= 3; KP++){
+		for (int KTH=1; KTH<= *CENANG_.NTH; KTH++){
+			for (int KPH=1; KPH <= *CENANG_.NPH; KPH++){
+				CENANG_.PDA[KPH-1][KTH-1][KP-1]=CENANG_.PDA[KPH-1][KTH-1][KP-1]+CENANG_.PDAP[KPH-1][KTH-1][KP-1];
+              	CENANG_.PDA2[KPH-1][KTH-1][KP-1]=CENANG_.PDA2[KPH-1][KTH-1][KP-1]+pow(CENANG_.PDAP[KPH-1][KTH-1][KP-1],2);
+              	CENANG_.PDAP[KPH-1][KTH-1][KP-1]=0.0e0;
+              	CENANG_.LPDA[KPH-1][KTH-1][KP-1]=0;
+			}
+		}
+	}
+
+	DF=1.0e0/ SHN;
+
+	//Distribuições de energia de partículas emergentes.
+	//Partículas ascendentes.
+
+	FILE* IWR = fopen("energy-up2.dat", "w");
+	if (IWR == NULL){
+		printf("Não foi possível abrir o arquivo energy-up.dat");
+		exit(0);
+	}
+
+	fprintf(IWR, " #  Results from PENMAIN.\n");
+	fprintf(IWR, " #  Energy distributions of upbound particles.\n");
+	fprintf(IWR, " #  1st column: E (eV).\n");
+	fprintf(IWR, " #  2nd and 3rd columns: PDF and STU for electrons.\n");
+	fprintf(IWR, " #  4th and 5th columns: PDF and STU for photons.\n");
+	fprintf(IWR, " #  6th and 7th columns: PDF and STU for positrons.\n");
+	fprintf(IWR, " #    PDFs and STUs in units of 1/(eV*primary_particle).\n");
+
+	for (int KEn = 1; KEn <= *CENANG_.NE; KEn++){
+		if (*CENANG_.LLE == 1){
+			XLOW=exp(*CENANG_.EL+(KEn-1)* *CENANG_.BSE);
+            XUPP=exp(*CENANG_.EL+KEn* *CENANG_.BSE);
+            XX=0.5e0*(XUPP+XLOW);
+            BINS=XUPP-XLOW;
+		}else{
+			XX=*CENANG_.EL+(KEn-0.5e0)* *CENANG_.BSE;
+            BINS=*CENANG_.BSE;
+		}
+		YERR1=3.0e0*sqrt(fabs(CENANG_.PDE2[KEn-1][1-1][1-1]-pow(CENANG_.PDE[KEn-1][1-1][1-1],2)*DF));
+        YAV1=CENANG_.PDE[KEn-1][1-1][1-1]*DF/BINS;
+        YERR1=YERR1*DF/BINS;
+        YERR2=3.0e0*sqrt(fabs(CENANG_.PDE2[KEn-1][1-1][2-1]-pow(CENANG_.PDE[KEn-1][1-1][2-1],2)*DF));
+        YAV2=CENANG_.PDE[KEn-1][1-1][2-1]*DF/BINS;
+        YERR2=YERR2*DF/BINS;
+        YERR3=3.0e0*sqrt(fabs(CENANG_.PDE2[KEn-1][1-1][3-1]-pow(CENANG_.PDE[KEn-1][1-1][3-1],2)*DF));
+        YAV3=CENANG_.PDE[KEn-1][1-1][3-1]*DF/BINS;
+        YERR3=YERR3*DF/BINS;
+		fprintf(IWR,"  %.6E  %.6E  %.2E  %.6E  %.2E  %.6E  %.2E\n", XX,fmax(YAV1,1.0e-35),YERR1, fmax(YAV2,1.0e-35),YERR2,fmax(YAV3,1.0e-35),YERR3);
+	}
+	fclose(IWR);
+
+	//Partículas descendentes.
+
+	FILE* IWR2 = fopen("energy-down2.dat", "w");
+	if (IWR2 == NULL){
+		printf("Não foi possível abrir o arquivo energy-down2.dat");
+		exit(0);
+	}
+
+	fprintf(IWR2, " #  Results from PENMAIN.\n");
+	fprintf(IWR2, " #  Energy distributions of downbound particles.\n");
+	fprintf(IWR2, " #  1st column: E (eV).\n");
+	fprintf(IWR2, " #  2nd and 3rd columns: PDF and STU for electrons.\n");
+	fprintf(IWR2, " #  4th and 5th columns: PDF and STU for photons.\n");
+	fprintf(IWR2, " #  6th and 7th columns: PDF and STU for positrons.\n");
+	fprintf(IWR2, " #    PDFs and STUs in units of 1/(eV*primary_particle).\n");
+
+	for (int KEn = 1; KEn <= *CENANG_.NE; KEn++){
+		if (*CENANG_.LLE == 1){
+			XLOW=exp(*CENANG_.EL+(KEn-1)* *CENANG_.BSE);
+            XUPP=exp(*CENANG_.EL+KEn* *CENANG_.BSE);
+            XX=0.5e0*(XUPP+XLOW);
+            BINS=XUPP-XLOW;
+		}else{
+			XX=*CENANG_.EL+(KEn-0.5e0)* *CENANG_.BSE;
+            BINS=*CENANG_.BSE;
+		}
+		YERR1=3.0e0*sqrt(fabs(CENANG_.PDE2[KEn-1][2-1][1-1]-pow(CENANG_.PDE[KEn-1][2-1][1-1],2)*DF));
+        YAV1=CENANG_.PDE[KEn-1][2-1][1-1]*DF/BINS;
+        YERR1=YERR1*DF/BINS;
+        YERR2=3.0e0*sqrt(fabs(CENANG_.PDE2[KEn-1][2-1][2-1]-pow(CENANG_.PDE[KEn-1][2-1][2-1],2)*DF));
+        YAV2=CENANG_.PDE[KEn-1][2-1][2-1]*DF/BINS;
+        YERR2=YERR2*DF/BINS;
+        YERR3=3.0e0*sqrt(fabs(CENANG_.PDE2[KEn-1][2-1][3-1]-pow(CENANG_.PDE[KEn-1][2-1][3-1],2)*DF));
+        YAV3=CENANG_.PDE[KEn-1][2-1][3-1]*DF/BINS;
+        YERR3=YERR3*DF/BINS;
+		fprintf(IWR2,"  %.6E  %.6E  %.2E  %.6E  %.2E  %.6E  %.2E\n", XX,fmax(YAV1,1.0e-35),YERR1, fmax(YAV2,1.0e-35),YERR2,fmax(YAV3,1.0e-35),YERR3);
+	}
+	fclose(IWR2);
+
+	//Distribuições angulares de partículas emergentes.
+
+	if (*CENANG_.NPH > 1){
+		FILE* IWR3 = fopen("angle2.dat", "w");
+		if (IWR3 == NULL){
+			printf("Não foi possível abrir o arquivo angle2.dat");
+			exit(0);
+		}
+
+		fprintf(IWR3, " #  Results from PENMAIN.\n");
+		fprintf(IWR3, " #  Angular distributions of emerging particles.\n");
+		fprintf(IWR3, " #  1st and 2nd columns: THETA and PHI (deg).\n");
+		fprintf(IWR3, " #  3rd and 4th columns: PDF and STU for electrons.\n");
+		fprintf(IWR3, " #  5th and 6th columns: PDF and STU for photons.\n");
+		fprintf(IWR3, " #  7th and 8th columns: PDF and STU for positrons.\n");
+		fprintf(IWR3, " #    PDFs and STUs in units of 1/(sr*primary_particle).\n");
+
+		for (int KTH = 1; KTH <= *CENANG_.NTH; KTH++){
+			if (*CENANG_.LLTH == 1){
+				XLOW=exp(*CENANG_.THL+(KTH-1)* *CENANG_.BSTH);
+				XUPP=exp(*CENANG_.THL+KTH* *CENANG_.BSTH);
+			}else{
+				XLOW=*CENANG_.THL+(KTH-1)* *CENANG_.BSTH;
+				XUPP=*CENANG_.THL+KTH* *CENANG_.BSTH;
+			}
+			XX=0.5e0*(XUPP+XLOW);
+			BINS=XUPP-XLOW;
+			DSANG=(cos(XLOW* DE2RA)-cos(XUPP* DE2RA))*(*CENANG_.BSPH* DE2RA);
+			for (int L =1; L<= *CENANG_.NPH; L++){
+				YY=(L-0.5e0)* *CENANG_.BSPH;
+
+				YERR1=3.0e0*sqrt(fabs(CENANG_.PDA2[L-1][KTH-1][1-1]-pow(CENANG_.PDA[L-1][KTH-1][1-1],2)*DF));
+				YAV1=CENANG_.PDA[L-1][KTH-1][1-1]*DF/DSANG;
+				YERR1=YERR1*DF/DSANG;
+				YERR2=3.0e0*sqrt(fabs(CENANG_.PDA2[L-1][KTH-1][2-1]-pow(CENANG_.PDA[L-1][KTH-1][2-1],2)*DF));
+				YAV2=CENANG_.PDA[L-1][KTH-1][1-1]*DF/DSANG;
+				YERR2=YERR2*DF/DSANG;
+				YERR3=3.0e0*sqrt(fabs(CENANG_.PDE2[L-1][KTH-1][3-1]-pow(CENANG_.PDE[L-1][KTH-1][3-1],2)*DF));
+				YAV3=CENANG_.PDE[L-1][KTH-1][3-1]*DF/DSANG;
+				YERR3=YERR3*DF/DSANG;
+				fprintf(IWR3,"  %.6E  %.6E  %.6E  %.2E  %.6E  %.2E  %.6E  %.2E\n", XX,YY,fmax(YAV1,1.0e-35),YERR1, fmax(YAV2,1.0e-35),YERR2,fmax(YAV3,1.0e-35),YERR3);
+			}
+			fprintf(IWR3,"\n");
+			}
+		fclose(IWR3);
+	}
+
+	FILE* IWR4 = fopen("polar-angle2.dat", "w");
+	if (IWR4 == NULL){
+		printf("Não foi possível abrir o arquivo polar-angle2.dat");
+		exit(0);
+	}
+
+	fprintf(IWR4, " #  Results from PENMAIN.\n");
+	fprintf(IWR4, " #   Angular distributions of emerging particles.\n");
+	fprintf(IWR4, " #  1st column: E (eV).\n");
+	fprintf(IWR4, " #  2nd and 3rd columns: PDF and STU for electrons.\n");
+	fprintf(IWR4, " #  4th and 5th columns: PDF and STU for photons.\n");
+	fprintf(IWR4, " #  6th and 7th columns: PDF and STU for positrons.\n");
+	fprintf(IWR4, " #    PDFs and STUs in units of 1/(sr*primary_particle).\n");
+
+	for (int KTH=1; KTH <= *CENANG_.NTH; KTH++){
+		if (*CENANG_.LLTH == 1){
+			XLOW=exp(*CENANG_.THL+(KTH-1)* *CENANG_.BSTH);
+			XUPP=exp(*CENANG_.THL+KTH* *CENANG_.BSTH);
+		}else{
+			XLOW=*CENANG_.THL+(KTH-1)* *CENANG_.BSTH;
+			XUPP=*CENANG_.THL+KTH* *CENANG_.BSTH;
+		}
+		XX=0.5e0*(XUPP+XLOW);
+		BINS=XUPP-XLOW;
+		DSANG=(cos(XLOW* DE2RA)-cos(XUPP* DE2RA))*TWOPI;
+
+		S1=0.0e0;
+        S2=0.0e0;
+		for (int L = 1; L <= *CENANG_.NPH; L++){
+			S1=S1+CENANG_.PDA[L-1][KTH-1][1-1];
+            S2=S2+CENANG_.PDA2[L-1][KTH-1][1-1];
+		}
+		YERR1=3.0e0*sqrt(fabs(S2-pow(S1,2)*DF));
+        YAV1=S1*DF/DSANG;
+        YERR1=YERR1*DF/DSANG;
+
+		S1=0.0e0;
+        S2=0.0e0;
+		for (int L = 1; L <= *CENANG_.NPH; L++){
+			S1=S1+CENANG_.PDA[L-1][KTH-1][2-1];
+            S2=S2+CENANG_.PDA2[L-1][KTH-1][2-1];
+		}
+		YERR2=3.0e0*sqrt(fabs(S2-pow(S1,2)*DF));
+        YAV2=S1*DF/DSANG;
+        YERR2=YERR2*DF/DSANG;
+
+		S1=0.0e0;
+        S2=0.0e0;
+		for (int L = 1; L <= *CENANG_.NPH; L++){
+			S1=S1+CENANG_.PDA[L-1][KTH-1][3-1];
+            S2=S2+CENANG_.PDA2[L-1][KTH-1][3-1];
+		}
+		YERR3=3.0e0*sqrt(fabs(S2-pow(S1,2)*DF));
+        YAV3=S1*DF/DSANG;
+        YERR3=YERR3*DF/DSANG;
+		fprintf(IWR4,"  %.6E  %.6E  %.2E  %.6E  %.2E  %.6E  %.2E\n", XX,fmax(YAV1,1.0e-35),YERR1, fmax(YAV2,1.0e-35),YERR2,fmax(YAV3,1.0e-35),YERR3);
+	}
+	fclose(IWR4);
+
+}
+
 
 
 
