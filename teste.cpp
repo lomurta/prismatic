@@ -1269,6 +1269,8 @@ void dosed2_(FILE *IWR);
 
 void enangw2_(double &SHN);
 
+void dosew2_(double &SHN, double &TSIM, FILE *IWR);
+
 }
 
 
@@ -3405,7 +3407,7 @@ void geomin2_(double *PARINP, int *NPINP, int *NMATG, int *NBOD, FILE *IRD, FILE
 	 double Q0;
 	 
 	 
-	 double TSTL ;
+	double TSTL ;
 	double TSTU;
 	double TOL;
 	double F;
@@ -23510,7 +23512,7 @@ void pmwrt2_(int &ICLOSE){
 
 	fprintf(IWR2, "   Simulation time ......................... %.6E sec\n", *CNTRL_.TSIM);
 	double TAVS=*CNTRL_.SHN / *CNTRL_.TSIM;
-	fprintf(IWR2, "   Simulation speed ........................ %.6E sec\n\n\n", *CNTRL_.TSIM);
+	fprintf(IWR2, "   Simulation speed ........................ %.6E showers/sec\n\n\n", TAVS);
 
 	fprintf(IWR2, "   Simulated primary particles ............. %.6E sec\n\n", *CNTRL_.SHN);
 	if (*CSOUR0_.KPARP == 1)
@@ -23554,16 +23556,16 @@ void pmwrt2_(int &ICLOSE){
 
 	fprintf(IWR2,"   Secondary-particle generation probabilities:\n" );
 	fprintf(IWR2,"                   ----------------------------------------------\n" );
-	fprintf(IWR2, "                   |  electrons   |   photons    |  positrons   |\n");
+	fprintf(IWR2, "                   |  electrons    |   photons     |  positrons    |\n");
 	fprintf(IWR2, "   --------------------------------------------------------------\n");
 	fprintf(IWR2, "   |   upbound     | %.6E | %.6E | %.6E |\n", WSEC[1-1][1-1],WSEC[1-1][2-1],WSEC[1-1][3-1]);
-	fprintf(IWR2, "   |               | +- %.1E | +- %.1E | +- %.1E |\n",  WSEC2[1-1][1-1],WSEC2[1-1][2-1],WSEC2[1-1][3-1]);
+	fprintf(IWR2, "   |               |  +- %.1E  |  +- %.1E  |  +- %.1E  |\n",  WSEC2[1-1][1-1],WSEC2[1-1][2-1],WSEC2[1-1][3-1]);
     fprintf(IWR2, "   --------------------------------------------------------------\n");
 	fprintf(IWR2, "   |   downbound   | %.6E | %.6E | %.6E |\n", WSEC[2-1][1-1],WSEC[2-1][2-1],WSEC[2-1][3-1]);
-	fprintf(IWR2, "   |               | +- %.1E | +- %.1E | +- %.1E |\n",  WSEC2[2-1][1-1],WSEC2[2-1][2-1],WSEC2[2-1][3-1]);
+	fprintf(IWR2, "   |               |  +- %.1E  |  +- %.1E  |  +- %.1E  |\n",  WSEC2[2-1][1-1],WSEC2[2-1][2-1],WSEC2[2-1][3-1]);
     fprintf(IWR2, "   --------------------------------------------------------------\n");
 	fprintf(IWR2, "   |   absorbed    | %.6E | %.6E | %.6E |\n", WSEC[3-1][1-1],WSEC[3-1][2-1],WSEC[3-1][3-1]);
-	fprintf(IWR2, "   |               | +- %.1E | +- %.1E | +- %.1E |\n",  WSEC2[3-1][1-1],WSEC2[3-1][2-1],WSEC2[3-1][3-1]);
+	fprintf(IWR2, "   |               |  +- %.1E  |  +- %.1E  |  +- %.1E  |\n",  WSEC2[3-1][1-1],WSEC2[3-1][2-1],WSEC2[3-1][3-1]);
     fprintf(IWR2, "   --------------------------------------------------------------\n\n");
 
 	for (int I = 1; I <=2; I++){
@@ -23580,13 +23582,13 @@ void pmwrt2_(int &ICLOSE){
 	fprintf(IWR2, "      Upbound primary particles ....... %.6E +- %.1E eV\n", WAVE[1-1],WAVE2[1-1]);
 	fprintf(IWR2, "      Downbound primary particles ..... %.6E +- %.1E eV\n\n", WAVE[2-1],WAVE2[2-1]);
 
-	fprintf(IWR2, "   Mean value of the polar cosine of the exit\n");
-	fprintf(IWR2, "      Upbound primary particles ....... %.6E +- %.1E eV\n", WAVW[1-1],WAVW2[1-1]);
-	fprintf(IWR2, "      Downbound primary particles ..... %.6E +- %.1E eV\n\n", WAVW[2-1],WAVW2[2-1]);
+	fprintf(IWR2, "   Mean value of the polar cosine of the exit direction:\n");
+	fprintf(IWR2, "      Upbound primary particles ....... %.6E +- %.1E\n", WAVW[1-1],WAVW2[1-1]);
+	fprintf(IWR2, "      Downbound primary particles ..... %.6E +- %.1E\n\n", WAVW[2-1],WAVW2[2-1]);
 
-	fprintf(IWR2, "   Mean value of the polar angle of the exit dir\n");
-	fprintf(IWR2, "      Upbound primary particles ....... %.6E +- %.1E eV\n", WAVA[1-1],WAVA2[1-1]);
-	fprintf(IWR2, "      Downbound primary particles ..... %.6E +- %.1E eV\n\n", WAVA[2-1],WAVA2[2-1]);
+	fprintf(IWR2, "   Mean value of the polar angle of the exit direction:\n");
+	fprintf(IWR2, "      Upbound primary particles ....... %.6E +- %.1E deg\n", WAVA[1-1],WAVA2[1-1]);
+	fprintf(IWR2, "      Downbound primary particles ..... %.6E +- %.1E deg\n\n", WAVA[2-1],WAVA2[2-1]);
 
 	//Energias médias depositadas nos corpos..
 
@@ -23607,19 +23609,19 @@ void pmwrt2_(int &ICLOSE){
 	}
 
 	//Saída de detectores de impacto.
-	if (*CNT4_.NID > 0)
+//	if (*CNT4_.NID > 0)
 		//imdetw2_(CNTRL_.SHN,CNTRL_.TSIM,IWR); Não será implementado detectores de impacto
 
 	//Saída de detectores de deposição de energia.
-	if (*CNT5_.NED > 0)
+	//if (*CNT5_.NED > 0)
 		//endetw2_(CNTRL_.SHN,CNTRL_.TSIM,IWR); //nao será implementado dectores de deposicao de energia
 
 
 	//Espectro de energia da fonte (conforme definido no PENMAIN).
 	if (*CSOUR2_.LSPEC){
-		FILE* IWR3 = fopen("psource.dat", "w");
+		FILE* IWR3 = fopen("psource2.dat", "w");
 		if (IWR3 == NULL){
-			printf("Não foi possível abrir o arquivo psource.dat");
+			printf("Não foi possível abrir o arquivo psource2.dat");
 			exit(0);
 		}
 
@@ -23658,8 +23660,12 @@ void pmwrt2_(int &ICLOSE){
 
 	//Distribuição de dose
 
+	if (*CNT6_.LDOSEM){
+		dosew2_(*CNTRL_.SHN,*CNTRL_.TSIM, IWR2);
+	}
 
-
+	fprintf(IWR2, "\n   Last random seeds = %d , %d\n\n", *RSEED_.ISEED1, *RSEED_.ISEED2);
+	fprintf(IWR2,"  ------------------------------------------------------------------------\n");
 
 
 }
@@ -24203,7 +24209,317 @@ void enangw2_(double &SHN){
 
 }
 
+void dosew2_(double &SHN, double &TSIM, FILE *IWR){
 
+	double DF, DMAX,  QAV, QAV2, QER, EFFIC, ZZ, YAV, YAV2, YERR, XX, YY, XYZ, RR, ZAV, ZAV2, ZERR;
+	int I1M, I2M, I3M, I1C, I2C, I3C;
+
+	DF=1.0e0/SHN;
+
+	//Transferir contadores parciais para contadores globais.
+
+	for (int I3 =1; I3 <= CDOSE3_.NDB[3-1]; I3++){
+		for (int I2 =1; I2 <= CDOSE3_.NDB[2-1]; I2++){
+			for (int I1 =1; I1 <= CDOSE3_.NDB[1-1]; I1++){
+				CDOSE1_.DOSE[I3-1][I2-1][I1-1]=CDOSE1_.DOSE[I3-1][I2-1][I1-1]+CDOSE1_.DOSEP[I3-1][I2-1][I1-1];
+          		CDOSE1_.DOSE2[I3-1][I2-1][I1-1]=CDOSE1_.DOSE2[I3-1][I2-1][I1-1]+pow(CDOSE1_.DOSEP[I3-1][I2-1][I1-1],2);
+          		CDOSE1_.DOSEP[I3-1][I2-1][I1-1]=0.0e0;
+          		CDOSE1_.LDOSE[I3-1][I2-1][I1-1]=0;
+			}
+		}
+		CDOSE2_.DDOSE[I3-1]=CDOSE2_.DDOSE[I3-1]+CDOSE2_.DDOSEP[I3-1];
+        CDOSE2_.DDOSE2[I3-1]=CDOSE2_.DDOSE2[I3-1]+pow(CDOSE2_.DDOSEP[I3-1],2);
+        CDOSE2_.DDOSEP[I3-1]=0.0e0;
+        CDOSE2_.LDDOSE[I3-1]=0;
+	}
+
+	DMAX=0.0e0;
+    I1M=1;
+    I2M=1;
+    I3M=1;
+
+	for (int I1 =1; I1 <= CDOSE3_.NDB[1-1]; I1++){
+		for (int I2 =1; I2 <= CDOSE3_.NDB[2-1]; I2++){
+			for (int I3 =1; I3 <= CDOSE3_.NDB[3-1]; I3++){
+				if (CDOSE1_.DOSE[I3-1][I2-1][I1-1]*CDOSE4_.VMASS[I3-1][I2-1][I1-1] > DMAX){
+					I1M=I1;
+					I2M=I2;
+					I3M=I3;
+					DMAX=CDOSE1_.DOSE[I3-1][I2-1][I1-1]*CDOSE4_.VMASS[I3-1][I2-1][I1-1];
+				}
+			}
+		}
+	}
+
+	QAV=CDOSE1_.DOSE[I3M-1][I2M-1][I1M-1];
+    QAV2=CDOSE1_.DOSE2[I3M-1][I2M-1][I1M-1];
+    QER=3.0E0*sqrt(fabs(QAV2-pow(QAV,2)*DF));
+    QAV=QAV*DF*CDOSE4_.VMASS[I3M-1][I2M-1][I1M-1];
+    QER=QER*DF*CDOSE4_.VMASS[I3M-1][I2M-1][I1M-1];
+
+	if (QER > 1.0e-10*fabs(QAV)){
+		EFFIC=pow(QAV,2)/(pow((QER/3.0e0),2)*TSIM);
+	}else{
+		 EFFIC=0.0e0;
+	}
+
+	fprintf(IWR, "\n      Maximum dose ... %.6E +- %.1E eV/g  (effic. = %.2E)\n", QAV,QER,EFFIC);
+
+	if (*CDOSE1_.KDOSE == 1){ //Caixa
+
+		//distribuição de dose em profundidade
+		FILE* IWR2 = fopen("depth-dose2.dat", "w");
+		if (IWR2 == NULL){
+			printf("Nao foi possivel abrir o arquivo depth-dose2.dat");
+			exit(0);
+		}
+
+		fprintf(IWR2," #  Results from PENMAIN. Depth-dose distribution.\n");
+		fprintf(IWR2," #  (integrated over X and Y within the volume of the material system).\n");
+		fprintf(IWR2," #  1st column: z coordinate (cm).\n");
+		fprintf(IWR2," #  2nd column: depth-dose (eV/(g/cm**2)).\n");
+		fprintf(IWR2," #  3rd column: statistical uncertainty (3 sigma).\n");
+		fprintf(IWR2," #  NOTE: The calculated dose distribution is correct only when the\n");
+		fprintf(IWR2," #         Z bins have uniform mass density.\n #\n");
+
+		for (int I3 = 1; I3 <= CDOSE3_.NDB[3-1]; I3++){
+			ZZ=CDOSE3_.DXL[3-1]+(I3-0.5e0)*CDOSE3_.BDOSE[3-1];
+			YAV=CDOSE2_.DDOSE[I3-1];
+			YAV2=CDOSE2_.DDOSE2[I3-1];
+			YERR=3.0e0*sqrt(fabs(YAV2-pow(YAV,2)*DF));
+			YAV=YAV*DF*CDOSE3_.RBDOSE[3-1];
+			YERR=YERR*DF*CDOSE3_.RBDOSE[3-1];
+			fprintf(IWR2, " %.6E  %.6E  %.2E\n", ZZ,fmax(YAV,1.0e-35),fmax(YERR,1.0e-35));
+		}
+		fclose(IWR2);
+
+		//Mapa de dose em 3D
+		FILE* IWR3 = fopen("3d-dose-map2.dat", "w");
+		if (IWR3 == NULL){
+			printf("Nao foi possivel abrir o arquivo 3d-dose-map2.dat");
+			exit(0);
+		}
+
+		fprintf(IWR3, " #  Results from PENMAIN. 3D dose distribution.\n");
+		fprintf(IWR3, " #  Dose-map box:  XL = %.6E cm,  XU = %.6E cm\n", CDOSE3_.DXL[1-1],CDOSE3_.DXU[1-1]);
+		fprintf(IWR3, " #                 YL = %.6E cm,  YU = %.6E cm\n", CDOSE3_.DXL[2-1],CDOSE3_.DXU[2-1]);
+		fprintf(IWR3, " #                 ZL = %.6E cm,  ZU = %.6E cm\n", CDOSE3_.DXL[3-1],CDOSE3_.DXU[3-1]);
+		fprintf(IWR3, " #  Numbers of bins:     NBX = %d, NBY = %d, NBZ = %d\n #\n", CDOSE3_.NDB[1-1],CDOSE3_.NDB[2-1],CDOSE3_.NDB[3-1]);
+		fprintf(IWR3, " #  columns 1 to 3: coordinates X,Y,Z of the bin  centres.\n");
+		fprintf(IWR3, " #  4th column: dose (eV/g).\n");
+		fprintf(IWR3, " #  5th column: statistical uncertainty (3 sigma).\n");
+		fprintf(IWR3, " #  columns 6 to 8: bin indices IX,IY,IZ.\n");
+
+		for (int I3 = 1; I3 <= CDOSE3_.NDB[3-1]; I3++){
+			ZZ=CDOSE3_.DXL[3-1]+(I3-0.5e0)*CDOSE3_.BDOSE[3-1];
+			for (int I1=1; I1 <= CDOSE3_.NDB[1-1]; I1++){
+				XX=CDOSE3_.DXL[1-1]+(I1-0.5e0)*CDOSE3_.BDOSE[1-1];
+				for (int I2=1; I2 <= CDOSE3_.NDB[2-1]; I2++){
+					YY=CDOSE3_.DXL[2-1]+(I2-0.5e0)*CDOSE3_.BDOSE[2-1];
+					YAV=CDOSE1_.DOSE[I3-1][I2-1][I1-1];
+					YAV2=CDOSE1_.DOSE2[I3-1][I2-1][I1-1];
+					YERR=3.0e0*sqrt(fabs(YAV2-pow(YAV,2)*DF));
+					YAV=YAV*DF*CDOSE4_.VMASS[I3-1][I2-1][I1-1];
+					YERR=YERR*DF*CDOSE4_.VMASS[I3-1][I2-1][I1-1];
+					fprintf(IWR3, " %.3E  %.3E  %.3E  %.6E  %.2E  %d  %d  %d\n", XX,YY,ZZ,fmax(YAV,1.0e-35),fmax(YERR,1.0e-35),I1,I2,I3);
+				}
+				fprintf(IWR3, "	\n");
+			}
+			fprintf(IWR3, "	\n");
+		}
+		fclose(IWR3);
+
+		//Distribuições de dose nos eixos centrais.
+		I1C=(CDOSE3_.NDB[1-1]/2)+1;
+        I2C=(CDOSE3_.NDB[2-1]/2)+1;
+        I3C=(CDOSE3_.NDB[3-1]/2)+1;
+
+		if (CDOSE3_.NDB[1-1] > 1){
+			FILE* IWR4 = fopen("x-dose2.dat", "w");
+			if (IWR4 == NULL){
+				printf("Nao foi possivel abrir o arquivo x-dose2.dat");
+				exit(0);
+			}
+			fprintf(IWR4," #  Results from PENMAIN.\n");
+			fprintf(IWR4," #  Dose distribution along the central X axis.\n");
+			fprintf(IWR4," #  1st column: x (cm).\n");
+			fprintf(IWR4," #  2nd column: dose (eV/g).\n");
+			fprintf(IWR4," #  3rd column: statistical uncertainty (3 sigma).\n");
+
+			for (int I1 = 1; I1 <= CDOSE3_.NDB[1-1]; I1++){
+				XYZ=CDOSE3_.DXL[1-1]+(I1-0.5e0)*CDOSE3_.BDOSE[1-1];
+				YAV=CDOSE1_.DOSE[I3C-1][I2C-1][I1-1];
+				YAV2=CDOSE1_.DOSE2[I3C-1][I2C-1][I1-1];
+				YERR=3.0e0*sqrt(fabs(YAV2-pow(YAV,2)*DF));
+				YAV=YAV*DF*CDOSE4_.VMASS[I3C-1][I2C-1][I1-1];
+				YERR=YERR*DF*CDOSE4_.VMASS[I3C-1][I2C-1][I1-1];
+				fprintf(IWR4, " %.6E  %.6E  %.2E\n", XYZ,fmax(YAV,1.0e-35),fmax(YERR,1.0e-35));
+			}
+			fclose(IWR4);
+		}
+
+		if (CDOSE3_.NDB[2-1] > 1){
+			FILE* IWR5 = fopen("y-dose2.dat", "w");
+			if (IWR5 == NULL){
+				printf("Nao foi possivel abrir o arquivo y-dose2.dat");
+				exit(0);
+			}
+			fprintf(IWR5," #  Results from PENMAIN.\n");
+			fprintf(IWR5," #  Dose distribution along the central Y axis.\n");
+			fprintf(IWR5," #  1st column: y (cm).\n");
+			fprintf(IWR5," #  2nd column: dose (eV/g).\n");
+			fprintf(IWR5," #  3rd column: statistical uncertainty (3 sigma).\n");
+			fprintf(IWR5," #  NOTE: The calculated dose distribution is correct only when the\n");
+			fprintf(IWR5," #         Z bins have uniform mass density.\n #\n");
+
+			for (int I2 = 1; I2 <= CDOSE3_.NDB[2-1]; I2++){
+				XYZ=CDOSE3_.DXL[2-1]+(I2-0.5e0)*CDOSE3_.BDOSE[2-1];
+				YAV=CDOSE1_.DOSE[I3C-1][I2-1][I1C-1];
+				YAV2=CDOSE1_.DOSE2[I3C-1][I2-1][I1C-1];
+				YERR=3.0e0*sqrt(fabs(YAV2-pow(YAV,2)*DF));
+				YAV=YAV*DF*CDOSE4_.VMASS[I3C-1][I2-1][I1C-1];
+				YERR=YERR*DF*CDOSE4_.VMASS[I3C-1][I2-1][I1C-1];
+				fprintf(IWR5, " %.6E  %.6E  %.2E\n", XYZ,fmax(YAV,1.0e-35),fmax(YERR,1.0e-35));
+			}
+			fclose(IWR5);
+		}
+
+		if (CDOSE3_.NDB[2-1] > 1){
+			FILE* IWR6 = fopen("z-dose2.dat", "w");
+			if (IWR6 == NULL){
+				printf("Nao foi possivel abrir o arquivo z-dose2.dat");
+				exit(0);
+			}
+			fprintf(IWR6," #  Results from PENMAIN.\n");
+			fprintf(IWR6," #  Dose distribution along the central Z axis.\n");
+			fprintf(IWR6," #  1st column: z (cm).\n");
+			fprintf(IWR6," #  2nd column: dose (eV/g).\n");
+			fprintf(IWR6," #  3rd column: statistical uncertainty (3 sigma).\n");
+
+			for (int I3 = 1; I3 <= CDOSE3_.NDB[3-1]; I3++){
+				XYZ=CDOSE3_.DXL[3-1]+(I3-0.5e0)*CDOSE3_.BDOSE[3-1];
+				YAV=CDOSE1_.DOSE[I3-1][I2C-1][I1C-1];
+				YAV2=CDOSE1_.DOSE2[I3-1][I2C-1][I1C-1];
+				YERR=3.0e0*sqrt(fabs(YAV2-pow(YAV,2)*DF));
+				YAV=YAV*DF*CDOSE4_.VMASS[I3-1][I2C-1][I1C-1];
+				YERR=YERR*DF*CDOSE4_.VMASS[I3-1][I2C-1][I1C-1];
+				fprintf(IWR6, " %.6E  %.6E  %.2E\n", XYZ,fmax(YAV,1.0e-35),fmax(YERR,1.0e-35));
+			}
+			fclose(IWR6);
+		}
+
+	} else if (*CDOSE1_.KDOSE == 2){ //Cilindro
+
+	//Mapa de dose 2D
+		FILE* IWR7 = fopen("2d-dose-map.dat", "w");
+		if (IWR7 == NULL){
+			printf("Nao foi possivel abrir o arquivo 2d-dose-map.dat");
+			exit(0);
+		}
+		fprintf(IWR7, " #  Results from PENMAIN. Dose distribution.\n");
+		fprintf(IWR7, " #  Dose-map cylinder:         RU = %.6E cm\n", CDOSE3_.DXU[1-1]);
+		fprintf(IWR7, " #     ZL = %.6E cm,  ZU = %.6E cm\n", CDOSE3_.DXL[3-1], CDOSE3_.DXU[3-1]);
+		fprintf(IWR7, " #  Numbers of bins:     NBR = %d, NBZ = %d\n", CDOSE3_.NDB[1-1],CDOSE3_.NDB[3-1]);
+		fprintf(IWR7, " #  columns 1 and 2: coordinates R,Z of the bin  centres\n");
+		fprintf(IWR7, " #  3rd column: dose (eV/g).\n");
+		fprintf(IWR7, " #  4th column: statistical uncertainty (3 sigma).\n");
+
+		for (int I1=1; I1 <= CDOSE3_.NDB[1-1]; I1++){
+			RR=(I1-0.5e0)*CDOSE3_.BDOSE[1-1];
+			for (int I3=1; I3<= CDOSE3_.NDB[3-1]; I3++){
+				ZZ=CDOSE3_.DXL[3-1]+(I3-0.5e0)*CDOSE3_.BDOSE[3-1];
+				YAV=CDOSE1_.DOSE[I3-1][1-1][I1-1];
+				YAV2=CDOSE1_.DOSE2[I3-1][1-1][I1-1];
+				YERR=3.0e0*sqrt(fabs(YAV2-pow(YAV,2)*DF));
+				YAV=YAV*DF*CDOSE4_.VMASS[I3-1][1-1][I1-1];
+				YERR=YERR*DF*CDOSE4_.VMASS[I3-1][1-1][I1-1];
+				fprintf(IWR7, " %.6E  %.6E  %.6E  %.2E\n", RR,ZZ,fmax(YAV,1.0e-35),fmax(YERR,1.0e-35));
+			}
+			fprintf(IWR7, "	\n");
+		}
+		fclose(IWR7);
+
+		FILE* IWR8 = fopen("depth-dose2.dat", "w");
+		if (IWR8 == NULL){
+			printf("Nao foi possivel abrir o arquivo depth-dose2.dat");
+			exit(0);
+		}
+
+		fprintf(IWR8," #  Results from PENMAIN. Depth-dose distribution.\n");
+		fprintf(IWR8," #  (integrated over X and Y within the volume of the material system).\n");
+		fprintf(IWR8," #  1st column: z coordinate (cm).\n");
+		fprintf(IWR8," #  2nd column: depth-dose (eV/(g/cm**2)).\n");
+		fprintf(IWR8," #  3rd column: statistical uncertainty (3 sigma).\n");
+		fprintf(IWR8," #  NOTE: The calculated dose distribution is correct only when the\n");
+		fprintf(IWR8," #         Z bins have uniform mass density.\n #\n");
+
+		for (int I3 = 1; I3 <= CDOSE3_.NDB[3-1]; I3++){
+			ZZ=CDOSE3_.DXL[3-1]+(I3-0.5e0)*CDOSE3_.BDOSE[3-1];
+			YAV=CDOSE2_.DDOSE[I3-1];
+			YAV2=CDOSE2_.DDOSE2[I3-1];
+			YERR=3.0e0*sqrt(fabs(YAV2-pow(YAV,2)*DF));
+			YAV=YAV*DF*CDOSE3_.RBDOSE[3-1];
+			YERR=YERR*DF*CDOSE3_.RBDOSE[3-1];
+			fprintf(IWR8, " %.6E  %.6E  %.2E\n", ZZ,fmax(YAV,1.0e-35),fmax(YERR,1.0e-35));
+		}
+		fclose(IWR8);
+
+		FILE* IWR9 = fopen("z-dose2.dat", "w");
+			if (IWR9 == NULL){
+				printf("Nao foi possivel abrir o arquivo z-dose2.dat");
+				exit(0);
+			}
+			fprintf(IWR9," #  Results from PENMAIN.\n");
+			fprintf(IWR9," #  Dose distribution along the central Z axis.\n");
+			fprintf(IWR9," #  1st column: z (cm).\n");
+			fprintf(IWR9," #  2nd column: dose (eV/g).\n");
+			fprintf(IWR9," #  3rd column: statistical uncertainty (3 sigma).\n");
+
+			for (int I3 = 1; I3 <= CDOSE3_.NDB[3-1]; I3++){
+				XYZ=CDOSE3_.DXL[3-1]+(I3-0.5e0)*CDOSE3_.BDOSE[3-1];
+				YAV=CDOSE1_.DOSE[I3-1][I2C-1][I1C-1];
+				YAV2=CDOSE1_.DOSE2[I3-1][I2C-1][I1C-1];
+				YERR=3.0e0*sqrt(fabs(YAV2-pow(YAV,2)*DF));
+				YAV=YAV*DF*CDOSE4_.VMASS[I3-1][I2C-1][I1C-1];
+				YERR=YERR*DF*CDOSE4_.VMASS[I3-1][I2C-1][I1C-1];
+				fprintf(IWR9, " %.6E  %.6E  %.2E\n", XYZ,fmax(YAV,1.0e-35),fmax(YERR,1.0e-35));
+			}
+			fclose(IWR9);
+	}else{ //Esfera
+		//Distribuição radial da dose.
+		FILE* IWR10 = fopen("radial-dose2.dat", "w");
+		if (IWR10 == NULL){
+			printf("Nao foi possivel abrir o arquivo radial-dose2.dat");
+			exit(0);
+		}
+
+		fprintf(IWR10, " #  Results from PENMAIN. Dose distribution.\n");
+		fprintf(IWR10, " #  Dose-map sphere:         RU = %.6E cm\n", CDOSE3_.DXU[1-1]);
+		fprintf(IWR10, " #  Numbers of bins:     NBR = %d\n", CDOSE3_.NDB[1-1]);
+		fprintf(IWR10, " #  column 1: radius R of the bin centres.\n");
+		fprintf(IWR10, " #  2nd column: absorbed dose (eV/g).\n");
+		fprintf(IWR10, " #  3rd column: statistical uncertainty (3 sigma).\n");
+		fprintf(IWR10, " #  4th column: deposited energy per unit radius (eV/cm).\n");
+		fprintf(IWR10, " #  5th column: statistical uncertainty (3 sigma).\n");
+
+		for (int I1=1; I1 <= CDOSE3_.NDB[1-1]; I1++){
+			RR=(I1-0.5e0)*CDOSE3_.BDOSE[1-1];
+			YAV=CDOSE1_.DOSE[1-1][1-1][I1-1];
+			YAV2=CDOSE1_.DOSE2[1-1][1-1][I1-1];
+			YERR=3.0e0*sqrt(fabs(YAV2-pow(YAV,2)*DF));
+			YAV=YAV*DF*CDOSE4_.VMASS[1-1][1-1][I1-1];
+			YERR=YERR*DF*CDOSE4_.VMASS[1-1][1-1][I1-1];
+
+			ZAV=CDOSE1_.DOSE[1-1][1-1][I1-1];
+			ZAV2=CDOSE1_.DOSE2[1-1][1-1][I1-1];
+			ZERR=3.0e0*sqrt(fabs(ZAV2-pow(ZAV,2)*DF));
+			ZAV=ZAV*DF*CDOSE3_.RBDOSE[1-1];
+			ZERR=ZERR*DF*CDOSE3_.RBDOSE[1-1];
+			fprintf(IWR10," %.6E  %.6E  %.2E  %.6E  %.2E\n", RR,YAV,YERR,ZAV,ZERR);
+		}
+		fclose(IWR10);
+	}
+}
 
 
 
