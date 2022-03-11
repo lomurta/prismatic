@@ -1239,28 +1239,37 @@ C  ****  End the simulation after the allotted time or after completing
 C        DSHN showers.
 C
 
-      CALL TIMER(TSEC)
+c      CALL TIMER(TSEC)
+	   call timer2(TSEC)
       IF(TSEC.LT.TSECA.AND.SHN.LT.DSHN) THEN
-C  ****  Write partial results after each dumping period.
-c        IF(LDUMP) THEN
-c          IF(TSEC-TSECAD.GT.DUMPP) THEN
+c  ****  Write partial results after each dumping period.
+        IF(LDUMP) THEN
+          IF(TSEC-TSECAD.GT.DUMPP) THEN
 c            TSIM=TSIM+CPUTIM()-CPUT0
-c            CALL PMWRT(-1)
-c            WRITE(6,1001) SHN
-c 1001       FORMAT(3X,'Number of simulated showers =',1P,E14.7)
+			TSIM=TSIM+cputim2()-CPUT0
+c           CALL PMWRT(-1)
+			wvar=-1
+			CALL pmwrt2(wvar)
+            WRITE(6,1001) SHN
+ 1001       FORMAT(3X,'Number of simulated showers =',1P,E14.7)
 c            CALL TIMER(TSEC)
-c            TSECAD=TSEC
+			call timer2(TSEC)
+            TSECAD=TSEC
 c            CPUT0=CPUTIM()
-c            GO TO 101
-c          ENDIF
-c        ENDIF
+			CPUT0=cputim2()
+            GO TO 101
+          ENDIF
+        ENDIF
         GO TO 101
       ENDIF
 C
   102 CONTINUE
-      TSIM=TSIM+CPUTIM()-CPUT0
+c      TSIM=TSIM+CPUTIM()-CPUT0
+	  TSIM=TSIM+cputim2()-CPUT0	
   103 CONTINUE
-      CALL PMWRT2(1)
+	  wvar2=-1
+	  CALL pmwrt2(wvar2)
+c     CALL PMWRT2(1)
       WRITE(6,1002) SHN
  1002 FORMAT(3X,'Number of simulated showers =',1P,E14.7,
      1  /3X,'*** END ***')

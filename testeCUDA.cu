@@ -542,17 +542,6 @@ typedef struct{
 	double *AVE, *AVE2, *DAVE; // Energia final
 }CNT0;
 
-
-
-/*typedef struct{
-    double PRIM[3], PRIM2[3], DPRIM[3]; //Numero de particulas IEXIT;
-	double SEC[3][3], SEC2[3][3], DSEC[3][3]; // Geradores de particulas secundarias.
-	double AVW[2], AVW2[2], DAVW[2]; //Cosseno final do diretor polar.
-	double AVA[2], AVA2[2], DAVA[2]; // Angulo final polar
-	double AVE[2], AVE2[2], DAVE[2]; // Energia final
-}CNT0;*/
-
-
 // Energias depositadas em vários corpos.
 
 typedef struct{
@@ -615,7 +604,7 @@ typedef struct{
 	double *EL, *EU, *THL, *THU, *BSE, *RBSE, *BSTH, *RBSTH, *BSPH, *RBSPH;
 	double (*PDE)[2][3], (*PDE2)[2][3], (*PDEP)[2][3];
 	double (*PDA)[NBTHM][3], (*PDA2)[NBTHM][3], (*PDAP)[NBTHM][3];
-	bool (*LPDE)[2][3], (*LPDA)[NBTHM][3];
+	bool (*LPDE)[2][3], (*LPDA)[2][3];
 	int *NE, *NTH, *NPH;
 	bool *LLE, *LLTH;
 }CENANG;
@@ -969,7 +958,7 @@ void transfcgcone_(double *CPCT, double *CPST, double *SPCT, double *SPST, doubl
 void transfcenang_(	double *EL, double *EU, double *THL, double *THU, double *BSE, double *RBSE, double *BSTH, double *RBSTH, double *BSPH, double *RBSPH,
 	double (*PDE)[2][3], double (*PDE2)[2][3], double (*PDEP)[2][3],
 	double (*PDA)[NBTHM][3], double (*PDA2)[NBTHM][3], double (*PDAP)[NBTHM][3],
-	bool (*LPDE)[2][3], bool (*LPDA)[NBTHM][3],
+	bool (*LPDE)[2][3], bool (*LPDA)[2][3],
 	int *NE, int *NTH, int *NPH,
 	bool *LLE, bool *LLTH);
 
@@ -1288,8 +1277,6 @@ void timer2_(double &SEC);
 
 
 double cputim2_();
-
-void inicializarStructs();
 
 }
 
@@ -2206,10 +2193,10 @@ void transfcsour5_(char (*PSFI)[20]){
 
 }
 
-/*void transfcnt0_(double *PRIM , double *PRIM2, double *DPRIM, double (*SEC)[3], double (*SEC2)[3], double (*DSEC)[3], 
+void transfcnt0_(double *PRIM , double *PRIM2, double *DPRIM, double (*SEC)[3], double (*SEC2)[3], double (*DSEC)[3], 
 			    double *AVW, double *AVW2, double *DAVW, double *AVA, double *AVA2, double *DAVA, double *AVE, double *AVE2, double *DAVE){
-	
-   CNT0_.PRIM =    PRIM;
+
+    CNT0_.PRIM =    PRIM;
 	CNT0_.PRIM2	= PRIM2;
 	CNT0_.DPRIM	= DPRIM;
 	CNT0_.SEC	= SEC;
@@ -2225,30 +2212,7 @@ void transfcsour5_(char (*PSFI)[20]){
 	CNT0_.AVE2	= AVE2;
 	CNT0_.DAVE	= DAVE;
 
-}*/
-
-/*void transfcnt0_(double *PRIM , double *PRIM2, double *DPRIM, double (*SEC)[3], double (*SEC2)[3], double (*DSEC)[3], 
-			    double *AVW, double *AVW2, double *DAVW, double *AVA, double *AVA2, double *DAVA, double *AVE, double *AVE2, double *DAVE){
-
-    CNT0_.PRIM[0] =    PRIM;
-	CNT0_.PRIM2[0]	= PRIM2;
-	CNT0_.DPRIM[0]	= DPRIM;
-	CNT0_.SEC[0][0]	= SEC;
-	CNT0_.SEC2[0][0]	= SEC2;
-	CNT0_.DSEC[0][0]	= DSEC;
-	CNT0_.AVW[0]	= AVW;
-	CNT0_.AVW2[0]	= AVW2;
-	CNT0_.DAVW[0]	= DAVW;
-	CNT0_.AVA[0]	= AVA;
-	CNT0_.AVA2[0]	= AVA2;
-	CNT0_.DAVA[0]	= DAVA;
-	CNT0_.AVE[0]	= AVE;
-	CNT0_.AVE2[0]	= AVE2;
-	CNT0_.DAVE[0]	= DAVE;
-
-}*/
-
-
+}
 
 void transfcnt1_(double *TDEBO, double *TDEBO2, double *DEBO){
 	CNT1_.TDEBO = TDEBO;
@@ -2324,7 +2288,7 @@ void transfcgcone_(double *CPCT, double *CPST, double *SPCT, double *SPST, doubl
 void transfcenang_(	double *EL, double *EU, double *THL, double *THU, double *BSE, double *RBSE, double *BSTH, double *RBSTH, double *BSPH, double *RBSPH,
 	double (*PDE)[2][3], double (*PDE2)[2][3], double (*PDEP)[2][3],
 	double (*PDA)[NBTHM][3], double (*PDA2)[NBTHM][3], double (*PDAP)[NBTHM][3],
-	bool (*LPDE)[2][3], bool (*LPDA)[NBTHM][3],
+	bool (*LPDE)[2][3], bool (*LPDA)[2][3],
 	int *NE, int *NTH, int *NPH,
 	bool *LLE, bool *LLTH){
 
@@ -6389,9 +6353,9 @@ void peinit2_(double *EMAX, int &NMATER, FILE *IWR, int *INFO, char (*PMFILE)[20
 	esia02_(); //Inicializa rotinas de ioniza��o por impacto de el�trons.
 	psia02_(); //Inicializa as rotinas de ioniza��o por impacto de p�sitrons.
 	gpha02_(); //Inicializa rotinas fotoel�tricas.
-//	relax0_();
+	relax0_();
 	relax02_(); //Inicializa rotinas de relaxamento at�mico.
-//	rndg30_();
+	rndg30_();
 	rndg302_(); //Inicializa a rotina de amostragem gaussiana.
 
 
@@ -14108,19 +14072,19 @@ void pmrdr2_(){
 		printf("Nao foi possivel abrir o arquivo entrada.in");
 		exit(0);
 	}
-	printf("\n\nAQUI\n\n");
+	
 	for (int I = 1; I <= 3; I++){
+		printf("\n\nAQUI\n\n");
 		CNT0_.PRIM[I-1]=0.0e0;
+		
         CNT0_.PRIM2[I-1]=0.0e0;
 		for (int K = 1; K <= 3; K++){
 			CNT0_.SEC[I-1][K-1]=0.0e0;
             CNT0_.SEC2[I-1][K-1]=0.0e0;
 		}
 	}
-		printf("\n\nAQUI2\n\n");
 	
 
-	
 	for (int I = 1; I <= 2; I++){
 		CNT0_.AVW[I-1]=0.0e0;
         CNT0_.AVW2[I-1]=0.0e0;
@@ -14129,7 +14093,6 @@ void pmrdr2_(){
         CNT0_.AVE[I-1]=0.0e0;
         CNT0_.AVE2[I-1]=0.0e0;
 	}
-
 
 	for (int I = 1; I <= NSEM; I++){
 		CNT2_.SHIST[I-1]=0.0e0;
@@ -24572,9 +24535,8 @@ void dosew2_(double &SHN, double &TSIM, FILE *IWR){
 }
 
 
-int main(){
+/*int main(){
 
-	inicializarStructs();
 	start = clock();
 
 	//Leia os arquivos de entrada e inicialize os pacotes de simulação.
@@ -24616,7 +24578,7 @@ L103:;
 
 	system("PAUSE");   
 	return 0;
-}
+}*/
 
 void timer2_(double &SEC){
 
@@ -24630,741 +24592,6 @@ double cputim2_(){
 }
 
 void inicializarStructs(){
-
-
-/*se o seu compilador suporta arrays de comprimento variável ou se colsé uma constante de tempo de compilação, 
-você nem precisa calcular os deslocamentos por conta própria; se você usar
- int (*mat)[cols] = malloc(rows * sizeof *mat), você pode acessar os elementos via mat[i][j]
-
-
-int (*mat)[col];
-mat=(int (*)[col])malloc(sizeof(*mat)*row);*/
-
-
-	printf("\ninicializarStructs\n");
-	//QSURF
-	QSURF_.AXX = (double *) malloc(NS*sizeof(double));
-	QSURF_.AXY = (double *) malloc(NS*sizeof(double));
-	QSURF_.AXZ =(double *) malloc(NS*sizeof(double));
-	QSURF_.AYY = (double *) malloc(NS*sizeof(double));
-	QSURF_.AYZ = (double *) malloc(NS*sizeof(double));
-	QSURF_.AZZ =(double *) malloc(NS*sizeof(double));
-	QSURF_.AX = (double *) malloc(NS*sizeof(double));
-	QSURF_.AY =(double *) malloc(NS*sizeof(double));
-	QSURF_.AZ = (double *) malloc(NS*sizeof(double));
-	QSURF_.A0 = (double *) malloc(NS*sizeof(double));
-	QSURF_.NSURF = (int *) malloc(sizeof(int));
-	QSURF_.KPLANE =(int *) malloc(NS*sizeof(int));		
-
-	//QTREE
-	QTREE_.NBODYS = (int *) malloc(sizeof(int));
-	QTREE_.KMOTH = (int *) malloc(NB*sizeof(int));
-	QTREE_.KDGHT = (int (*)[NB])malloc(NXG*NB*sizeof(int));
-	QTREE_.KSURF = (int (*)[NB])malloc(NXG*NB*sizeof(int));
-	QTREE_.KFLAG = (int (*)[NB])malloc(NXG*NB*sizeof(int));
-	QTREE_.KSP = (int *) malloc(NS*sizeof(int));
-	QTREE_.NWARN = (int *) malloc(sizeof(int));
-
-	//TRACK_mod
-	TRACK_mod_.E = (double *) malloc(sizeof(double));
-	TRACK_mod_.X = (double *) malloc(sizeof(double));
-	TRACK_mod_.Y = (double *) malloc(sizeof(double));
-	TRACK_mod_.Z = (double *) malloc(sizeof(double));
-	TRACK_mod_.U = (double *) malloc(sizeof(double));
-	TRACK_mod_.V = (double *) malloc(sizeof(double));
-	TRACK_mod_.W = (double *) malloc(sizeof(double));
-	TRACK_mod_.WGHT = (double *) malloc(sizeof(double));
-	TRACK_mod_.SP1 = (double *) malloc(sizeof(double));
-	TRACK_mod_.SP2 = (double *) malloc(sizeof(double));
-	TRACK_mod_.SP3 = (double *) malloc(sizeof(double));
-	TRACK_mod_.PAGE = (double *) malloc(sizeof(double));
-	TRACK_mod_.KPAR = (int *) malloc(sizeof(int));
-	TRACK_mod_.IBODY = (int *) malloc(sizeof(int));
-	TRACK_mod_.MAT = (int *) malloc(sizeof(int));
-	TRACK_mod_.ILB = (int *) malloc(5*sizeof(int));
-	TRACK_mod_.IPOL = (int *) malloc(sizeof(int));
-	TRACK_mod_.LAGE = (bool *) malloc(sizeof(bool));
-
-	//PENELOPE_mod
-	PENELOPE_mod_.EABS =  (double (*)[3])malloc(MAXMAT*3*sizeof(double));
-	PENELOPE_mod_.C1 = (double *) malloc(MAXMAT*sizeof(double));
-	PENELOPE_mod_.C2 = (double *) malloc(MAXMAT*sizeof(double));
-	PENELOPE_mod_.WCC = (double *) malloc(MAXMAT*sizeof(double));
-	PENELOPE_mod_.WCR = (double *) malloc(MAXMAT*sizeof(double));
-	PENELOPE_mod_.DEN = (double *) malloc(MAXMAT*sizeof(double));
-	PENELOPE_mod_.RDEN = (double *) malloc(MAXMAT*sizeof(double));
-	PENELOPE_mod_.E0STEP = (double *) malloc(sizeof(double));
-	PENELOPE_mod_.DESOFT = (double *) malloc(sizeof(double));
-	PENELOPE_mod_.SSOFT = (double *) malloc(sizeof(double));
-	PENELOPE_mod_.NMS = (int *) malloc(sizeof(int));
-	PENELOPE_mod_.NEGP = (int *) malloc(sizeof(int));
-	PENELOPE_mod_.NMAT = (int *) malloc(sizeof(int));
-
-	//PENGEOM_mod
-	PENGEOM_mod_.BALIAS = (char (*)[5]) malloc(NB*5*sizeof(char));
-	PENGEOM_mod_.DSTOT = (double *) malloc(sizeof(double));
-	PENGEOM_mod_.MATER = (int *) malloc(NB*sizeof(int));
-	PENGEOM_mod_.KDET = (int *) malloc(NB*sizeof(int));
-	PENGEOM_mod_.KSLAST = (int *) malloc(sizeof(int));
-	PENGEOM_mod_.NBODY = (int *) malloc(sizeof(int));
-	PENGEOM_mod_.LVERB = (bool *) malloc(sizeof(bool));
-
-	//QBODY
-	QBODY_.KBODY = (int (*)[NB]) malloc(NXG*NB*sizeof(int));
-	QBODY_.KBOMO = (int *) malloc(NB*sizeof(int));
-
-	//CECUTR
-	CECUTR_.ECUTR = (double *) malloc(MAXMAT*sizeof(double));
-
-	//CSGAWR
-	CSGAWR_.ISGAW = (int *) malloc(sizeof(int));
-
-	//CERSEC
-	CERSEC_.IERSEC = (int *) malloc(sizeof(int));
-
-	//CEGRID
-	CEGRID_.EMIN = (double *) malloc(sizeof(double));
-	CEGRID_.EL = (double *) malloc(sizeof(double));
-	CEGRID_.EU = (double *) malloc(sizeof(double));
-	CEGRID_.ET = (double *) malloc(NEGP*sizeof(double));
-    CEGRID_.DLEMP = (double *) malloc(NEGP*sizeof(double));
-	CEGRID_.DLEMP1 = (double *) malloc(sizeof(double));
-	CEGRID_.DLFC = (double *) malloc(sizeof(double));
-	CEGRID_.XEL = (double *) malloc(sizeof(double));
-	CEGRID_.XE = (double *) malloc(sizeof(double));
-	CEGRID_.XEK = (double *) malloc(sizeof(double));
-	CEGRID_.KE = (int *) malloc(sizeof(int));
-	CERSEC_.IERSEC = (int *) malloc(sizeof(int));
-
-	//CESI0
-	CESI0_.XESI = (double (*)[NRP]) malloc(16*NRP*sizeof(double));
-	CESI0_.IESIF = (int *) malloc(99*sizeof(int));
-	CESI0_.IESIL = (int *) malloc(99*sizeof(int));
-	CESI0_.NSESI = (int *) malloc(99*sizeof(int));
-	CESI0_.NCURE = (int *) malloc(sizeof(int));
-
-	//CPSI0
-	CPSI0_.XPSI = (double (*)[NRP]) malloc(16*NRP*sizeof(double));
-	CPSI0_.IPSIF = (int *) malloc(99*sizeof(int));
-	CPSI0_.IPSIL = (int *) malloc(99*sizeof(int));
-	CPSI0_.NSPSI =(int *) malloc(99*sizeof(int));
-	CPSI0_.NCURP = (int *) malloc(sizeof(int));
-
-	//CADATA_
-	CADATA_.ATW = (double *) malloc(99*sizeof(double));
-	CADATA_.EPX = (double *) malloc(99*sizeof(double));
-	CADATA_.RSCR = (double *) malloc(99*sizeof(double));
-	CADATA_.ETA = (double *) malloc(99*sizeof(double));
-	CADATA_.EB = (double (*)[99]) malloc(30*99*sizeof(double));
-	CADATA_.ALW = (double (*)[99]) malloc(30*99*sizeof(double));
-	CADATA_.CP0 = (double (*)[99]) malloc(30*99*sizeof(double));	
-	CADATA_.IFI = (int (*)[99]) malloc(30*99*sizeof(int));
-	CADATA_.IKS = (int (*)[99]) malloc(30*99*sizeof(int));
-	CADATA_.NSHT = (int *) malloc(99*sizeof(int));
-	CADATA_.LASYMB = (char (*)[2]) malloc(99*2*sizeof(char));
-
-	//CGPH00_
-	CGPH00_.EPH = (double *) malloc(NTP*sizeof(double));
-	CGPH00_.XPH = (double (*)[NTP]) malloc(17*NTP*sizeof(double));
-	CGPH00_.IPHF = (int *) malloc(99*sizeof(int));
-	CGPH00_.IPHL = (int *) malloc(99*sizeof(int));
-	CGPH00_.NPHS =(int *) malloc(99*sizeof(int));
-	CGPH00_.NCUR = (int *) malloc(sizeof(int));
-
-	//CRELAX_
-	CRELAX_.P = (double *) malloc(NRX*sizeof(double));
-	CRELAX_.ET = (double *) malloc(NRX*sizeof(double));
-	CRELAX_.F = (double *) malloc(NRX*sizeof(double));
-	CRELAX_.IS0 = (int *) malloc(NRX*sizeof(int));
-	CRELAX_.IS1 =(int *) malloc(NRX*sizeof(int));
-	CRELAX_.IS2 = (int *) malloc(NRX*sizeof(int));
-	CRELAX_.IFIRST = (int (*)[99]) malloc(16*99*sizeof(int));
-	CRELAX_.ILAST = (int (*)[99]) malloc(16*99*sizeof(int));
-	CRELAX_.NCUR = (int *) malloc(sizeof(int));
-	CRELAX_.KS = (int *) malloc(sizeof(int));
-	CRELAX_.MODER = (int *) malloc(sizeof(int));
-
-	//CRITAA_
-	CRITAA_.XA = (double *) malloc(NM*sizeof(double));
-	CRITAA_.AA = (double *) malloc(NM*sizeof(double));
-	CRITAA_.BA = (double *) malloc(NM*sizeof(double));; 
-	CRITAA_.FA = (double *) malloc(NM*sizeof(double));
-	CRITAA_.IA = (int *) malloc(NM*sizeof(int));
-	CRITAA_.NPM1A =  (int *) malloc(sizeof(int));
-
-	//CRITA_
-	CRITA_.XT = (double *) malloc(NM*sizeof(double));
-	CRITA_.PAC =(double *) malloc(NM*sizeof(double));
-	CRITA_.DPAC = (double *) malloc(NM*sizeof(double));
-	CRITA_.A = (double *) malloc(NM*sizeof(double));
-	CRITA_.B = (double *) malloc(NM*sizeof(double));
-	CRITA_.IL = (int *) malloc(NM*sizeof(int));
-	CRITA_.IU = (int *) malloc(NM*sizeof(int));
-	CRITA_.NPM1 = (int *) malloc(sizeof(int));
-	
-	CRITA_.QTI = CRITA_.XT;
-	CRITA_.PACI = CRITA_.PAC;
-	CRITA_.DPACI = CRITA_.DPAC;
-	CRITA_.AI = CRITA_.A;
-	CRITA_.BI = CRITA_.B; 
-	CRITA_.ITLI = CRITA_.IL;
-	CRITA_.ITUI = CRITA_.IU;
-	CRITA_.NPM1I = CRITA_.NPM1;
-	
-	CRITA_.XTI = CRITA_.XT;
-
-	//CRITAN_
-	CRITAN_.CNORM = (double *) malloc(sizeof(double));
-
-	//COMPOS_
-	COMPOS_.STF = (double (*)[MAXMAT]) malloc(30*MAXMAT*sizeof(double));
-	COMPOS_.ZT = (double *) malloc(MAXMAT*sizeof(double));
-	COMPOS_.AT = (double *) malloc(MAXMAT*sizeof(double));
-	COMPOS_.RHO = (double *) malloc(MAXMAT*sizeof(double));
-	COMPOS_.VMOL = (double *) malloc(MAXMAT*sizeof(double));
-	COMPOS_.IZ = (int (*)[MAXMAT]) malloc(30*MAXMAT*sizeof(int));
-	COMPOS_.NELEM = (int *) malloc(MAXMAT*sizeof(int));
-
-	//CRANGE_
-	CRANGE_.RANGE = (double (*)[MAXMAT][3])malloc(NEGP*MAXMAT*3*sizeof(double));
-	CRANGE_.RANGEL = (double (*)[MAXMAT][3])malloc(NEGP*MAXMAT*3*sizeof(double));
-
-	//CEIN_
-	CEIN_.EXPOT = (double *) malloc(MAXMAT*sizeof(double));
-	CEIN_.OP2 = (double *) malloc(MAXMAT*sizeof(double));
-	CEIN_.F = (double (*)[MAXMAT]) malloc(NO*MAXMAT*sizeof(double));
-	CEIN_.UI = (double (*)[MAXMAT]) malloc(NO*MAXMAT*sizeof(double));
-	CEIN_.WRI = (double (*)[MAXMAT]) malloc(NO*MAXMAT*sizeof(double));
-	CEIN_.KZ = (int (*)[MAXMAT]) malloc(NO*MAXMAT*sizeof(int));
-	CEIN_.KS = (int (*)[MAXMAT]) malloc(NO*MAXMAT*sizeof(int));
-	CEIN_.NOSC = (int *) malloc(MAXMAT*sizeof(int));
-
-	//CEINTF_
-	CEINTF_.T1EI = (double *) malloc(NEGP*sizeof(double));
-	CEINTF_.T2EI = (double *) malloc(NEGP*sizeof(double));
-	CEINTF_.T1PI = (double *) malloc(NEGP*sizeof(double));
-	CEINTF_.T2PI = (double *) malloc(NEGP*sizeof(double));
-
-	//CEIN00_
-	CEIN00_.SEH0 = (double *) malloc(NO*sizeof(double));
-	CEIN00_.SEH1 = (double *) malloc(NO*sizeof(double));
-	CEIN00_.SEH2 = (double *) malloc(NO*sizeof(double));
-	CEIN00_.SES0 = (double *) malloc(NO*sizeof(double));
-	CEIN00_.SES1 = (double *) malloc(NO*sizeof(double));
-	CEIN00_.SES2 = (double *) malloc(NO*sizeof(double));
-	CEIN00_.SET0 = (double *) malloc(NO*sizeof(double));
-	CEIN00_.SET1 = (double *) malloc(NO*sizeof(double));
-	CEIN00_.SET2 = (double *) malloc(NO*sizeof(double));
-
-	//CPIN00_
-	CPIN00_.SPH0 = (double *) malloc(NO*sizeof(double));
-	CPIN00_.SPH1 = (double *) malloc(NO*sizeof(double)); 
-	CPIN00_.SPH2 = (double *) malloc(NO*sizeof(double));
-	CPIN00_.SPS0 = (double *) malloc(NO*sizeof(double));
-	CPIN00_.SPS1 = (double *) malloc(NO*sizeof(double));
-	CPIN00_.SPS2 = (double *) malloc(NO*sizeof(double));
-	CPIN00_.SPT0 = (double *) malloc(NO*sizeof(double));
-	CPIN00_.SPT1 = (double *) malloc(NO*sizeof(double));
-	CPIN00_.SPT2 = (double *) malloc(NO*sizeof(double));
-
-	//CEINAC_
-	CEINAC_.EINAC = (double (*)[NEGP][MAXMAT])malloc(NO*NEGP*MAXMAT*sizeof(double));
-	CEINAC_.IEIN = (int (*)[MAXMAT])malloc(NO*MAXMAT*sizeof(int));
-	CEINAC_.NEIN = (int *)malloc(MAXMAT*sizeof(int));
-
-	//CESIAC_
-	CESIAC_.ESIAC = (double (*)[NEGP][MAXMAT])malloc(NO*NEGP*MAXMAT*sizeof(double));
-	CESIAC_.IESI = (int (*)[MAXMAT])malloc(NO*MAXMAT*sizeof(int));
-	CESIAC_.NESI = (int *)malloc(MAXMAT*sizeof(int));
-
-	//CESIN_
-	CESIN_.XSEIN = (double (*)[NEGP])malloc(NO*NEGP*sizeof(double));
-	CESIN_.XSESI = (double (*)[NEGP])malloc(NO*NEGP*sizeof(double));
-	CESIN_.ISIE = (int *)malloc(NO*sizeof(int));
-
-	//CPINAC_
-	CPINAC_.PINAC = (double (*)[NEGP][MAXMAT])malloc(NO*NEGP*MAXMAT*sizeof(double));
-	CPINAC_.IPIN = (int (*)[MAXMAT])malloc(NO*MAXMAT*sizeof(int));
-	CPINAC_.NPIN = (int *)malloc(MAXMAT*sizeof(int));
-
-	//CPSIAC_
-	CPSIAC_.PSIAC = (double (*)[NEGP][MAXMAT])malloc(NO*NEGP*MAXMAT*sizeof(double));
-	CPSIAC_.IPSI = (int (*)[MAXMAT])malloc(NO*MAXMAT*sizeof(int));
-	CPSIAC_.NPSI = (int *)malloc(MAXMAT*sizeof(int));
-
-	//CPSIN_
-	CPSIN_.XSPIN = (double (*)[NEGP])malloc(NO*NEGP*sizeof(double));
-	CPSIN_.XSPSI = (double (*)[NEGP])malloc(NO*NEGP*sizeof(double));
-	CPSIN_.ISIP = (int *)malloc(NO*sizeof(int));
-
-	//CGCO_
-	CGCO_.FCO   =  (double (*)[MAXMAT])malloc(NOCO*MAXMAT*sizeof(double));
-	CGCO_.UICO  =  (double (*)[MAXMAT])malloc(NOCO*MAXMAT*sizeof(double));
-	CGCO_.FJ0   =  (double (*)[MAXMAT])malloc(NOCO*MAXMAT*sizeof(double));
-	CGCO_.PTRSH =  (double (*)[MAXMAT])malloc(NOCO*MAXMAT*sizeof(double));
-	CGCO_.KZCO  =  (int (*)[MAXMAT])malloc(NOCO*MAXMAT*sizeof(int));
-	CGCO_.KSCO  =  (int (*)[MAXMAT])malloc(NOCO*MAXMAT*sizeof(int));
-	CGCO_.NOSCCO = (int *)malloc(MAXMAT*sizeof(int));
-
-	//CEIMFP_
-	CEIMFP_.SEHEL = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CEIMFP_.SEHIN = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CEIMFP_.SEISI = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CEIMFP_.SEHBR = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CEIMFP_.SEAUX = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-    CEIMFP_.SETOT =(double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CEIMFP_.CSTPE = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CEIMFP_.RSTPE = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CEIMFP_.DEL =   (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CEIMFP_.W1E =   (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-    CEIMFP_.W2E =   (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CEIMFP_.DW1EL = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CEIMFP_.DW2EL = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CEIMFP_.RNDCE = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CEIMFP_.AE =    (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CEIMFP_.BE =    (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-    CEIMFP_.T1E =   (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CEIMFP_.T2E =   (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-
-	//CLAS1E_
-	CLAS1E_.TSTPE = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CLAS1E_.TSTRE = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CLAS1E_.TRL1E = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CLAS1E_.TRL2E = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-
-	//CPIMFP_
-	CPIMFP_.SPHEL = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CPIMFP_.SPHIN = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CPIMFP_.SPISI = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CPIMFP_.SPHBR = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CPIMFP_.SPAN =  (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CPIMFP_.SPAUX = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CPIMFP_.SPTOT = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CPIMFP_.CSTPP = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CPIMFP_.RSTPP = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CPIMFP_.W1P =   (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CPIMFP_.W2P =   (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CPIMFP_.DW1PL = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CPIMFP_.DW2PL = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CPIMFP_.RNDCP = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CPIMFP_.AP =    (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CPIMFP_.BP =    (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CPIMFP_.T1P =   (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CPIMFP_.T2P =   (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-
-	//CLAS1P_
-	CLAS1P_.TSTPP = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double)); 
-	CLAS1P_.TSTRP = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double)); 
-	CLAS1P_.TRL1P = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double)); 
-	CLAS1P_.TRL2P = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-
-	//CEEL00_.
-	CEEL00_.EJT  = (double *)malloc(NEGP*sizeof(double)); 
-	CEEL00_.XE0  = (double *)malloc(NEGP*sizeof(double));  
-	CEEL00_.XE1  =(double *)malloc(NEGP*sizeof(double)); 
-	CEEL00_.XE2  = (double *)malloc(NEGP*sizeof(double)); 
-	CEEL00_.XP0  = (double *)malloc(NEGP*sizeof(double)); 
-	CEEL00_.XP1  = (double *)malloc(NEGP*sizeof(double));  
-	CEEL00_.XP2  = (double *)malloc(NEGP*sizeof(double));  
-	CEEL00_.T1E0 = (double *)malloc(NEGP*sizeof(double)); 
-	CEEL00_.T2E0 = (double *)malloc(NEGP*sizeof(double)); 
-	CEEL00_.T1P0 = (double *)malloc(NEGP*sizeof(double)); 
-	CEEL00_.T2P0 = (double *)malloc(NEGP*sizeof(double)); 
-	CEEL00_.EJTL = (double *)malloc(NEGP*sizeof(double)); 
-	CEEL00_.FJL  = (double *)malloc(NEGP*sizeof(double)); 
-	CEEL00_.A    = (double *)malloc(NEGP*sizeof(double));    
-	CEEL00_.B    = (double *)malloc(NEGP*sizeof(double));    
-	CEEL00_.C    = (double *)malloc(NEGP*sizeof(double));    
-	CEEL00_.D =    (double *)malloc(NEGP*sizeof(double)); 
-
-	//CBRYLD_
-	CBRYLD_.EBRY = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double)); 
-	CBRYLD_.PBRY = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double)); 
-
-	//CGIMFP_
-	CGIMFP_.SGRA = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double)); 
-	CGIMFP_.SGCO =  (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double)); 
-	CGIMFP_.SGPH =  (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double)); 
-	CGIMFP_.SGPP =  (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double)); 
-	CGIMFP_.SGAUX = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double)); 
-
-	//CGPH01_
-	CGPH01_.ER = (double *)malloc(NDIM*sizeof(double)); 
-	CGPH01_.XSR = (double *)malloc(NDIM*sizeof(double)); 
-	CGPH01_.NPHD = (int *)malloc(sizeof(int)); 
-
-	//CGPP01_
-	CGPP01_.TRIP = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-
-	//CEBR_
-	CEBR_.WB = (double *)malloc(NBW*sizeof(double)); 
-	CEBR_.PBCUT = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double)); 
-	CEBR_.WBCUT = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double)); 
-	CEBR_.PDFB = (double (*)[NEGP][MAXMAT])malloc(NBW*NEGP*MAXMAT*sizeof(double)); 
-	CEBR_.DPDFB = (double (*)[NEGP][MAXMAT])malloc(NBW*NEGP*MAXMAT*sizeof(double)); 
-	CEBR_.PACB = (double (*)[NEGP][MAXMAT])malloc(NBW*NEGP*MAXMAT*sizeof(double));
-	CEBR_.ZBR2 = (double *)malloc(MAXMAT*sizeof(double)); 
-
-	//CEBR01_
-	CEBR01_.EBT = (double *)malloc(NBE*sizeof(double)); 
-	CEBR01_.XS = (double (*)[NBE])malloc(NBE*NBW*sizeof(double)); 
-	CEBR01_.TXS = (double *)malloc(NBE*sizeof(double));
-	CEBR01_.X = (double *)malloc(NBE*sizeof(double));
-	CEBR01_.Y = (double *)malloc(NBE*sizeof(double));
-
-	//CEBR02_
-	CEBR02_.P0 = (double (*)[NEGP][MAXMAT])malloc(NBW*NEGP*MAXMAT*sizeof(double));
-
-	//CBRANG_
-	CBRANG_.BET = (double *)malloc(6*sizeof(double)); 
-	CBRANG_.BK = (double *)malloc(21*sizeof(double)); 
-	CBRANG_.BP1 = (double (*)[21][6][MAXMAT])malloc(4*21*6*MAXMAT*sizeof(double));
-	CBRANG_.BP2 = (double (*)[21][6][MAXMAT])malloc(4*21*6*MAXMAT*sizeof(double));
-	CBRANG_.ZBEQ = (double *)malloc(MAXMAT*sizeof(double)); 
-
-	//CEIN01_
-	CEIN01_.EI = (double *)malloc(sizeof(double));
-	CEIN01_.EE = (double *)malloc(sizeof(double));
-	CEIN01_.CPS = (double *)malloc(sizeof(double)); 
-	CEIN01_.AMOL = (double *)malloc(sizeof(double)); 
-	CEIN01_.MOM = (int *)malloc(sizeof(int));
-
-	//CSUMGA_
-	CSUMGA_.IERGA = (int *)malloc(sizeof(int));
-	CSUMGA_.NCALL = (int *)malloc(sizeof(int));
-
-	//CPIN01_
-	CPIN01_.EI = (double *)malloc(sizeof(double));
-	CPIN01_.CPS = (double *)malloc(sizeof(double));
-	CPIN01_.BHA1 = (double *)malloc(sizeof(double));
-	CPIN01_.BHA2 = (double *)malloc(sizeof(double));
-	CPIN01_.BHA3 = (double *)malloc(sizeof(double));
-	CPIN01_.BHA4 = (double *)malloc(sizeof(double));
-	CPIN01_.MOM = (int *)malloc(sizeof(int));
-
-	//CDCSEP_
-	CDCSEP_.ETS = (double *)malloc(NE*sizeof(double));
-	CDCSEP_.ETL = (double *)malloc(NE*sizeof(double));
-	CDCSEP_.TH = (double *)malloc(NA*sizeof(double));
-	CDCSEP_.THR = (double *)malloc(NA*sizeof(double));
-	CDCSEP_.XMU = (double *)malloc(NA*sizeof(double));
-	CDCSEP_.XMUL = (double *)malloc(NA*sizeof(double));
-	CDCSEP_.ECS = (double *)malloc(NE*sizeof(double)); 
-	CDCSEP_.ETCS1 = (double *)malloc(NE*sizeof(double));
-	CDCSEP_.ETCS2 = (double *)malloc(NE*sizeof(double));
-	CDCSEP_.EDCS = (double (*)[NE])malloc(NA*NE*sizeof(double));
-	CDCSEP_.PCS = (double *)malloc(NE*sizeof(double));
-	CDCSEP_.PTCS1 = (double *)malloc(NE*sizeof(double));
-	CDCSEP_.PTCS2 = (double *)malloc(NE*sizeof(double));
-	CDCSEP_.PDCS = (double (*)[NE])malloc(NA*NE*sizeof(double));
-	CDCSEP_.DCSI =  (double *)malloc(NA*sizeof(double));
-	CDCSEP_.DCSIL = (double *)malloc(NA*sizeof(double));
-	CDCSEP_.CSI = (double *)malloc(sizeof(double));
-	CDCSEP_.TCS1I = (double *)malloc(sizeof(double));
-	CDCSEP_.TCS2I =  (double *)malloc(sizeof(double));
-
-	//CEELDB_
-	CEELDB_.XSE = (double (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(double));
-	CEELDB_.PSE = (double (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(double));
-	CEELDB_.ASE = (double (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(double));
-	CEELDB_.BSE = (double (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(double));
-	CEELDB_.ITLE = (int (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(int));
-	CEELDB_.ITUE = (int (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(int));
-
-	//CPELDB_
-	CPELDB_.XSP = (double (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(double));
-	CPELDB_.PSP =(double (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(double));
-	CPELDB_.ASP =(double (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(double));
-	CPELDB_.BSP = (double (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(double));
-	CPELDB_.ITLP = (int (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(int));
-	CPELDB_.ITUP = (int (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(int));
-
-	//CELSEP_
-	CELSEP_.EELMAX = (double *)malloc(MAXMAT*sizeof(double));
-	CELSEP_.PELMAX = (double *)malloc(MAXMAT*sizeof(double));
-	CELSEP_.RNDCED = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-	CELSEP_.RNDCPD = (double (*)[MAXMAT])malloc(NEGP*MAXMAT*sizeof(double));
-
-	//CGRA00_
-	CGRA00_.FACTE =	(double *)malloc(sizeof(double));
-	CGRA00_.Q2MAX = (double *)malloc(sizeof(double));
-	CGRA00_.MM = (int *)malloc(sizeof(int));
-	CGRA00_.MOM = (int *)malloc(sizeof(int));
-
-	//CGRA01_
-	CGRA01_.FF =(double (*)[MAXMAT])malloc(NQ*MAXMAT*sizeof(double));
-	CGRA01_.ERA = (double *)malloc(NEX*sizeof(double));
-	CGRA01_.XSRA = (double (*)[MAXMAT])malloc(NEX*MAXMAT*sizeof(double));
-	CGRA01_.IED = (int *)malloc(NEGP*sizeof(int));
-	CGRA01_.IEU = (int *)malloc(NEGP*sizeof(int));
-	CGRA01_.NE = (int *)malloc(sizeof(int));
-
-	//CGRA02_
-	CGRA02_.QQ = (double *)malloc(NQ*sizeof(double));
-	CGRA02_.AR =(double (*)[MAXMAT])malloc(NQ*MAXMAT*sizeof(double));
-	CGRA02_.BR = (double (*)[MAXMAT])malloc(NQ*MAXMAT*sizeof(double));
-	CGRA02_.CR = (double (*)[MAXMAT])malloc(NQ*MAXMAT*sizeof(double));
-	CGRA02_.DR = (double (*)[MAXMAT])malloc(NQ*MAXMAT*sizeof(double));
-	CGRA02_.FF0 = (double *)malloc(MAXMAT*sizeof(double));
-	CGRA02_.QQM = (double *)malloc(sizeof(double));
-
-	//CGRA03_.QRA = QRA;
-	CGRA03_.PRA = (double (*)[NP2])malloc(MAXMAT*NP2*sizeof(double));
-	CGRA03_.DPRA = (double (*)[NP2])malloc(MAXMAT*NP2*sizeof(double));
-	CGRA03_.ARA = (double (*)[NP2])malloc(MAXMAT*NP2*sizeof(double));
-	CGRA03_.BRA = (double (*)[NP2])malloc(MAXMAT*NP2*sizeof(double));
-	CGRA03_.PMAX = (double (*)[NEGP])malloc(MAXMAT*NEGP*sizeof(double));
-	CGRA03_.ITLRA = (int (*)[NP2])malloc(MAXMAT*NP2*sizeof(int));
-	CGRA03_.ITURA = (int (*)[NP2])malloc(MAXMAT*NP2*sizeof(int));
-
-	//CGPP00_
-	CGPP00_.ZEQPP = (double *)malloc(MAXMAT*sizeof(double));
-	CGPP00_.F0 = (double (*)[MAXMAT])malloc(2*MAXMAT*sizeof(double));
-	CGPP00_.BCB = (double *)malloc(MAXMAT*sizeof(double));
-
-	//RSEED_
-	RSEED_.ISEED1 = (int *)malloc(sizeof(int));
-	RSEED_.ISEED2 = (int *)malloc(sizeof(int));
-
-	//CTITLE_
-	CTITLE_.TITLE = (char *)malloc(100*sizeof(char));
-	CTITLE_.TITLE2 = (char *)malloc(100*sizeof(char));
-
-	//CDATE_
-	CDATE_.DATE23 = (char *)malloc(50*sizeof(char));
-
-	//CSPGEO_
-	CSPGEO_.DSMAX = (double *)malloc(NB*sizeof(double)); 
-	CSPGEO_.EABSB = (double (*)[3])malloc(3*NB*sizeof(double));
-
-	//CFORCI_
-	CFORCI_.WLOW = (double (*)[NBV])malloc(NBV*3*sizeof(double));
-	CFORCI_.WHIG = (double (*)[NBV])malloc(NBV*3*sizeof(double));
-	CFORCI_.LFORCE = (bool (*)[NBV])malloc(NBV*3*sizeof(bool));
-
-	//CXRSPL_
-	CXRSPL_.IXRSPL = (int *)malloc(NBV*sizeof(int));
-	CXRSPL_.ILBA = (int *)malloc(5*sizeof(int));
-	CXRSPL_.LXRSPL = (bool *)malloc(NBV*sizeof(bool));
-
-	//CSOUR0_
-	CSOUR0_.CTHL =   (double *)malloc(sizeof(double)); 
-    CSOUR0_.DCTH =   (double *)malloc(sizeof(double)); 
-    CSOUR0_.PHIL =   (double *)malloc(sizeof(double)); 
-    CSOUR0_.DPHI =   (double *)malloc(sizeof(double)); 
-    CSOUR0_.KPARP =  (int *)malloc(sizeof(int)); 
-    CSOUR0_.JOBEND = (int *)malloc(sizeof(int)); 
-    CSOUR0_.LSCONE = (bool *)malloc(sizeof(bool));
-    CSOUR0_.LGPOL =  (bool *)malloc(sizeof(bool));
-    CSOUR0_.LPSF =   (bool *)malloc(sizeof(bool));
-
-	//CSOUR1_
-	CSOUR1_.E0    = (double *)malloc(sizeof(double));   
-	CSOUR1_.EPMAX = (double *)malloc(sizeof(double));
-	CSOUR1_.SP10  = (double *)malloc(sizeof(double));
-	CSOUR1_.SP20  =(double *)malloc(sizeof(double));
-	CSOUR1_.SP30  =(double *)malloc(sizeof(double));
-
-	// CSOUR2_
-	CSOUR2_.ESRC = (double *)malloc(NSEM*sizeof(double));   
-	CSOUR2_.PSRC = (double *)malloc(NSEM*sizeof(double)); 
-	CSOUR2_.IASRC = (int *)malloc(NSEM*sizeof(int)); 
-	CSOUR2_.FSRC = (double *)malloc(NSEM*sizeof(double)); 
-	CSOUR2_.LSPEC = (bool *)malloc(sizeof(bool)); 
-
-	//CSOUR3_
-	CSOUR3_.SX0 = (double *)malloc(sizeof(double)); 
-	CSOUR3_.SY0 = (double *)malloc(sizeof(double)); 
-	CSOUR3_.SZ0 = (double *)malloc(sizeof(double)); 
-	CSOUR3_.SSX = (double *)malloc(sizeof(double)); 
-	CSOUR3_.SSY = (double *)malloc(sizeof(double)); 
-	CSOUR3_.SSZ = (double *)malloc(sizeof(double));
-	CSOUR3_.IXSBOD = (int *)malloc(NB*sizeof(int));
-	CSOUR3_.LEXSRC = (bool *)malloc(sizeof(bool));
-	CSOUR3_.LEXBD = (bool *)malloc(sizeof(bool));
-
-	//CSOUR4_
-	CSOUR4_.WGMIN =   (double *)malloc(sizeof(double));
-	CSOUR4_.RWGMIN =	(double *)malloc(sizeof(double));
-	CSOUR4_.WGMAX =	 (double *)malloc(sizeof(double));;
-	CSOUR4_.RLREAD =	(double *)malloc(sizeof(double));
-	CSOUR4_.IPSFI =	(int *)malloc(sizeof(int));
-	CSOUR4_.NPSF =	(int *)malloc(sizeof(int));
-	CSOUR4_.NPSN =	(int *)malloc(sizeof(int));
-	CSOUR4_.NSPLIT =	(int *)malloc(sizeof(int));
-	CSOUR4_.KODEPS =	(int *)malloc(sizeof(int));
-
-	//CSOUR5_
-	CSOUR5_.PSFI = (char (*)[20])malloc(NPSFM*20*sizeof(char));
-
-	//CNT0
-	CNT0_.PRIM =  (double *) malloc(3*sizeof(double));
-	CNT0_.PRIM2	= (double *)malloc(3*sizeof(double));
-	CNT0_.DPRIM	= (double *)malloc(3*sizeof(double));
-	CNT0_.SEC	= (double (*)[3])malloc(3*3*sizeof(double));
-	CNT0_.SEC2	= (double (*)[3])malloc(3*3*sizeof(double));
-	CNT0_.DSEC	= (double (*)[3])malloc(3*3*sizeof(double));
-	CNT0_.AVW	= (double *)malloc(2*sizeof(double));
-	CNT0_.AVW2	= (double *)malloc(2*sizeof(double));
-	CNT0_.DAVW	= (double *)malloc(2*sizeof(double));
-	CNT0_.AVA	= (double *)malloc(2*sizeof(double));
-	CNT0_.AVA2	= (double *)malloc(2*sizeof(double));
-	CNT0_.DAVA	= (double *)malloc(2*sizeof(double));
-	CNT0_.AVE	= (double *)malloc(2*sizeof(double));
-	CNT0_.AVE2	= (double *)malloc(2*sizeof(double));
-	CNT0_.DAVE	= (double *)malloc(2*sizeof(double));
-
-	//CNT1_
-	CNT1_.TDEBO = (double *)malloc(NB*sizeof(double));
-	CNT1_.TDEBO2 = (double *)malloc(NB*sizeof(double));
-	CNT1_.DEBO = (double *)malloc(NB*sizeof(double));
-
-	//CNT2_
-	CNT2_.SHIST = (double *)malloc(NSEM*sizeof(double)); 
-	CNT2_.NSEB = (int *)malloc(sizeof(int));
-
-	//CNT3_
-	CNT3_.SEDS = (double (*)[3])malloc(NSEM*3*sizeof(double)); 
-	CNT3_.SEDS2 = (double (*)[3])malloc(NSEM*3*sizeof(double)); 
-	CNT3_.DSDE = (double *)malloc(sizeof(double)); 
-	CNT3_.RDSDE = (double *)malloc(sizeof(double)); 
-	CNT3_.NSDE =  (int *)malloc(sizeof(int)); 
-
-	//CNT4_
-	CNT4_.RLAST	= (double *)malloc(sizeof(double)); 
-	CNT4_.RWRITE =	(double *)malloc(sizeof(double)); 
-	CNT4_.IDCUT	= (int *)malloc(NDIM*sizeof(int)); 
-	CNT4_.KKDI	= (int (*)[NDIM])malloc(NDIM*3*sizeof(int));
-	CNT4_.IPSF =	(int *)malloc(sizeof(int)); 
-	CNT4_.NID =	(int *)malloc(NDIM*sizeof(int)); 
-	CNT4_.NPSFO	 = (int *)malloc(NDIM*sizeof(int)); 
-	CNT4_.IPSFO	= (int *)malloc(NDIM*sizeof(int)); 
-
-	//CNT5_
-	CNT5_.DEDE = (double *)malloc(NDIM*sizeof(double)); 
-	CNT5_.KBDE = (int *)malloc(NB*sizeof(int)); 
-	CNT5_.NED = (int *)malloc(sizeof(int)); 
-
-	//CNT6_
-	CNT6_.LDOSEM =(bool *)malloc(sizeof(bool)); 
-
-	//CDUMP_
-	CDUMP_.LDUMP = (bool *)malloc(sizeof(bool)); 
-	CDUMP_.PFILED = (char *)malloc(50*sizeof(char)); 
-
-	//CNTRL_
-	CNTRL_.TSIM	= (double *)malloc(sizeof(double)); 
-	CNTRL_.TSEC =	(double *)malloc(sizeof(double)); 
-	CNTRL_.TSECA =	(double *)malloc(sizeof(double)); 
-	CNTRL_.TSECAD =(double *)malloc(sizeof(double)); 
-	CNTRL_.CPUT0 =	(double *)malloc(sizeof(double)); 
-	CNTRL_.DUMPP =	(double *)malloc(sizeof(double)); 
-	CNTRL_.DSHN =	(double *)malloc(sizeof(double)); 
-	CNTRL_.SHN =	(double *)malloc(sizeof(double)); 
-	CNTRL_.N =	(int *)malloc(sizeof(int)); 
-
-	//CGCONE_
-	CGCONE_.CPCT = (double *)malloc(sizeof(double)); 
-	CGCONE_.CPST = (double *)malloc(sizeof(double)); 
-	CGCONE_.SPCT = (double *)malloc(sizeof(double)); 
-	CGCONE_.SPST = (double *)malloc(sizeof(double)); 
-	CGCONE_.SPHI = (double *)malloc(sizeof(double)); 
-	CGCONE_.CPHI = (double *)malloc(sizeof(double)); 
-	CGCONE_.STHE = (double *)malloc(sizeof(double)); 
-	CGCONE_.CTHE = (double *)malloc(sizeof(double)); 
-	CGCONE_.CAPER = (double *)malloc(sizeof(double)); 
-
-	//CENANG_
-	CENANG_.EL =	(double *)malloc(sizeof(double)); 
-	CENANG_.EU =(double *)malloc(sizeof(double)); 
-	CENANG_.THL =	(double *)malloc(sizeof(double)); 
-	CENANG_.THU	= (double *)malloc(sizeof(double)); 
-	CENANG_.BSE	= (double *)malloc(sizeof(double)); 
-	CENANG_.RBSE	= (double *)malloc(sizeof(double)); 
-	CENANG_.BSTH	= (double *)malloc(sizeof(double)); 
-	CENANG_.RBSTH	= (double *)malloc(sizeof(double)); 
-	CENANG_.BSPH	= (double *)malloc(sizeof(double)); 
-	CENANG_.RBSPH	= (double *)malloc(sizeof(double)); 
-	CENANG_.PDE    = (double (*)[2][3])malloc(NBEM*2*3*sizeof(double)); 
-	CENANG_.PDE2	= (double (*)[2][3])malloc(NBEM*2*3*sizeof(double)); 
-	CENANG_.PDEP	= (double (*)[2][3])malloc(NBEM*2*3*sizeof(double)); 
-	CENANG_.PDA    = (double (*)[NBTHM][3])malloc(NBPHM*NBEM*3*sizeof(double)); 
-	CENANG_.PDA2	= (double (*)[NBTHM][3])malloc(NBPHM*NBEM*3*sizeof(double));
-	CENANG_.PDAP	= (double (*)[NBTHM][3])malloc(NBPHM*NBEM*3*sizeof(double));
-	CENANG_.LPDE    = (bool (*)[2][3])malloc(NBEM*2*3*sizeof(bool)); 
-	CENANG_.LPDA	= (bool (*)[NBTHM][3])malloc(NBPHM*NBEM*3*sizeof(bool));
-	CENANG_.NE	= (int *)malloc(sizeof(int)); 
-	CENANG_.NTH	= (int *)malloc(sizeof(int)); 
-	CENANG_.NPH	= (int *)malloc(sizeof(int)); 
-	CENANG_.LLE	= (bool *)malloc(sizeof(bool)); 
-	CENANG_.LLTH	= (bool *)malloc(sizeof(bool)); 
-
-	//CIMDET_
-	CIMDET_.EL =	(double *)malloc(NDIM*sizeof(double)); 	
-	CIMDET_.EU =	(double *)malloc(NDIM*sizeof(double));
-	CIMDET_.BSE =	(double *)malloc(NDIM*sizeof(double));
-	CIMDET_.RBSE =	(double *)malloc(NDIM*sizeof(double));
-	CIMDET_.ET =	(double (*)[NIDM])malloc(NDIM*(NBEM2+1)*sizeof(double)); 
-	CIMDET_.EDEP =	(double *)malloc(NDIM*sizeof(double));
-	CIMDET_.EDEP2 =	(double *)malloc(NDIM*sizeof(double));
-	CIMDET_.EDEPP =	(double *)malloc(NDIM*sizeof(double));
-	CIMDET_.DIT =	(double (*)[NIDM])malloc(NBEM2*NDIM*sizeof(double)); 
-	CIMDET_.DIT2 =	(double (*)[NIDM])malloc(NBEM2*NDIM*sizeof(double));  
-	CIMDET_.DITP =	(double (*)[NIDM])malloc(NBEM2*NDIM*sizeof(double));   
-	CIMDET_.DIP =	(double (*)[NBEM2][NIDM])malloc(3*NBEM2*NDIM*sizeof(double)); 
-	CIMDET_.DIP2 =	(double (*)[NBEM2][NIDM])malloc(3*NBEM2*NDIM*sizeof(double));  
-	CIMDET_.DIPP =	(double (*)[NBEM2][NIDM])malloc(3*NBEM2*NDIM*sizeof(double));  
-	CIMDET_.FLT =	(double (*)[NIDM])malloc(NBEM2*NDIM*sizeof(double)); 
-	CIMDET_.FLT2 =	(double (*)[NIDM])malloc(NBEM2*NDIM*sizeof(double)); 
-	CIMDET_.FLTP =	(double (*)[NIDM])malloc(NBEM2*NDIM*sizeof(double)); 
-	CIMDET_.FLP =	(double (*)[NBEM2][NIDM])malloc(3*NBEM2*NDIM*sizeof(double)); 
-	CIMDET_.FLP2 =	(double (*)[NBEM2][NIDM])malloc(3*NBEM2*NDIM*sizeof(double)); 
-	CIMDET_.FLPP =	(double (*)[NBEM2][NIDM])malloc(3*NBEM2*NDIM*sizeof(double));  
-	CIMDET_.AGEL =	(double *)malloc(NDIM*sizeof(double)); 
-	CIMDET_.AGEU =	(double *)malloc(NDIM*sizeof(double));
-	CIMDET_.BAGE =	(double *)malloc(NDIM*sizeof(double));
-	CIMDET_.RBAGE =	(double *)malloc(NDIM*sizeof(double)); 
-	CIMDET_.AGE =	(double (*)[NIDM])malloc(NBEM2*NDIM*sizeof(double)); 
-	CIMDET_.AGE2 =	(double (*)[NIDM])malloc(NBEM2*NDIM*sizeof(double)); 
-	CIMDET_.AGEP =	(double (*)[NIDM])malloc(NBEM2*NDIM*sizeof(double)); 
-	CIMDET_.LEDEP =	(bool *)malloc(NDIM*sizeof(bool));  
-	CIMDET_.LDIT =	(bool (*)[NIDM])malloc(NBEM2*NDIM*sizeof(bool));  
-	CIMDET_.LDIP =	(bool (*)[NBEM2][NIDM])malloc(3*NBEM2*NDIM*sizeof(bool));  
-	CIMDET_.LFLT =	(bool (*)[NIDM])malloc(NBEM2*NDIM*sizeof(bool));  
-	CIMDET_.LFLP =	(bool (*)[NBEM2][NIDM])malloc(3*NBEM2*NDIM*sizeof(bool));  
-	CIMDET_.LAGEA =	(bool (*)[NIDM])malloc(NBEM2*NDIM*sizeof(bool));   
-	CIMDET_.IDCUT =	(int *)malloc(NDIM*sizeof(int)); 
-	CIMDET_.NE =	(int *)malloc(NDIM*sizeof(int));  
-	CIMDET_.LLE =	(bool *)malloc(NDIM*sizeof(bool)); 
-	CIMDET_.LLAGE =	(bool *)malloc(NDIM*sizeof(bool)); 
-	CIMDET_.NAGE =	(int *)malloc(NDIM*sizeof(int));  
-	CIMDET_.NID =	(int *)malloc(sizeof(int)); 
-
-	//CENDET
-	
-
-
-
-
-
-
-
-
-
-
-	//CEELDB
-	CEELDB_.XSE = (double (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(double));
-	CEELDB_.PSE =(double (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(double));
-	CEELDB_.ASE = (double (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(double));
-	CEELDB_.BSE = (double (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(double));
-	CEELDB_.ITLE = (int (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(int));
-	CEELDB_.ITUE = (int (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(int));
-
-
-
-
-
-
 
 	
 
