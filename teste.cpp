@@ -70,10 +70,10 @@ static const int NDZM=201;
 char LINHA[200];
 char APOIO[200];
 
-char SPCDIO[NDIM][20];
-char SPCFLO[NDIM][20];
-char SPCAGE[NDIM][20];
-char SPCDEO[NDIM][20];
+char SPCDIO[NIDM][20];
+char SPCFLO[NIDM][20];
+char SPCAGE[NIDM][20];
+char SPCDEO[NIDM][20];
 
 int imprimiu=0;
 int wIPOLI=0;
@@ -577,7 +577,7 @@ typedef struct{
 //Detectores (até diferentes detectores NIDM).
 typedef struct{
 	double *RLAST, *RWRITE;
-	int *IDCUT, (*KKDI)[NDIM], *IPSF, *NID, *NPSFO, *IPSFO;
+	int *IDCUT, (*KKDI)[NIDM], *IPSF, *NID, *NPSFO, *IPSFO;
 
 }CNT4;
 
@@ -954,7 +954,7 @@ void transfcnt2_(double *SHIST, int *NSEB);
 
 void transfcnt3_(double (*SEDS)[3], double (*SEDS2)[3], double *DSDE, double *RDSDE, int *NSDE);
 
-void transfcnt4_(double *RLAST, double *RWRITE, int *IDCUT, int (*KKDI)[NDIM], int *IPSF, int *NID, int *NPSFO, int *IPSFO);
+void transfcnt4_(double *RLAST, double *RWRITE, int *IDCUT, int (*KKDI)[NIDM], int *IPSF, int *NID, int *NPSFO, int *IPSFO);
 
 void transfcnt5_(double *DEDE, int *KBDE, int *NED);
 
@@ -1029,7 +1029,7 @@ void geomin2_(double *PARINP, int *NPINP, int *NMATG, int *NBOD, FILE *IRD, FILE
 
 void rotshf2_(double &OMEGA, double &THETA, double &PHI, double &DX, double &DY, double &DZ, double &AXX, double &AXY, double &AXZ, double &AYY, double &AYZ, double &AZZ, double &AX, double &AY, double &AZ, double &A0);
 
-void peinit2_(double *EMAX, int &NMATER, FILE *IWR, int *INFO, char (*PMFILE)[20]);
+void peinit2_(double *EMAX, int &NMATER, FILE *IWR, int *INFO, char (*PMFILE)[100]);
 
 void egrid2_(double &EMINu, double *EMAXu);
 
@@ -2269,7 +2269,7 @@ void transfcnt3_(double (*SEDS)[3], double (*SEDS2)[3], double *DSDE, double *RD
 	CNT3_.NSDE =  NSDE;
 }
 
-void transfcnt4_(double *RLAST, double *RWRITE, int *IDCUT, int (*KKDI)[NDIM], int *IPSF, int *NID, int *NPSFO, int *IPSFO){
+void transfcnt4_(double *RLAST, double *RWRITE, int *IDCUT, int (*KKDI)[NIDM], int *IPSF, int *NID, int *NPSFO, int *IPSFO){
 	CNT4_.RLAST	= RLAST;
 	CNT4_.RWRITE =	RWRITE;
 	CNT4_.IDCUT	= IDCUT;
@@ -6193,7 +6193,7 @@ void imprimirKDGHT(FILE* IW, int &KB){
 	
 }
 
-void peinit2_(double *EMAX, int &NMATER, FILE *IWR, int *INFO, char (*PMFILE)[20]){
+void peinit2_(double *EMAX, int &NMATER, FILE *IWR, int *INFO, char (*PMFILE)[100]){
 	
 	
 /*Modulo Penelope.f
@@ -6278,15 +6278,15 @@ void peinit2_(double *EMAX, int &NMATER, FILE *IWR, int *INFO, char (*PMFILE)[20
 
 	char LIT[4];
 	double EABS0[MAXMAT][3];
-	char APOIO[80];
+	char APOIO[100];
 	
 	
-	FILE* IWR2 = fopen("material2.dat", "w");
-	IWR = IWR2;
-    if (IWR == NULL){
- 		printf("N�o foi possivel abrir o arquivo material2.dat");
- 		exit(0);
- 	}
+	//FILE* IWR2 = fopen("material2.dat", "w");
+	//IWR = IWR2;
+   // if (IWR == NULL){
+ 	//	printf("N�o foi possivel abrir o arquivo material2.dat");
+ 	//	exit(0);
+ //	}
 
 
 	fprintf(IWR, "\n **********************************\n");
@@ -6383,8 +6383,9 @@ void peinit2_(double *EMAX, int &NMATER, FILE *IWR, int *INFO, char (*PMFILE)[20
 	RELAX02_(); //Inicializa rotinas de relaxamento at�mico.
 	RNDG302_(); //Inicializa a rotina de amostragem gaussiana.*/
 	
-	
+
 	egrid2_(EMIN, EMAX);
+	
 
 	esia02_(); //Inicializa rotinas de ioniza��o por impacto de el�trons.
 	psia02_(); //Inicializa as rotinas de ioniza��o por impacto de p�sitrons.
@@ -6498,12 +6499,13 @@ void egrid2_(double &EMINu, double *EMAXu){ //OK
 	*CEGRID_.EMIN = EMINu;
 	*CEGRID_.EL = 0.99999e0 * EMINu;
 	*CEGRID_.EU = 1.00001e0 * *EMAXu;
-	*CEGRID_.DLFC = log(*CEGRID_.EU / *CEGRID_.EL) / (*PENELOPE_mod_.NEGP - 1);
+	*CEGRID_.DLFC = log(*CEGRID_.EU / *CEGRID_.EL) / (NEGP - 1);
 	*CEGRID_.DLEMP1 = log(*CEGRID_.EL);
 	CEGRID_.DLEMP[1-1] = *CEGRID_.DLEMP1;
 	CEGRID_.ET[1-1] = *CEGRID_.EL;
+
 	
-	for (int I = 2; I <= *PENELOPE_mod_.NEGP; I++){
+	for (int I = 2; I <= NEGP; I++){
 		CEGRID_.DLEMP[I-1] = CEGRID_.DLEMP[I-1-1] + *CEGRID_.DLFC;
 		CEGRID_.ET[I-1] = exp(CEGRID_.DLEMP[I-1]);
 	} 
@@ -6935,7 +6937,6 @@ void pematr2_(int *M, FILE *IRD, FILE *IWR, int *INFO){
 		IZZ = COMPOS_.IZ[I-1][*M-1];
 		COMPOS_.AT[*M-1] = COMPOS_.AT[*M-1] + CADATA_.ATW[IZZ-1] * COMPOS_.STF[I-1][*M-1];
 	}
-	
 	
 	COMPOS_.VMOL[*M-1] = AVOG*COMPOS_.RHO[*M-1] / COMPOS_.AT[*M-1];
 	if (*INFO >= 2){
@@ -7516,7 +7517,7 @@ void pematr2_(int *M, FILE *IRD, FILE *IWR, int *INFO){
 			FACT = 1.0e0;
 		}
 		
-		//CEIMFP_.DEL[I-1][*M-1] = DELTA;
+	
         
 		CPIMFP_.CSTPP[I-1][*M-1] = STPC * FACT;
         XS1SI = 0.0e0;
@@ -7772,7 +7773,6 @@ void pematr2_(int *M, FILE *IRD, FILE *IWR, int *INFO){
 	for (int I = 2; I <= NEGP; I++){
 		XL= CEGRID_.ET[I-1-1];
         XU= CEGRID_.ET[I-1];
-        
         RADN[I-1] = RADN[I-1-1] + rmomx2_(CEGRID_.ET,F1,XL,XU,NEGP,0);
 	}
 	
@@ -9165,7 +9165,6 @@ void relaxr2_(FILE *IRD, FILE *IWR, int *INFO){
 		}
 	}
 	if (TST > 1.0e-12) {
-		printf("TST %.6E\n", TST);
 		printf("RELAXR. Rounding error is too large.");
 		exit(0);
 	}
@@ -10229,8 +10228,11 @@ void einat2_(double &E, double &WCCM, double &XH0, double &XH1, double &XH2, dou
 	//****  Sternheimer's resonance energy (WL2=L**2).
 	
 	double TST = COMPOS_.ZT[*M-1] / (GAM2 * CEIN_.OP2[*M-1]);
+
+	
 	double WL2 = 0.0e0;
 	double FDEL = 0.0e0;
+
 	for (int I = 1; I <= CEIN_.NOSC[*M-1]; I++){
 		FDEL = FDEL + CEIN_.F[I-1][*M-1] / (pow(CEIN_.WRI[I-1][*M-1], 2) + WL2);
 	}
@@ -10272,8 +10274,10 @@ L2:;
 	
 	// Density effect correction (delta).
 	
-	DELTA = 0.0;
+	DELTA = 0.0e0;
+	
 	for (int I = 1; I <= CEIN_.NOSC[*M-1]; I++){
+		
 		DELTA = DELTA + CEIN_.F[I-1][*M-1] * log(1.0e0 + WL2 / pow(CEIN_.WRI[I-1][*M-1], 2));
 	}
 	DELTA = (DELTA / COMPOS_.ZT[*M-1]) - WL2 / (GAM2*CEIN_.OP2[*M-1]);
@@ -13263,12 +13267,12 @@ void graar2_(int *M, FILE *IRD, FILE *IWR, int *INFO){
 		}
 		fprintf(IWR,"\n   Energy       CS-Rayl\n    (eV)        (cm**2)\n");
 		fprintf(IWR, " ----------------------------------\n");
-		
 		for (int I = 1; I <= *CGRA01_.NE; I++){
 			fprintf(IWR, " %.5E  %.5E\n", ER[I-1],exp(CGRA01_.XSRA[I-1][*M-1])/COMPOS_.VMOL[*M-1]);
 		}
 		
 	}
+	
 		
 	//Inicializa��o do algoritmo RITA para amostragem aleat�ria do
 	//Transfer�ncia de momento quadrado do fator de forma molecular ao quadrado.
@@ -13284,7 +13288,9 @@ void graar2_(int *M, FILE *IRD, FILE *IWR, int *INFO){
 			*CGRA00_.Q2MAX=pow(Q[I-1-1],2);		
 	}
 	int PDF = 3;
+	
 	ritai02_(PDF,Q2MIN,*CGRA00_.Q2MAX,NPT,NU,ERRM,0);
+
 	
 	NPI = *CRITA_.NPM1I+1;
 	if (NPI != NP){
@@ -13322,7 +13328,7 @@ L1:;
 				Q1=CRITA_.QTI[II-1];
             	Q2=Q2M;
             	DQ=(Q2-Q1)/(NIP-1);
-            	
+            		
             	for (int K =1; K <= NIP; K++){
             		QI[K-1]=Q1+(K-1)*DQ;
               	    TAU=(QI[K-1]-CRITA_.QTI[II-1])/(CRITA_.QTI[II+1-1]-CRITA_.QTI[II-1]);
@@ -13347,7 +13353,6 @@ L1:;
 			CGRA03_.PMAX[*M-1][IE-1]=CRITA_.PACI[1-1];
 		}	
 	}
-	
 	for (int I = 1; I <= NP; I++){
     	CGRA03_.QRA[*M-1][I-1]=CRITA_.QTI[I-1];
         CGRA03_.PRA[*M-1][I-1]=CRITA_.PACI[I-1];
@@ -13357,6 +13362,7 @@ L1:;
         CGRA03_.ITLRA[*M-1][I-1]=CRITA_.ITLI[I-1];
         CGRA03_.ITURA[*M-1][I-1]=CRITA_.ITUI[I-1];
 	}	
+	
 	
 	free(Q);
 	free(F);
@@ -14051,7 +14057,7 @@ void pmrdr2_(){
 	char APOIO[100];
 	char LIT[3];
 	char *PCH;
-	char PMFILE[MAXMAT][20];
+	char PMFILE[MAXMAT][100];
 	char PFILE[21];
 	char PFILER[21];
 	char SPCDIO[21];
@@ -14108,7 +14114,6 @@ void pmrdr2_(){
 		printf("Nao foi possivel abrir o arquivo entrada.in");
 		exit(0);
 	}
-	printf("\n\nAQUI\n\n");
 	for (int I = 1; I <= 3; I++){
 		CNT0_.PRIM[I-1]=0.0e0;
         CNT0_.PRIM2[I-1]=0.0e0;
@@ -14117,7 +14122,6 @@ void pmrdr2_(){
             CNT0_.SEC2[I-1][K-1]=0.0e0;
 		}
 	}
-		printf("\n\nAQUI2\n\n");
 	
 
 	
@@ -24734,7 +24738,6 @@ mat=(int (*)[col])malloc(sizeof(*mat)*row);*/
 	CEGRID_.XE = (double *) malloc(sizeof(double));
 	CEGRID_.XEK = (double *) malloc(sizeof(double));
 	CEGRID_.KE = (int *) malloc(sizeof(int));
-	CERSEC_.IERSEC = (int *) malloc(sizeof(int));
 
 	//CESI0
 	CESI0_.XESI = (double (*)[NRP]) malloc(16*NRP*sizeof(double));
@@ -24762,6 +24765,95 @@ mat=(int (*)[col])malloc(sizeof(*mat)*row);*/
 	CADATA_.IKS = (int (*)[99]) malloc(30*99*sizeof(int));
 	CADATA_.NSHT = (int *) malloc(99*sizeof(int));
 	CADATA_.LASYMB = (char (*)[2]) malloc(99*2*sizeof(char));
+
+
+	
+	double ATW[] = {1.0079e0,4.0026e0,6.9410e0,9.0122e0,1.0811e1,
+					1.2011e1,1.4007e1,1.5999e1,1.8998e1,2.0179e1,2.2990e1,
+					2.4305e1,2.6982e1,2.8086e1,3.0974e1,3.2066e1,3.5453e1,
+					3.9948e1,3.9098e1,4.0078e1,4.4956e1,4.7880e1,5.0942e1,
+					5.1996e1,5.4938e1,5.5847e1,5.8933e1,5.8690e1,6.3546e1,
+					6.5390e1,6.9723e1,7.2610e1,7.4922e1,7.8960e1,7.9904e1,
+					8.3800e1,8.5468e1,8.7620e1,8.8906e1,9.1224e1,9.2906e1,
+					9.5940e1,9.7907e1,1.0107e2,1.0291e2,1.0642e2,1.0787e2,
+					1.1241e2,1.1482e2,1.1871e2,1.2175e2,1.2760e2,1.2690e2,
+					1.3129e2,1.3291e2,1.3733e2,1.3891e2,1.4012e2,1.4091e2,
+					1.4424e2,1.4491e2,1.5036e2,1.5196e2,1.5725e2,1.5893e2,
+					1.6250e2,1.6493e2,1.6726e2,1.6893e2,1.7304e2,1.7497e2,
+					1.7849e2,1.8095e2,1.8385e2,1.8621e2,1.9020e2,1.9222e2,
+					1.9508e2,1.9697e2,2.0059e2,2.0438e2,2.0720e2,2.0898e2,
+					2.0898e2,2.0999e2,2.2202e2,2.2302e2,2.2603e2,2.2703e2,
+					2.3204e2,2.3104e2,2.3803e2,2.3705e2,2.3905e2,2.4306e2,
+					2.4707e2,2.4707e2,2.5108e2,2.5208e2};
+
+	for (int I = 1; I <= 99; I++){
+		CADATA_.ATW[I-1] = ATW[I-1];
+	}
+
+	double EPX[] = {19.2e0, 41.8e0, 40.0e0, 63.7e0, 76.0e0, 81.0e0,
+					82.0e0, 95.0e0,115.0e0,137.0e0,149.0e0,156.0e0,166.0e0,
+					173.0e0,173.0e0,180.0e0,174.0e0,188.0e0,190.0e0,191.0e0,
+					216.0e0,233.0e0,245.0e0,257.0e0,272.0e0,286.0e0,297.0e0,
+					311.0e0,322.0e0,330.0e0,334.0e0,350.0e0,347.0e0,348.0e0,
+					343.0e0,352.0e0,363.0e0,366.0e0,379.0e0,393.0e0,417.0e0,
+					424.0e0,428.0e0,441.0e0,449.0e0,470.0e0,470.0e0,469.0e0,
+					488.0e0,488.0e0,487.0e0,485.0e0,491.0e0,482.0e0,488.0e0,
+					491.0e0,501.0e0,523.0e0,535.0e0,546.0e0,560.0e0,574.0e0,
+					580.0e0,591.0e0,614.0e0,628.0e0,650.0e0,658.0e0,674.0e0,
+					684.0e0,694.0e0,705.0e0,718.0e0,727.0e0,736.0e0,746.0e0,
+					757.0e0,790.0e0,790.0e0,800.0e0,810.0e0,823.0e0,823.0e0,
+					830.0e0,825.0e0,794.0e0,827.0e0,826.0e0,841.0e0,847.0e0,
+					878.0e0,890.0e0,902.0e0,921.0e0,934.0e0,939.0e0,952.0e0,
+					966.0e0,980.0e0};
+
+	for (int I = 1; I <= 99; I++){
+		CADATA_.EPX[I-1] = EPX[I-1];
+	}
+
+	double RSCR[] = {1.2281e2,7.3167e1,6.9228e1,6.7301e1,6.4696e1,
+					6.1228e1,5.7524e1,5.4033e1,5.0787e1,4.7851e1,4.6373e1,
+					4.5401e1,4.4503e1,4.3815e1,4.3074e1,4.2321e1,4.1586e1,
+					4.0953e1,4.0524e1,4.0256e1,3.9756e1,3.9144e1,3.8462e1,
+					3.7778e1,3.7174e1,3.6663e1,3.5986e1,3.5317e1,3.4688e1,
+					3.4197e1,3.3786e1,3.3422e1,3.3068e1,3.2740e1,3.2438e1,
+					3.2143e1,3.1884e1,3.1622e1,3.1438e1,3.1142e1,3.0950e1,
+					3.0758e1,3.0561e1,3.0285e1,3.0097e1,2.9832e1,2.9581e1,
+					2.9411e1,2.9247e1,2.9085e1,2.8930e1,2.8721e1,2.8580e1,
+					2.8442e1,2.8312e1,2.8139e1,2.7973e1,2.7819e1,2.7675e1,
+					2.7496e1,2.7285e1,2.7093e1,2.6911e1,2.6705e1,2.6516e1,
+					2.6304e1,2.6108e1,2.5929e1,2.5730e1,2.5577e1,2.5403e1,
+					2.5245e1,2.5100e1,2.4941e1,2.4790e1,2.4655e1,2.4506e1,
+					2.4391e1,2.4262e1,2.4145e1,2.4039e1,2.3922e1,2.3813e1,
+					2.3712e1,2.3621e1,2.3523e1,2.3430e1,2.3331e1,2.3238e1,
+					2.3139e1,2.3048e1,2.2967e1,2.2833e1,2.2694e1,2.2624e1,
+					2.2545e1,2.2446e1,2.2358e1,2.2264e1};
+
+	for (int I = 1; I <= 99; I++){
+		CADATA_.RSCR[I-1] = RSCR[I-1];
+	}
+
+	double ETA[] = {1.1570e0,1.1690e0,1.2190e0,1.2010e0,1.1890e0,
+        1.1740e0,1.1760e0,1.1690e0,1.1630e0,1.1570e0,1.1740e0,
+        1.1830e0,1.1860e0,1.1840e0,1.1800e0,1.1780e0,1.1750e0,
+        1.1700e0,1.1800e0,1.1870e0,1.1840e0,1.1800e0,1.1770e0,
+        1.1660e0,1.1690e0,1.1660e0,1.1640e0,1.1620e0,1.1540e0,
+        1.1560e0,1.1570e0,1.1580e0,1.1570e0,1.1580e0,1.1580e0,
+        1.1580e0,1.1660e0,1.1730e0,1.1740e0,1.1750e0,1.1700e0,
+        1.1690e0,1.1720e0,1.1690e0,1.1680e0,1.1640e0,1.1670e0,
+        1.1700e0,1.1720e0,1.1740e0,1.1750e0,1.1780e0,1.1790e0,
+        1.1800e0,1.1870e0,1.1940e0,1.1970e0,1.1960e0,1.1940e0,
+        1.1940e0,1.1940e0,1.1940e0,1.1940e0,1.1960e0,1.1970e0,
+        1.1960e0,1.1970e0,1.1970e0,1.1980e0,1.1980e0,1.2000e0,
+        1.2010e0,1.2020e0,1.2040e0,1.2050e0,1.2060e0,1.2080e0,
+        1.2070e0,1.2080e0,1.2120e0,1.2150e0,1.2180e0,1.2210e0,
+        1.2240e0,1.2270e0,1.2300e0,1.2370e0,1.2430e0,1.2470e0,
+        1.2500e0,1.2510e0,1.2520e0,1.2550e0,1.2560e0,1.2570e0,
+        1.2590e0,1.2620e0,1.2620e0,1.2650e0};
+
+	for (int I = 1; I <= 99; I++){
+		CADATA_.ETA[I-1] = ETA[I-1];
+	}
+
 
 	//CGPH00_
 	CGPH00_.EPH = (double *) malloc(NTP*sizeof(double));
@@ -24791,6 +24883,14 @@ mat=(int (*)[col])malloc(sizeof(*mat)*row);*/
 	CRITAA_.FA = (double *) malloc(NM*sizeof(double));
 	CRITAA_.IA = (int *) malloc(NM*sizeof(int));
 	CRITAA_.NPM1A =  (int *) malloc(sizeof(int));
+
+	//CRNDG3_
+	CRNDG3_.X = (double *) malloc(NR*sizeof(double));
+	CRNDG3_.A = (double *) malloc(NR*sizeof(double));
+	CRNDG3_.B = (double *) malloc(NR*sizeof(double));
+	CRNDG3_.F = (double *) malloc(NR*sizeof(double));
+	CRNDG3_.KA =(int *) malloc(NR*sizeof(int));
+	CRNDG3_.NPM1 = (int *) malloc(sizeof(int));
 
 	//CRITA_
 	CRITA_.XT = (double *) malloc(NM*sizeof(double));
@@ -25108,7 +25208,8 @@ mat=(int (*)[col])malloc(sizeof(*mat)*row);*/
 	CGRA02_.FF0 = (double *)malloc(MAXMAT*sizeof(double));
 	CGRA02_.QQM = (double *)malloc(sizeof(double));
 
-	//CGRA03_.QRA = QRA;
+	//
+	CGRA03_.QRA = (double (*)[NP2])malloc(MAXMAT*NP2*sizeof(double));
 	CGRA03_.PRA = (double (*)[NP2])malloc(MAXMAT*NP2*sizeof(double));
 	CGRA03_.DPRA = (double (*)[NP2])malloc(MAXMAT*NP2*sizeof(double));
 	CGRA03_.ARA = (double (*)[NP2])malloc(MAXMAT*NP2*sizeof(double));
@@ -25233,15 +25334,15 @@ mat=(int (*)[col])malloc(sizeof(*mat)*row);*/
 	//CNT4_
 	CNT4_.RLAST	= (double *)malloc(sizeof(double)); 
 	CNT4_.RWRITE =	(double *)malloc(sizeof(double)); 
-	CNT4_.IDCUT	= (int *)malloc(NDIM*sizeof(int)); 
-	CNT4_.KKDI	= (int (*)[NDIM])malloc(NDIM*3*sizeof(int));
+	CNT4_.IDCUT	= (int *)malloc(NIDM*sizeof(int)); 
+	CNT4_.KKDI	= (int (*)[NIDM])malloc(NIDM*3*sizeof(int));
 	CNT4_.IPSF =	(int *)malloc(sizeof(int)); 
-	CNT4_.NID =	(int *)malloc(NDIM*sizeof(int)); 
-	CNT4_.NPSFO	 = (int *)malloc(NDIM*sizeof(int)); 
-	CNT4_.IPSFO	= (int *)malloc(NDIM*sizeof(int)); 
+	CNT4_.NID =	(int *)malloc(NIDM*sizeof(int)); 
+	CNT4_.NPSFO	 = (int *)malloc(NIDM*sizeof(int)); 
+	CNT4_.IPSFO	= (int *)malloc(NIDM*sizeof(int)); 
 
 	//CNT5_
-	CNT5_.DEDE = (double *)malloc(NDIM*sizeof(double)); 
+	CNT5_.DEDE = (double *)malloc(NIDM*sizeof(double)); 
 	CNT5_.KBDE = (int *)malloc(NB*sizeof(int)); 
 	CNT5_.NED = (int *)malloc(sizeof(int)); 
 
@@ -25300,73 +25401,122 @@ mat=(int (*)[col])malloc(sizeof(*mat)*row);*/
 	CENANG_.LLTH	= (bool *)malloc(sizeof(bool)); 
 
 	//CIMDET_
-	CIMDET_.EL =	(double *)malloc(NDIM*sizeof(double)); 	
-	CIMDET_.EU =	(double *)malloc(NDIM*sizeof(double));
-	CIMDET_.BSE =	(double *)malloc(NDIM*sizeof(double));
-	CIMDET_.RBSE =	(double *)malloc(NDIM*sizeof(double));
-	CIMDET_.ET =	(double (*)[NIDM])malloc(NDIM*(NBEM2+1)*sizeof(double)); 
-	CIMDET_.EDEP =	(double *)malloc(NDIM*sizeof(double));
-	CIMDET_.EDEP2 =	(double *)malloc(NDIM*sizeof(double));
-	CIMDET_.EDEPP =	(double *)malloc(NDIM*sizeof(double));
-	CIMDET_.DIT =	(double (*)[NIDM])malloc(NBEM2*NDIM*sizeof(double)); 
-	CIMDET_.DIT2 =	(double (*)[NIDM])malloc(NBEM2*NDIM*sizeof(double));  
-	CIMDET_.DITP =	(double (*)[NIDM])malloc(NBEM2*NDIM*sizeof(double));   
-	CIMDET_.DIP =	(double (*)[NBEM2][NIDM])malloc(3*NBEM2*NDIM*sizeof(double)); 
-	CIMDET_.DIP2 =	(double (*)[NBEM2][NIDM])malloc(3*NBEM2*NDIM*sizeof(double));  
-	CIMDET_.DIPP =	(double (*)[NBEM2][NIDM])malloc(3*NBEM2*NDIM*sizeof(double));  
-	CIMDET_.FLT =	(double (*)[NIDM])malloc(NBEM2*NDIM*sizeof(double)); 
-	CIMDET_.FLT2 =	(double (*)[NIDM])malloc(NBEM2*NDIM*sizeof(double)); 
-	CIMDET_.FLTP =	(double (*)[NIDM])malloc(NBEM2*NDIM*sizeof(double)); 
-	CIMDET_.FLP =	(double (*)[NBEM2][NIDM])malloc(3*NBEM2*NDIM*sizeof(double)); 
-	CIMDET_.FLP2 =	(double (*)[NBEM2][NIDM])malloc(3*NBEM2*NDIM*sizeof(double)); 
-	CIMDET_.FLPP =	(double (*)[NBEM2][NIDM])malloc(3*NBEM2*NDIM*sizeof(double));  
-	CIMDET_.AGEL =	(double *)malloc(NDIM*sizeof(double)); 
-	CIMDET_.AGEU =	(double *)malloc(NDIM*sizeof(double));
-	CIMDET_.BAGE =	(double *)malloc(NDIM*sizeof(double));
-	CIMDET_.RBAGE =	(double *)malloc(NDIM*sizeof(double)); 
-	CIMDET_.AGE =	(double (*)[NIDM])malloc(NBEM2*NDIM*sizeof(double)); 
-	CIMDET_.AGE2 =	(double (*)[NIDM])malloc(NBEM2*NDIM*sizeof(double)); 
-	CIMDET_.AGEP =	(double (*)[NIDM])malloc(NBEM2*NDIM*sizeof(double)); 
-	CIMDET_.LEDEP =	(bool *)malloc(NDIM*sizeof(bool));  
-	CIMDET_.LDIT =	(bool (*)[NIDM])malloc(NBEM2*NDIM*sizeof(bool));  
-	CIMDET_.LDIP =	(bool (*)[NBEM2][NIDM])malloc(3*NBEM2*NDIM*sizeof(bool));  
-	CIMDET_.LFLT =	(bool (*)[NIDM])malloc(NBEM2*NDIM*sizeof(bool));  
-	CIMDET_.LFLP =	(bool (*)[NBEM2][NIDM])malloc(3*NBEM2*NDIM*sizeof(bool));  
-	CIMDET_.LAGEA =	(bool (*)[NIDM])malloc(NBEM2*NDIM*sizeof(bool));   
-	CIMDET_.IDCUT =	(int *)malloc(NDIM*sizeof(int)); 
-	CIMDET_.NE =	(int *)malloc(NDIM*sizeof(int));  
-	CIMDET_.LLE =	(bool *)malloc(NDIM*sizeof(bool)); 
-	CIMDET_.LLAGE =	(bool *)malloc(NDIM*sizeof(bool)); 
-	CIMDET_.NAGE =	(int *)malloc(NDIM*sizeof(int));  
+	CIMDET_.EL =	(double *)malloc(NIDM*sizeof(double)); 	
+	CIMDET_.EU =	(double *)malloc(NIDM*sizeof(double));
+	CIMDET_.BSE =	(double *)malloc(NIDM*sizeof(double));
+	CIMDET_.RBSE =	(double *)malloc(NIDM*sizeof(double));
+	CIMDET_.ET =	(double (*)[NIDM])malloc(NIDM*(NBEM2+1)*sizeof(double)); 
+	CIMDET_.EDEP =	(double *)malloc(NIDM*sizeof(double));
+	CIMDET_.EDEP2 =	(double *)malloc(NIDM*sizeof(double));
+	CIMDET_.EDEPP =	(double *)malloc(NIDM*sizeof(double));
+	CIMDET_.DIT =	(double (*)[NIDM])malloc(NBEM2*NIDM*sizeof(double)); 
+	CIMDET_.DIT2 =	(double (*)[NIDM])malloc(NBEM2*NIDM*sizeof(double));  
+	CIMDET_.DITP =	(double (*)[NIDM])malloc(NBEM2*NIDM*sizeof(double));   
+	CIMDET_.DIP =	(double (*)[NBEM2][NIDM])malloc(3*NBEM2*NIDM*sizeof(double)); 
+	CIMDET_.DIP2 =	(double (*)[NBEM2][NIDM])malloc(3*NBEM2*NIDM*sizeof(double));  
+	CIMDET_.DIPP =	(double (*)[NBEM2][NIDM])malloc(3*NBEM2*NIDM*sizeof(double));  
+	CIMDET_.FLT =	(double (*)[NIDM])malloc(NBEM2*NIDM*sizeof(double)); 
+	CIMDET_.FLT2 =	(double (*)[NIDM])malloc(NBEM2*NIDM*sizeof(double)); 
+	CIMDET_.FLTP =	(double (*)[NIDM])malloc(NBEM2*NIDM*sizeof(double)); 
+	CIMDET_.FLP =	(double (*)[NBEM2][NIDM])malloc(3*NBEM2*NIDM*sizeof(double)); 
+	CIMDET_.FLP2 =	(double (*)[NBEM2][NIDM])malloc(3*NBEM2*NIDM*sizeof(double)); 
+	CIMDET_.FLPP =	(double (*)[NBEM2][NIDM])malloc(3*NBEM2*NIDM*sizeof(double));  
+	CIMDET_.AGEL =	(double *)malloc(NIDM*sizeof(double)); 
+	CIMDET_.AGEU =	(double *)malloc(NIDM*sizeof(double));
+	CIMDET_.BAGE =	(double *)malloc(NIDM*sizeof(double));
+	CIMDET_.RBAGE =	(double *)malloc(NIDM*sizeof(double)); 
+	CIMDET_.AGE =	(double (*)[NIDM])malloc(NBEM2*NIDM*sizeof(double)); 
+	CIMDET_.AGE2 =	(double (*)[NIDM])malloc(NBEM2*NIDM*sizeof(double)); 
+	CIMDET_.AGEP =	(double (*)[NIDM])malloc(NBEM2*NIDM*sizeof(double)); 
+	CIMDET_.LEDEP =	(bool *)malloc(NIDM*sizeof(bool));  
+	CIMDET_.LDIT =	(bool (*)[NIDM])malloc(NBEM2*NIDM*sizeof(bool));  
+	CIMDET_.LDIP =	(bool (*)[NBEM2][NIDM])malloc(3*NBEM2*NIDM*sizeof(bool));  
+	CIMDET_.LFLT =	(bool (*)[NIDM])malloc(NBEM2*NIDM*sizeof(bool));  
+	CIMDET_.LFLP =	(bool (*)[NBEM2][NIDM])malloc(3*NBEM2*NIDM*sizeof(bool));  
+	CIMDET_.LAGEA =	(bool (*)[NIDM])malloc(NBEM2*NIDM*sizeof(bool));   
+	CIMDET_.IDCUT =	(int *)malloc(NIDM*sizeof(int)); 
+	CIMDET_.NE =	(int *)malloc(NIDM*sizeof(int));  
+	CIMDET_.LLE =	(bool *)malloc(NIDM*sizeof(bool)); 
+	CIMDET_.LLAGE =	(bool *)malloc(NIDM*sizeof(bool)); 
+	CIMDET_.NAGE =	(int *)malloc(NIDM*sizeof(int));  
 	CIMDET_.NID =	(int *)malloc(sizeof(int)); 
 
 	//CENDET
-	
+	CENDET_.EL = (double *)malloc(NIDM*sizeof(double)); 
+	CENDET_.EU = (double *)malloc(NIDM*sizeof(double)); 
+	CENDET_.BSE = (double *)malloc(NIDM*sizeof(double)); 
+	CENDET_.RBSE = (double *)malloc(NIDM*sizeof(double)); 
+	CENDET_.EDEP = (double *)malloc(NIDM*sizeof(double)); 
+	CENDET_.EDEP2 = (double *)malloc(NIDM*sizeof(double)); 
+	CENDET_.DET = (double (*)[NIDM])malloc(NBEM2*NIDM*sizeof(double)); 
+	CENDET_.NE = (int *)malloc(NIDM*sizeof(int)); 
+	CENDET_.NID = (int *)malloc(sizeof(int)); 
+	CENDET_.LLE = (bool *)malloc(NIDM*sizeof(bool)); 
 
+	//CDOSE1_
+	CDOSE1_.DOSE = (double (*)[NDYM][NDXM])malloc(NDZM*NDYM*NDXM*sizeof(double));  
+	CDOSE1_.DOSE2 = (double (*)[NDYM][NDXM])malloc(NDZM*NDYM*NDXM*sizeof(double)); 
+	CDOSE1_.DOSEP = (double (*)[NDYM][NDXM])malloc(NDZM*NDYM*NDXM*sizeof(double)); 
+	CDOSE1_.LDOSE = (int (*)[NDYM][NDXM])malloc(NDZM*NDYM*NDXM*sizeof(int)); 
+	CDOSE1_.KDOSE = (int *)malloc(sizeof(int));
 
+	//CDOSE2_
+	CDOSE2_.DDOSE = (double *)malloc(NDZM*sizeof(double)); 
+	CDOSE2_.DDOSE2 = (double *)malloc(NDZM*sizeof(double)); 
+	CDOSE2_.DDOSEP = (double *)malloc(NDZM*sizeof(double)); 
+	CDOSE2_.LDDOSE = (int *)malloc(NDZM*sizeof(int)); 
 
+	//CDOSE3_
+	CDOSE3_.DXL = (double *)malloc(3*sizeof(double)); 
+	CDOSE3_.DXU = (double *)malloc(3*sizeof(double));
+	CDOSE3_.BDOSE = (double *)malloc(3*sizeof(double));
+	CDOSE3_.RBDOSE = (double *)malloc(3*sizeof(double));
+	CDOSE3_.NDB = (int *)malloc(3*sizeof(int));
 
+	//CDOSE4_
+	CDOSE4_.VMASS = (double (*)[NDYM][NDXM])malloc(NDZM*NDYM*NDXM*sizeof(double)); 
 
+	//CJUMP1_
+	CJUMP1_.ELAST1 = (double *)malloc(sizeof(double)); 
+	CJUMP1_.ELAST2 = (double *)malloc(sizeof(double)); 
+	CJUMP1_.MHINGE = (int *)malloc(sizeof(int)); 
+	CJUMP1_.KSOFTE = (int *)malloc(sizeof(int)); 
+	CJUMP1_.KSOFTI = (int *)malloc(sizeof(int)); 
+	CJUMP1_.KDELTA = (int *)malloc(sizeof(int)); 
 
+	//SECST_
+	SECST_.ES = (double *)malloc(NMS*sizeof(double)); 
+	SECST_.XS = (double *)malloc(NMS*sizeof(double)); 
+	SECST_.YS = (double *)malloc(NMS*sizeof(double)); 
+	SECST_.ZS = (double *)malloc(NMS*sizeof(double)); 
+	SECST_.US = (double *)malloc(NMS*sizeof(double)); 
+	SECST_.VS = (double *)malloc(NMS*sizeof(double)); 
+	SECST_.WS = (double *)malloc(NMS*sizeof(double)); 
+	SECST_.WGHTS = (double *)malloc(NMS*sizeof(double)); 
+	SECST_.SP1S = (double *)malloc(NMS*sizeof(double)); 
+	SECST_.SP2S = (double *)malloc(NMS*sizeof(double)); 
+	SECST_.SP3S = (double *)malloc(NMS*sizeof(double)); 
+	SECST_.PAGES = (double *)malloc(NMS*sizeof(double)); 
+    SECST_.KS = (int *)malloc(NMS*sizeof(int)); 
+	SECST_.IBODYS =(int *)malloc(NMS*sizeof(int)); 
+	SECST_.MS = (int *)malloc(NMS*sizeof(int)); 
+	SECST_.ILBS = (int (*)[5])malloc(NMS*5*sizeof(int)); 
+	SECST_.IPOLS = (int *)malloc(NMS*sizeof(int)); 
+	SECST_.NSEC = (int *)malloc(sizeof(int)); 
 
+	//CJUMP0_
+	CJUMP0_.P = (double *)malloc(8*sizeof(double)); 
+	CJUMP0_.ST = (double *)malloc(sizeof(double)); 
+	CJUMP0_.DST = (double *)malloc(sizeof(double)); 
+	CJUMP0_.DSR =(double *)malloc(sizeof(double)); 
+	CJUMP0_.W1 = (double *)malloc(sizeof(double)); 
+	CJUMP0_.W2 = (double *)malloc(sizeof(double)); 
+	CJUMP0_.T1 = (double *)malloc(sizeof(double)); 
+	CJUMP0_.T2 = (double *)malloc(sizeof(double)); 
 
+	//CHIST_
+	CHIST_.ILBA = (int *)malloc(5*sizeof(int)); 
 
-
-	//CEELDB
-	CEELDB_.XSE = (double (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(double));
-	CEELDB_.PSE =(double (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(double));
-	CEELDB_.ASE = (double (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(double));
-	CEELDB_.BSE = (double (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(double));
-	CEELDB_.ITLE = (int (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(int));
-	CEELDB_.ITUE = (int (*)[NEGP][NP])malloc(MAXMAT*NEGP*NP*sizeof(int));
-
-
-
-
-
-
-
-	
 
 }
 
