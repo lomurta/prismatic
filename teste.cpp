@@ -4331,6 +4331,7 @@ L202:;
 		fprintf(IW, "%s(%4d), SIDE POINTER=(%2d)\n", LKEYW, KS, INDS);
 	//	fputs("linha 780\n", IW);
 		KST = QTREE_.KSURF[NXG-1][*QTREE_.NBODYS - 1];
+		printf("\n\n\n\n AQUIIIIII KST = %d\n\n\n", KST);
 		if (KST > 0){
 			KST0 = KST;
 			for (int K = 1; K<= KST0; K++){
@@ -4369,6 +4370,7 @@ L203:;
 			 	extrairString(APOIO, ALIAB[KB0 - 1], 0, 5 );
 			 	if (!strcmp(C5, APOIO)){
 			 		KB = KB0;
+					 printf("\n\n\n goto l204\n\n");
 			 		goto L204;											 
 				 }
 			 }
@@ -4385,6 +4387,7 @@ L204:;
 		}
 		
 		KN1 = QTREE_.KSURF[NXG-1][KB-1];
+	
 		for (int KS1 = 1; KS1 <= KN1; KS1++){
 			KSURF1 = QTREE_.KSURF[KS1-1][KB-1];
 			KN2 = QTREE_.KSURF[NXG-1][*QTREE_.NBODYS-1];
@@ -5751,7 +5754,7 @@ L701:;
 					KSL = 0;
 					KSLP = 0;
 					NSB = QTREE_.KSURF[NXG-1][KB-1];
-					for ( int K = 1; K <=NSB; K++){
+					for ( int K = 1; K <= NSB; K++){
 						if (QTREE_.KSURF[K-1][KB-1] == KS)
 							KSL = K;
 						if (QTREE_.KSURF[K-1][KB-1] == KST)
@@ -5800,7 +5803,9 @@ L701:;
 							}
 							QTREE_.KSURF[NSB-1][KB-1] = 0;
 							QTREE_.KFLAG[NSB-1][KB-1] = 5;
-							QTREE_.KSURF[NXG-1][KB-1] = NSB -1;
+
+							QTREE_.KSURF[NXG-1][KB-1] = NSB-1;
+							printf("\n\nKSURF NXG-1 NB-1 = %d\n\n", NSB-1);
 							if (KB < *QTREE_.NBODYS) {
 								KBI = KB;
 								goto L701;
@@ -5839,10 +5844,13 @@ L704:;
 		//fprintf(IW, "KSURF = %d", QTREE_.KSURF);
 		imprimirKSURF(IW, KB);
 		imprimirKFLAG(IW, KB);
+
+	
 	
 		//fputs("linha 2174\n", IW);
 	//	fputs("linha 2176\n", IW);	
 	}
+		
 	
 	if (MLESS == 1){
 		if (QBODY_.KBOMO[KBENC-1] == 1){
@@ -5850,6 +5858,7 @@ L704:;
 		//	fputs("The module'',I5,'' is the enclosure.\n", IW);
 		}
 	}
+
 	
 	//Teste de consistência de superfície (F. Tola).
 	for (int KB = 1; KB <= *QTREE_.NBODYS-1; KB++){
@@ -5857,7 +5866,7 @@ L704:;
 		for (int I = 1; I <= QTREE_.KSURF[NXG-1][KB-1]; I++){
 			KS = QTREE_.KSURF[I-1][KB-1];
 			KF = QTREE_.KFLAG[I-1][KB-1];
-			for (int J = 1; J <= QTREE_.KSURF[I-1][KB-1]; J++){
+			for (int J = 1; J <= QTREE_.KSURF[NXG-1][KB1-1]; J++){
 				if (QTREE_.KSURF[J-1][KB1-1] == KS){
 					//Surface tem filha e mãe em lados opostos.
 					if (((KF == 1) && (QTREE_.KSURF[J-1][KB1-1] == 2)) || ((KF == 2) &&  (QTREE_.KSURF[J-1][KB1-1] == 1))) {
@@ -5875,6 +5884,7 @@ L704:;
 L801:;
 		}
 	}
+		
 	
 	//Teste de facilidade.
 	
@@ -5894,6 +5904,8 @@ L801:;
 		}
 		NSU = max(NSU, NSE);		
 	}
+
+	
 	
 	fputs("\n************ Adequacy of the geometry definition\n", IW);
 	fputs("\nThe largest number of bodies in a module or\n", IW);
@@ -5917,6 +5929,7 @@ L801:;
 		fputs("\nSimulating this geometry will be extremely slow\n", IW);	
 	}
 	fputs("\n************  The end.\n", IW);
+	
 	return;
 	
 L900:;
@@ -6142,12 +6155,13 @@ void extrairString(char destino[], char origem[], int inicio, int qtde){
 
 void imprimirKSURF(FILE* IW, int &KB){
 	fprintf(IW, "KSURF =");
-	for (int i = 1; i <= QTREE_.KSURF[NXG-1][KB-1]; i++){ 
-		if (QTREE_.KSURF[i-1][KB-1] != 0){
-			fprintf(IW, "%5d", QTREE_.KSURF[i-1][KB-1]);
-			if (i == 15)
-			fprintf(IW, "\n       ");
-		}
+	printf("\n\nQTREE_.KSURF %d\n\n", QTREE_.KSURF[NXG-1][KB-1]);
+	for (int KS = 1; KS <= QTREE_.KSURF[NXG-1][KB-1]; KS++){ 
+		//if (QTREE_.KSURF[i-1][KB-1] != 0){
+			fprintf(IW, "%5d", QTREE_.KSURF[KS-1][KB-1]);
+			if ((KS == 15) || (KS == 30))
+				fprintf(IW, "\n       ");
+		//}
 	}
 	fprintf(IW, "\n");
 	
@@ -14876,6 +14890,7 @@ L34:;
 	}
 
 
+
 	//Comprimentos máximos de passos de elétrons e pósitrons.
 
 	if (!strcmp(KWORD, KWSMAX)){
@@ -14914,6 +14929,7 @@ L35_2:;
             CSPGEO_.EABSB[IB-1][3-1]=PENELOPE_mod_.EABS[M-1][3-1];
 		}
 	}
+	
 
 	if (!strcmp(KWORD, KWEABS)){
 L36:;
@@ -15087,6 +15103,7 @@ L52:;
 
 
 	enang02_(EMIN,EMAX,NBE,NBTH,NBPH,IWR);
+	printf("\n\nAQUI\n\n");
 
 
 	//Detectores de impacto
@@ -16427,6 +16444,8 @@ void enang02_(double &EMIN, double &EMAX, int &NBE, int &NBTH, int &NBPH, FILE *
 	*CENANG_.BSPH=FSAFE*360.0e0/ *CENANG_.NPH;
     *CENANG_.RBSPH=1.0e0/ *CENANG_.BSPH;
 
+	
+
 	for (int I = 1; I <= 3; I++){
 		for (int J = 1; J <= 2; J++){
 			for (int K = 1; K <= NBEM; K++){
@@ -16438,6 +16457,8 @@ void enang02_(double &EMIN, double &EMAX, int &NBE, int &NBTH, int &NBPH, FILE *
 		}
 	}
 
+
+
 	for (int I = 1; I <= 3; I++){
 		for (int J = 1; J <= NBTHM; J++){
 			for (int K = 1; K <= NBPHM; K++){
@@ -16448,6 +16469,8 @@ void enang02_(double &EMIN, double &EMAX, int &NBE, int &NBTH, int &NBPH, FILE *
 			}
 		}
 	}
+
+		printf("\n\nAQUI2\n\n");
 }
 
 void imdet02_(double &EMIN, double &EMAX, int &NBE, double &AGEMIN, double &AGEMAX, int &NBAGE, int &ICUT, char *FNSPC, char *FNFLU, char *FNAGE, int &ID, FILE *IWR){
@@ -25389,11 +25412,11 @@ mat=(int (*)[col])malloc(sizeof(*mat)*row);*/
 	CENANG_.PDE    = (double (*)[2][3])malloc(NBEM*2*3*sizeof(double)); 
 	CENANG_.PDE2	= (double (*)[2][3])malloc(NBEM*2*3*sizeof(double)); 
 	CENANG_.PDEP	= (double (*)[2][3])malloc(NBEM*2*3*sizeof(double)); 
-	CENANG_.PDA    = (double (*)[NBTHM][3])malloc(NBPHM*NBEM*3*sizeof(double)); 
-	CENANG_.PDA2	= (double (*)[NBTHM][3])malloc(NBPHM*NBEM*3*sizeof(double));
-	CENANG_.PDAP	= (double (*)[NBTHM][3])malloc(NBPHM*NBEM*3*sizeof(double));
+	CENANG_.PDA    = (double (*)[NBTHM][3])malloc(NBPHM*NBTHM*3*sizeof(double)); 
+	CENANG_.PDA2	= (double (*)[NBTHM][3])malloc(NBPHM*NBTHM*3*sizeof(double));
+	CENANG_.PDAP	= (double (*)[NBTHM][3])malloc(NBPHM*NBTHM*3*sizeof(double));
 	CENANG_.LPDE    = (bool (*)[2][3])malloc(NBEM*2*3*sizeof(bool)); 
-	CENANG_.LPDA	= (bool (*)[NBTHM][3])malloc(NBPHM*NBEM*3*sizeof(bool));
+	CENANG_.LPDA	= (bool (*)[NBTHM][3])malloc(NBPHM*NBTHM*3*sizeof(bool));
 	CENANG_.NE	= (int *)malloc(sizeof(int)); 
 	CENANG_.NTH	= (int *)malloc(sizeof(int)); 
 	CENANG_.NPH	= (int *)malloc(sizeof(int)); 
