@@ -543,16 +543,6 @@ typedef struct{
 }CNT0;
 
 
-
-/*typedef struct{
-    double PRIM[3], PRIM2[3], DPRIM[3]; //Numero de particulas IEXIT;
-	double SEC[3][3], SEC2[3][3], DSEC[3][3]; // Geradores de particulas secundarias.
-	double AVW[2], AVW2[2], DAVW[2]; //Cosseno final do diretor polar.
-	double AVA[2], AVA2[2], DAVA[2]; // Angulo final polar
-	double AVE[2], AVE2[2], DAVE[2]; // Energia final
-}CNT0;*/
-
-
 // Energias depositadas em vários corpos.
 
 typedef struct{
@@ -2206,7 +2196,7 @@ void transfcsour5_(char (*PSFI)[20]){
 
 }
 
-/*void transfcnt0_(double *PRIM , double *PRIM2, double *DPRIM, double (*SEC)[3], double (*SEC2)[3], double (*DSEC)[3], 
+void transfcnt0_(double *PRIM , double *PRIM2, double *DPRIM, double (*SEC)[3], double (*SEC2)[3], double (*DSEC)[3], 
 			    double *AVW, double *AVW2, double *DAVW, double *AVA, double *AVA2, double *DAVA, double *AVE, double *AVE2, double *DAVE){
 	
    CNT0_.PRIM =    PRIM;
@@ -2225,7 +2215,7 @@ void transfcsour5_(char (*PSFI)[20]){
 	CNT0_.AVE2	= AVE2;
 	CNT0_.DAVE	= DAVE;
 
-}*/
+}
 
 /*void transfcnt0_(double *PRIM , double *PRIM2, double *DPRIM, double (*SEC)[3], double (*SEC2)[3], double (*DSEC)[3], 
 			    double *AVW, double *AVW2, double *DAVW, double *AVA, double *AVA2, double *DAVA, double *AVE, double *AVE2, double *DAVE){
@@ -2512,27 +2502,27 @@ void fsurf2_(int& KS, double& A, double& B, double& C){
 	/*
 	Calcula os par�metros da fun��o mestre da superf�cie KS e o raio (X, Y, Z) + S * (U, V, W).
 	*/
-     KS = KS - 1;
+ 
      
-    if (QSURF_.KPLANE[KS] == 0) {
-        A = *TRACK_mod_.U * (QSURF_.AXX[KS] * *TRACK_mod_.U + QSURF_.AXY[KS] * *TRACK_mod_.V + QSURF_.AXZ[KS] * *TRACK_mod_.W) +
-            *TRACK_mod_.V * (QSURF_.AYY[KS] * *TRACK_mod_.V + QSURF_.AYZ[KS] * *TRACK_mod_.W) + *TRACK_mod_.W * QSURF_.AZZ[KS] * *TRACK_mod_.W;
-		double XXX = QSURF_.AXX[KS] * *TRACK_mod_.X + QSURF_.AXY[KS] * *TRACK_mod_.Y + QSURF_.AXZ[KS] * *TRACK_mod_.Z + QSURF_.AX[KS];
-        double YYY = QSURF_.AYY[KS] * *TRACK_mod_.Y + QSURF_.AYZ[KS] * *TRACK_mod_.Z + QSURF_.AY[KS];
-        double ZZZ = QSURF_.AZZ[KS] * *TRACK_mod_.Z + QSURF_.AZ[KS];
+    if (QSURF_.KPLANE[KS-1] == 0) {
+        A = *TRACK_mod_.U * (QSURF_.AXX[KS-1] * *TRACK_mod_.U + QSURF_.AXY[KS-1] * *TRACK_mod_.V + QSURF_.AXZ[KS-1] * *TRACK_mod_.W) +
+            *TRACK_mod_.V * (QSURF_.AYY[KS-1] * *TRACK_mod_.V + QSURF_.AYZ[KS-1] * *TRACK_mod_.W) + *TRACK_mod_.W * QSURF_.AZZ[KS-1] * *TRACK_mod_.W;
+		double XXX = QSURF_.AXX[KS-1] * *TRACK_mod_.X + QSURF_.AXY[KS-1] * *TRACK_mod_.Y + QSURF_.AXZ[KS-1] * *TRACK_mod_.Z + QSURF_.AX[KS-1];
+        double YYY = QSURF_.AYY[KS-1] * *TRACK_mod_.Y + QSURF_.AYZ[KS-1] * *TRACK_mod_.Z + QSURF_.AY[KS-1];
+        double ZZZ = QSURF_.AZZ[KS-1] * *TRACK_mod_.Z + QSURF_.AZ[KS-1];
 
-        B = *TRACK_mod_.U * (QSURF_.AXX[KS] * *TRACK_mod_.X + XXX) + *TRACK_mod_.V * (QSURF_.AXY[KS] * *TRACK_mod_.X + QSURF_.AYY[KS] * *TRACK_mod_.Y + YYY) +
-            *TRACK_mod_.W * (QSURF_.AXZ[KS] * *TRACK_mod_.X + QSURF_.AYZ[KS] * *TRACK_mod_.Y + QSURF_.AZZ[KS] * *TRACK_mod_.Z + ZZZ);
+        B = *TRACK_mod_.U * (QSURF_.AXX[KS-1] * *TRACK_mod_.X + XXX) + *TRACK_mod_.V * (QSURF_.AXY[KS-1] * *TRACK_mod_.X + QSURF_.AYY[KS-1] * *TRACK_mod_.Y + YYY) +
+            *TRACK_mod_.W * (QSURF_.AXZ[KS-1] * *TRACK_mod_.X + QSURF_.AYZ[KS-1] * *TRACK_mod_.Y + QSURF_.AZZ[KS-1] * *TRACK_mod_.Z + ZZZ);
 
-        C = *TRACK_mod_.X * XXX + *TRACK_mod_.Y * YYY + *TRACK_mod_.Z * ZZZ + QSURF_.A0[KS];
+        C = *TRACK_mod_.X * XXX + *TRACK_mod_.Y * YYY + *TRACK_mod_.Z * ZZZ + QSURF_.A0[KS-1];
     }
     else{
         A = 0.0e0;
-    	B = *TRACK_mod_.U * QSURF_.AX[KS] + *TRACK_mod_.V * QSURF_.AY[KS] + *TRACK_mod_.W * QSURF_.AZ[KS];
-    	C = *TRACK_mod_.X * QSURF_.AX[KS] + *TRACK_mod_.Y * QSURF_.AY[KS] + *TRACK_mod_.Z * QSURF_.AZ[KS] + QSURF_.A0[KS];
+    	B = *TRACK_mod_.U * QSURF_.AX[KS-1] + *TRACK_mod_.V * QSURF_.AY[KS-1] + *TRACK_mod_.W * QSURF_.AZ[KS-1];
+    	C = *TRACK_mod_.X * QSURF_.AX[KS-1] + *TRACK_mod_.Y * QSURF_.AY[KS-1] + *TRACK_mod_.Z * QSURF_.AZ[KS-1] + QSURF_.A0[KS-1];
 	} 
      
-     KS = KS + 1;
+     
 }
 
 void locate2_(){
@@ -2568,8 +2558,8 @@ void locate2_(){
     int KF;
     double ABSA = 0.0;
 											
-    for (int i = 1; i <= *QSURF_.NSURF; ++i) { 
-	    QTREE_.KSP[i-1] = 0;
+    for (int I = 1; I <= *QSURF_.NSURF; I++) { 
+	    QTREE_.KSP[I-1] = 0;
     }
 	int KB0 = *QTREE_.NBODYS;
 	
@@ -2594,13 +2584,12 @@ d100:
 		} else if (C > FUZZ){
 				QTREE_.KSP[KS-1] = 2;
 		} else {
-				if (B < 0.0e0)	
-					QTREE_.KSP[KS-1] = 1; //particula movendo-se para dentro
-				else
-					QTREE_.KSP[KS-1] = 2; // particula movendo-se para fora
+			if (B < 0.0e0)	
+				QTREE_.KSP[KS-1] = 1; //particula movendo-se para dentro
+			else
+				QTREE_.KSP[KS-1] = 2; // particula movendo-se para fora
 		}
 d101: ;
-
 	}
 	for (int KBB = 1; KBB <= QTREE_.KDGHT[NXG-1][KB0 - 1]; KBB++) {
 		KB = QTREE_.KDGHT[KBB - 1][KB0 - 1];
@@ -2617,14 +2606,13 @@ d101: ;
 			*TRACK_mod_.MAT = PENGEOM_mod_.MATER[KB-1];// a particula está dentro do MATERial KB    
 			return; 
 		}else if (QTREE_.KDGHT[NXG-1][KB-1] > 1) {
-				KB0 = KB; //o ponto está dentro de um submodulo
-				goto d100;
-			}else{
-				*TRACK_mod_.IBODY = KB; //a particula esta dentro de um corpo ou modulo irmão
-				*TRACK_mod_.MAT = PENGEOM_mod_.MATER[KB-1];
-				return;
-		 		 }		
-			
+			KB0 = KB; //o ponto está dentro de um submodulo
+			goto d100;
+		}else{
+			*TRACK_mod_.IBODY = KB; //a particula esta dentro de um corpo ou modulo irmão
+			*TRACK_mod_.MAT = PENGEOM_mod_.MATER[KB-1];
+			return;
+		}				
 d102: ;
 	}
 	*TRACK_mod_.IBODY = *QTREE_.NBODYS + 1;
@@ -2715,8 +2703,8 @@ void step2_(double *DS, double *DSEF, int *NCROSS){
 	
 //	printf("LVERB %d\n", *PENGEOM_mod_.LVERB);
 //	printf(*PENGEOM_mod_.LVERB ? "true\n" : "false\n")
-	for (int i = 1; i <= *QSURF_.NSURF; i++){
-	 	QTREE_.KSP[i - 1]  = 0; //Ponteiros laterais das superfícies avaliadas.
+	for (int I = 1; I <= *QSURF_.NSURF; I++){
+	 	QTREE_.KSP[I - 1]  = 0; //Ponteiros laterais das superfícies avaliadas.
 	}
 	
 	//	printf("2\n");
@@ -2742,62 +2730,62 @@ void step2_(double *DS, double *DSEF, int *NCROSS){
 		NSCT = NSC;
 		NST = QTREE_.KSURF[NXG -1][KB1 - 1];
 			
-			for (int KI = NSCT; KI >= 1; KI--){
-		//		printf("5\n");
-			//	printf("KI: %d\n", KI);
-		//		printf("*PENGEOM_mod_.KSLAST : %d\n" ,*PENGEOM_mod_.KSLAST); 
-				// a particula atravessa uma superficie
-				*PENGEOM_mod_.KSLAST = IS[KI - 1];
-		//		printf("6\n");
-				if (QTREE_.KSP[*PENGEOM_mod_.KSLAST - 1] == 1)
-					QTREE_.KSP[*PENGEOM_mod_.KSLAST - 1] = 2;
-				else 
-					QTREE_.KSP[*PENGEOM_mod_.KSLAST - 1] = 1;
-				
-				DSP = S[KI - 1];
-				*DSEF = *DSEF + DSP;
-				*PENGEOM_mod_.DSTOT = *PENGEOM_mod_.DSTOT + DSP;
-				*TRACK_mod_.X = *TRACK_mod_.X + DSP * *TRACK_mod_.U;
-				*TRACK_mod_.Y = *TRACK_mod_.Y + DSP * *TRACK_mod_.V;
-				*TRACK_mod_.Z = *TRACK_mod_.Z + DSP * *TRACK_mod_.W;
-				NSC = NSC -1;
-				
-				if (NSC > 0){
-					for (int i = 1; i <= NSC; i++){
-						S[i-1] = S[i-1] - DSP;
-					}
+		for (int KI = NSCT; KI >= 1; KI--){
+	//		printf("5\n");
+		//	printf("KI: %d\n", KI);
+	//		printf("*PENGEOM_mod_.KSLAST : %d\n" ,*PENGEOM_mod_.KSLAST); 
+			// a particula atravessa uma superficie
+			*PENGEOM_mod_.KSLAST = IS[KI - 1];
+	//		printf("6\n");
+			if (QTREE_.KSP[*PENGEOM_mod_.KSLAST - 1] == 1)
+				QTREE_.KSP[*PENGEOM_mod_.KSLAST - 1] = 2;
+			else 
+				QTREE_.KSP[*PENGEOM_mod_.KSLAST - 1] = 1;
+			
+			DSP = S[KI - 1];
+			*DSEF = *DSEF + DSP;
+			*PENGEOM_mod_.DSTOT = *PENGEOM_mod_.DSTOT + DSP;
+			*TRACK_mod_.X = *TRACK_mod_.X + DSP * *TRACK_mod_.U;
+			*TRACK_mod_.Y = *TRACK_mod_.Y + DSP * *TRACK_mod_.V;
+			*TRACK_mod_.Z = *TRACK_mod_.Z + DSP * *TRACK_mod_.W;
+			NSC = NSC -1;
+			
+			if (NSC > 0){
+				for (int I = 1; I <= NSC; I++){
+					S[I-1] = S[I-1] - DSP;
 				}
-				
-				for (int KSS = 1; KSS <= NST; KSS++){
-					KS1 = QTREE_.KSURF[KSS-1][KB1-1];
-					KF = QTREE_.KFLAG[KSS-1][KB1 -1];
-					if ((KF < 3) && (QTREE_.KSP[KS1 -1] != KF))
-						goto L101;
-				}
+			}
+			
+			for (int KSS = 1; KSS <= NST; KSS++){
+				KS1 = QTREE_.KSURF[KSS-1][KB1-1];
+				KF = QTREE_.KFLAG[KSS-1][KB1 -1];
+				if ((KF < 3) && (QTREE_.KSP[KS1 -1] != KF))
+					goto L101;
+			}
 				// A partícula entra no invólucro.
-				L100:;
-				steplb2_(KB1, IERR);
-				// A partícula entra em um submódulo.
-				if (IERR == -1){
+			L100:;
+			steplb2_(KB1, IERR);
+			// A partícula entra em um submódulo.
+			if (IERR == -1){
+				KB1 = *TRACK_mod_.IBODY;
+				stepsi2_(KB1, S, IS, NSC);
+				goto L100;
+			} else{
+				//A particula entrou em um corpo material
+				if (*TRACK_mod_.MAT != 0){
+					*NCROSS = 1;
+					return;
+				} else{
 					KB1 = *TRACK_mod_.IBODY;
 					stepsi2_(KB1, S, IS, NSC);
-					goto L100;
-				} else{
-					//A particula entrou em um corpo material
-					if (*TRACK_mod_.MAT != 0){
-						*NCROSS = 1;
-						return;
-					} else{
-						KB1 = *TRACK_mod_.IBODY;
-						stepsi2_(KB1, S, IS, NSC);
-						goto L200;
-					}
-						
+					goto L200;
 				}
+						
+			}
 				
 				//Neste ponto, o programa saiu do ciclo DO.
-				L101:;
-			}
+			L101:;
+		}
 		//	printf("6\n");
 			goto L300;		
 	}
@@ -2886,7 +2874,7 @@ void step2_(double *DS, double *DSEF, int *NCROSS){
 			goto L102;
 	}
 //	printf("9\n");
-	if (PENGEOM_mod_.KDET[*TRACK_mod_.IBODY - 1] != PENGEOM_mod_.KDET[IBODYL -1] || *TRACK_mod_.MAT != MAT0){
+	if ((PENGEOM_mod_.KDET[*TRACK_mod_.IBODY - 1] != PENGEOM_mod_.KDET[IBODYL -1]) || (*TRACK_mod_.MAT != MAT0)){
 		*NCROSS = 1;
 		*DSEF = 0.0e0;
 		return;
@@ -2951,8 +2939,8 @@ void step2_(double *DS, double *DSEF, int *NCROSS){
 		*PENGEOM_mod_.DSTOT = *PENGEOM_mod_.DSTOT + DSP;
 		NSC = NSC -1;
 		if (NSC > 0){
-			for (int i = 1; i <= NSC; i++){
-				S[i-1] = S[i-1] - DSP;
+			for (int I = 1; I <= NSC; I++){
+				S[I-1] = S[I-1] - DSP;
 			}
 		}
 		steplb2_(KB1, IERR);
@@ -3856,7 +3844,7 @@ L101:;
 		goto L102;
 	if (ICHPAR > 0){
 		if (ICHPAR <= *NPINP){
-			VALUE = PARINP[ICHPAR];
+			VALUE = PARINP[ICHPAR-1];
 			ICHPAR = -ICHPAR; //Desativa a opção de alteração de parâmetro.
 		} else{
 			fprintf(IW, "%s(%f,%4d,%s)\n", LKEYW, VALUE, ICHPAR, LANGLE);
@@ -4832,7 +4820,7 @@ L309:;
 		goto L310;
 	if (ICHPAR > 0){
 		if (ICHPAR <= *NPINP){
-			VALUE = PARINP[ICHPAR];
+			VALUE = PARINP[ICHPAR-1];
 			ICHPAR = -ICHPAR; //Desativa a opção de alteração de parâmetro.
 		} else{
 			//fputs("linha 1229", IW);
@@ -5087,7 +5075,7 @@ L404:;
 		goto L405;
 	if (ICHPAR > 0){
 		if (ICHPAR <= *NPINP){
-			VALUE = PARINP[ICHPAR];
+			VALUE = PARINP[ICHPAR-1];
 			ICHPAR = -ICHPAR; //Desativa a opção de alteração de parâmetro.
 		} else{
 			fputs("linha 1462", IW);
@@ -6404,9 +6392,9 @@ void peinit2_(double *EMAX, int &NMATER, FILE *IWR, int *INFO, char (*PMFILE)[10
 	esia02_(); //Inicializa rotinas de ioniza��o por impacto de el�trons.
 	psia02_(); //Inicializa as rotinas de ioniza��o por impacto de p�sitrons.
 	gpha02_(); //Inicializa rotinas fotoel�tricas.
-//	relax0_();
+	//relax0_();
 	relax02_(); //Inicializa rotinas de relaxamento at�mico.
-//	rndg30_();
+	//rndg30_();
 	rndg302_(); //Inicializa a rotina de amostragem gaussiana.
 
 
@@ -15925,6 +15913,7 @@ L78:;
 
 	//end = clock();
 	//double tempo = (double)(end - start) / CLOCKS_PER_SEC;
+	start = clock();
 	double TSECIN;
 	timer2_(TSECIN);
 
@@ -24602,10 +24591,11 @@ void dosew2_(double &SHN, double &TSIM, FILE *IWR){
 int main(){
 
 	inicializarStructs();
-	start = clock();
+	
 
 	//Leia os arquivos de entrada e inicialize os pacotes de simulação.
 	pmrdr2_();
+	
 
 	if (*CSOUR0_.JOBEND != 0)
 		goto L103;
@@ -24712,6 +24702,11 @@ mat=(int (*)[col])malloc(sizeof(*mat)*row);*/
 	TRACK_mod_.IPOL = (int *) malloc(sizeof(int));
 	TRACK_mod_.LAGE = (bool *) malloc(sizeof(bool));
 
+	*TRACK_mod_.IPOL = 0;
+	*TRACK_mod_.LAGE = false;
+	*TRACK_mod_.PAGE = 0.0e0;
+
+
 	//PENELOPE_mod
 	PENELOPE_mod_.EABS =  (double (*)[3])malloc(MAXMAT*3*sizeof(double));
 	PENELOPE_mod_.C1 = (double *) malloc(MAXMAT*sizeof(double));
@@ -24727,6 +24722,26 @@ mat=(int (*)[col])malloc(sizeof(*mat)*row);*/
 	PENELOPE_mod_.NEGP = (int *) malloc(sizeof(int));
 	PENELOPE_mod_.NMAT = (int *) malloc(sizeof(int));
 
+
+	for (int I = 1; I <= MAXMAT; I++){
+		for (int J = 1; J <= 3; J++){
+			PENELOPE_mod_.EABS[I-1][J-1] = 50.0e0;
+		}
+		PENELOPE_mod_.C1[I-1] = 0.01e0;
+		PENELOPE_mod_.C2[I-1] = 0.01e0;
+		PENELOPE_mod_.WCC[I-1] = 1.0e2;
+		PENELOPE_mod_.WCR[I-1] = 1.0e2;
+		PENELOPE_mod_.DEN[I-1] = 1.0e0;
+		PENELOPE_mod_.RDEN[I-1] = 1.0e0;
+
+
+	}
+	*PENELOPE_mod_.NEGP = 200;
+	*PENELOPE_mod_.NMS = 1000;
+
+
+
+
 	//PENGEOM_mod
 	PENGEOM_mod_.BALIAS = (char (*)[5]) malloc(NB*5*sizeof(char));
 	PENGEOM_mod_.DSTOT = (double *) malloc(sizeof(double));
@@ -24735,6 +24750,14 @@ mat=(int (*)[col])malloc(sizeof(*mat)*row);*/
 	PENGEOM_mod_.KSLAST = (int *) malloc(sizeof(int));
 	PENGEOM_mod_.NBODY = (int *) malloc(sizeof(int));
 	PENGEOM_mod_.LVERB = (bool *) malloc(sizeof(bool));
+
+	*PENGEOM_mod_.LVERB = false;
+
+	for (int I = 1; I <= NB; I++){
+		PENGEOM_mod_.KDET[I-1] = 0; 
+		PENGEOM_mod_.MATER[I-1] = 0;
+		strcpy(PENGEOM_mod_.BALIAS[I-1], "    ");
+	}
 
 	//QBODY
 	QBODY_.KBODY = (int (*)[NB]) malloc(NXG*NB*sizeof(int));

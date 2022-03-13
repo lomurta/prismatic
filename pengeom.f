@@ -2606,6 +2606,8 @@ C
      1  KFLAG(NB,NXG),KSP(NS),NWARN
 C
 
+	  call locate2()
+	  return
 
 C	  write(*,*) IBODY 
 C	  write(*,*) U
