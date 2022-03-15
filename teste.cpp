@@ -1281,6 +1281,8 @@ double cputim2_();
 
 void inicializarStructs();
 
+void memoryFree();
+
 }
 
 
@@ -4367,7 +4369,7 @@ L203:;
 			exit(0);	
 		 }
 L204:;
-		fprintf(IW, "%s(%$d)\n", LKEYW, KB);
+		fprintf(IW, "%s(%d)\n", LKEYW, KB);
 		//fputs("LInha 831\n", IW);
 		if (QBODY_.KBOMO[KB - 1] != 0){
 			fputs("*** This body is a module.", IW);
@@ -6303,21 +6305,21 @@ void peinit2_(double *EMAX, int &NMATER, FILE *IWR, int *INFO, char (*PMFILE)[10
 //	printf("\n\nNMAT: %d\n\n", *PENELOPE_mod_.NMAT);
 	for (int M = 1; M <= *PENELOPE_mod_.NMAT; M++){
 		if (PENELOPE_mod_.EABS[M-1][1-1] < 49.999e0){
-			fprintf(IWR, "EABS(1, %2d) = %.4E eV \n ERROR: electron absorption energy cannot be less than 50 eV\n", M, PENELOPE_mod_.EABS[M-1, 1-1]);
+			fprintf(IWR, "EABS(1, %2d) = %.4E eV \n ERROR: electron absorption energy cannot be less than 50 eV\n", M, PENELOPE_mod_.EABS[M-1][1-1]);
 			printf("Electron absorption energy less than 50 eV.");
 			exit(0);
 		}
 		EABS0[M-1][1-1] = PENELOPE_mod_.EABS[M-1][1-1];
 		
 		if (PENELOPE_mod_.EABS[M-1][2-1] < 49.999e0){
-			fprintf(IWR, "EABS(2, %2d) = %.4E eV \n ERROR: photon absorption energy cannot be less than 50 eV\n", M, PENELOPE_mod_.EABS[M-1, 2-1]);
+			fprintf(IWR, "EABS(2, %2d) = %.4E eV \n ERROR: photon absorption energy cannot be less than 50 eV\n", M, PENELOPE_mod_.EABS[M-1][2-1]);
 			printf("Photon absorption energy less than 50 eV.");
 			exit(0);
 		}
 		EABS0[M-1][2-1] = PENELOPE_mod_.EABS[M-1][2-1];
 		
 		if (PENELOPE_mod_.EABS[M-1][3-1] < 49.999e0){
-			fprintf(IWR, "EABS(3, %2d) = %.4E eV \n ERROR: positron absorption energy cannot be less than 50 eV.\n", M, PENELOPE_mod_.EABS[M-1, 3-1]);
+			fprintf(IWR, "EABS(3, %2d) = %.4E eV \n ERROR: positron absorption energy cannot be less than 50 eV.\n", M, PENELOPE_mod_.EABS[M-1][3-1]);
 			printf("Positron absorption energy less than 50 eV.");
 			exit(0);
 		}
@@ -6889,7 +6891,7 @@ void pematr2_(int *M, FILE *IRD, FILE *IWR, int *INFO){
 		printf("I/O error. Corrupt material data file.\n");
 		printf("     The first line is: %s\n\n", NAME);
 		printf("     ... and should be: %s\n", LNAME);
-		printf("PEMATR. Corrupt material data file\n", LNAME);
+		printf("PEMATR. Corrupt material data file\n");
 		exit(0);
 	}
 	
@@ -8466,7 +8468,7 @@ void ritai02_(int &PDF, double &XLOW, double &XHIGH, int &N, int &NU, double &ER
 	}
 	
 	if (XLOW > XHIGH-EPS) {
-		printf("Error in RITAI0: XLOW must be larger than XHIGH. XLOW=E%.6, XHIGH = E%.6\n", XLOW, XHIGH);
+		printf("Error in RITAI0: XLOW must be larger than XHIGH. XLOW = %.E6, XHIGH = %.E6\n", XLOW, XHIGH);
 		exit(0);
 	}
 		
@@ -8488,7 +8490,7 @@ void ritai02_(int &PDF, double &XLOW, double &XHIGH, int &N, int &NU, double &ER
 		NUNIF=min(max(8,-NU),N/2);
         NP=NUNIF;
         if (XLOW < 0.0e0){
-        	printf("Error in RITAI0: XLOW and NU are negative. XLOW= E%.7, NU=%11d", XLOW, NU);
+        	printf("Error in RITAI0: XLOW and NU are negative. XLOW= %.E7, NU=%11d", XLOW, NU);
 			exit(0);
 		}
 		CRITA_.XT[1-1]=XLOW;
@@ -8828,7 +8830,7 @@ L400:;
 				break;
 		}
 	
-		fprintf(IW, "%f  %.6E %f  %f  %f  %d\n", CRITA_.XT[I-1], PDFE, CRITA_.A[I-1], CRITA_.B[I-1], C[I-1], ERR[I-1] );
+		fprintf(IW, "%f  %.6E %f  %f  %f  %f\n", CRITA_.XT[I-1], PDFE, CRITA_.A[I-1], CRITA_.B[I-1], C[I-1], ERR[I-1] );
 	}
 	fclose(IW);
 	
@@ -8869,7 +8871,7 @@ L400:;
 			
 			P2 = CRITA_.DPAC[I-1] * pow(1.0e0+ (CRITA_.A[I-1] + CRITA_.B[I-1]*ETA) * ETA, 2) /
 				 ((1.0e0-CRITA_.B[I-1] * ETA *ETA) * C[I-1] * (CRITA_.XT[I+1-1] - CRITA_.XT[I-1]));
-			fprintf(IW1, "%f   %.8E   %f   %f   %f\n", XTAU, P1, P2, (P1-P2)/P1);	 
+			fprintf(IW1, "%f   %.8E   %f   %f   \n", XTAU, P1, P2, (P1-P2)/P1);	 
 		}
 	}
 	
@@ -11761,13 +11763,13 @@ double rmomx2_(double *X, double *PDF, double XD, double XU, int NP, int MOM){
 	}
 	
 	if ((X[1-1] < 0.0e0) || (PDF[1-1] < 0.0e0)){
-		printf("X(1),PDF(1) = %d, %d    RMOMX. Error code 2.\n", X[1-1],PDF[1-1]);
+		printf("X(1),PDF(1) = %f, %f    RMOMX. Error code 2.\n", X[1-1],PDF[1-1]);
 		exit(0);
 	}
 	
 	for (int I = 2; I<=NP; I++){
 		if ((X[I-1] < 0.0e0) || (PDF[I-1] < 0.0e0)){
-		   	printf("X(1),PDF(1) = %d, %d    RMOMX. Error code 2.\n", X[I-1],PDF[I-1]);
+		   	printf("X(1),PDF(1) = %f, %f    RMOMX. Error code 2.\n", X[I-1],PDF[I-1]);
 		   	exit(0);
 	   	}
 	   	if (X[I-1] < X[I-1-1]){
@@ -11784,7 +11786,7 @@ double rmomx2_(double *X, double *PDF, double XD, double XU, int NP, int MOM){
 	
 	if (XLOW >= XUP){
 		printf("WARNING: XLOW is greater than XUP in RMOMX.\n");
-		printf("XLOW = %d, XUP = %d\n", XLOW, XUP);
+		printf("XLOW = %f, XUP = %f\n", XLOW, XUP);
 		resultado = 0.0e0;
 		return resultado;	
 	}
@@ -12294,7 +12296,7 @@ void eela02_(double &XS0, double &XS1, double &XS2, double &XS0H, double &A, dou
 
 
 	if ((RMU1 < 0.0e0) || (RMU1 < RMU2)){
-		printf("*** The arguments in subroutine EELa0 are inconsistent. XS0 = %d, XS1 = %d\n", XS0,XS1);
+		printf("*** The arguments in subroutine EELa0 are inconsistent. XS0 = %f, XS1 = %f\n", XS0,XS1);
 		exit(0);	
 	}
 	
@@ -13763,7 +13765,7 @@ void merge22_(double *X1,double *Y1, double *X2, double *Y2, double *XM, double 
 	
 	
 	if ((N1 > NP) || (N2 > NP)){
-		printf("MERGE2. Increase the value of the parameter NP = %d\n", fmax(N1, N2));
+		printf("MERGE2. Increase the value of the parameter NP = %f\n", fmax(N1, N2));
 		exit(0);
 	}
 
@@ -18902,7 +18904,7 @@ L104:;
 
 	//Incrementar contadores de partículas.
 	if (TRACK_mod_.ILB[1-1] == 1){
-		CNT0_.DPRIM[IEXIT-1]=CNT0_.DPRIM[IEXIT-1]+*TRACK_mod_.WGHT;
+		CNT0_.DPRIM[IEXIT-1]=CNT0_.DPRIM[IEXIT-1]+ *TRACK_mod_.WGHT;
 		/*if (*CSOUR0_.LPSF){  não sera implementado redução de variancia como divisão de particulas ou roleta russa
 			if (NSPL1 > 1)
 				CNT0_.DPRIM[IEXIT-1]=CNT0_.DPRIM[IEXIT-1]+*TRACK_mod_.WGHT*(NSPL1-1);
@@ -18916,7 +18918,7 @@ L104:;
 		}
 
 	}else{
-		CNT0_.DSEC[IEXIT-1][*TRACK_mod_.KPAR-1]=CNT0_.DSEC[IEXIT-1][*TRACK_mod_.KPAR-1]+*TRACK_mod_.WGHT;
+		CNT0_.DSEC[IEXIT-1][*TRACK_mod_.KPAR-1]=CNT0_.DSEC[IEXIT-1][*TRACK_mod_.KPAR-1]+ *TRACK_mod_.WGHT;
 	}
 
 	if (IEXIT < 3){
@@ -18967,8 +18969,8 @@ L202:;
 			DEP=*TRACK_mod_.E* *TRACK_mod_.WGHT;
           	CNT1_.DEBO[*TRACK_mod_.IBODY-1]=CNT1_.DEBO[*TRACK_mod_.IBODY-1]-DEP; 
 			if (*CNT6_.LDOSEM){
-				DEP = -DEP;
-				sdose2_(DEP,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,*TRACK_mod_.MAT,*CNTRL_.N);
+				double wDEP = -DEP;
+				sdose2_(wDEP,*TRACK_mod_.X,*TRACK_mod_.Y,*TRACK_mod_.Z,*TRACK_mod_.MAT,*CNTRL_.N);
 			}
 		}else{
 			goto L202;
@@ -19011,7 +19013,7 @@ L202:;
 
 	}
 
-	//Contadores de estado final.
+	//Contadores de estado final
 	for (int I=1; I <= 3; I++){
 		CNT0_.PRIM[I-1]=CNT0_.PRIM[I-1]+CNT0_.DPRIM[I-1];
         CNT0_.PRIM2[I-1]=CNT0_.PRIM2[I-1]+pow(CNT0_.DPRIM[I-1],2);
@@ -23422,7 +23424,7 @@ void pmwrt2_(int ICLOSE){
 	double PI=3.1415926535897932e0;
 	double RA2DE=180.0e0/PI;
 
-	double FT, ERR1, ERR2, ERR, FB, FA, DF, QER, QAV, EFFIC, PTOT, YAV, YERR, EINTL, FACT;
+	double FT, ERR1, ERR2, ERR, FB, FA, DF, QER, QAV, EFFIC, PTOT, YAV, YERR, EINTL, FACT, FNT;
 
 	double WSEC[3][3];
 	double WSEC2[3][3];
@@ -23594,7 +23596,7 @@ void pmwrt2_(int ICLOSE){
 	fprintf(IWR2, "   Downbound primary particles ............. %.6E\n", CNT0_.PRIM[2-1]);
 	fprintf(IWR2, "   Absorbed primary particles .............. %.6E\n\n", CNT0_.PRIM[3-1]);
 
-	double FNT=1.0e0/ *CNTRL_.SHN;
+	FNT=1.0e0 / *CNTRL_.SHN;
 	if (*CSOUR0_.KPARP != 0){
 		FT=(CNT0_.PRIM[1-1]+CNT0_.SEC[1-1][*CSOUR0_.KPARP-1])*FNT;
         ERR1=3.0e0*FNT*sqrt(fabs(CNT0_.PRIM2[1-1]-pow(CNT0_.PRIM[1-1],2)*FNT));
@@ -23658,7 +23660,7 @@ void pmwrt2_(int ICLOSE){
 
 	//Energias médias depositadas nos corpos..
 
-	DF=1.0e0/ *CNTRL_.SHN;
+	DF=1.0e0 / *CNTRL_.SHN;
 
 	fprintf(IWR2, "Average deposited energies (bodies):\n");
 	for (int KB = 1; KB <= *PENGEOM_mod_.NBODY; KB++){
@@ -23866,13 +23868,13 @@ void imdetd2_(FILE *IWR){
 	fprintf(IWR, "\n");
 
 	for (int I = 1; I <= *CIMDET_.NID; I++){
-		fprintf(IWR, "	%.16f	", CIMDET_.IDCUT[I-1]);
+		fprintf(IWR, "	%d	", CIMDET_.IDCUT[I-1]);
 	}
 	fprintf(IWR, "\n");
 
 	for (int I = 1; I <= *CIMDET_.NID; I++){
 		fprintf(IWR, "	%s	\n", SPCDIO[I-1]);
-		fprintf(IWR, "	%.16f	%.16f	%.16f	%.16f	%.16f	%.d\n", CIMDET_.NE[I-1],CIMDET_.EL[I-1],CIMDET_.EU[I-1],CIMDET_.BSE[I-1],CIMDET_.RBSE[I-1],CIMDET_.LLE[I-1]);
+		fprintf(IWR, "	%d	%.16f	%.16f	%.16f	%.16f	%.d\n", CIMDET_.NE[I-1],CIMDET_.EL[I-1],CIMDET_.EU[I-1],CIMDET_.BSE[I-1],CIMDET_.RBSE[I-1],CIMDET_.LLE[I-1]);
 		for (int J=1; J <= CIMDET_.NE[I-1]; J++){
 			fprintf(IWR, "	%.16f	", CIMDET_.DIT[I-1][J-1]);
 		}
@@ -23924,7 +23926,7 @@ void imdetd2_(FILE *IWR){
 			fprintf(IWR,"\n");
 		}
 
-		fprintf(IWR, "		%d		%.16f		%.16f		%.16f		%d	\n", CIMDET_.NAGE[I-1],CIMDET_.AGEL[I-1],CIMDET_.AGE[I-1],CIMDET_.BAGE[I-1],CIMDET_.RBAGE[I-1],CIMDET_.LLAGE[I-1]);
+		fprintf(IWR, "		%d		%.16f		%.16f		%.16f		 %.16f		 %d		\n", CIMDET_.NAGE[I-1],CIMDET_.AGEL[I-1],CIMDET_.AGEU[I-1],CIMDET_.BAGE[I-1],CIMDET_.RBAGE[I-1],CIMDET_.LLAGE[I-1]);
 		if (CIMDET_.NAGE[I-1] > 0){
 			fprintf(IWR, "		%s	\n",SPCAGE[I-1] );
 			
@@ -24630,6 +24632,8 @@ L103:;
 	pmwrt2_(1);
 	printf("Number of simulated showers = %.6E\n", *CNTRL_.SHN);
 	printf("*** END ***\n");
+
+	memoryFree();
 
 	system("PAUSE");   
 	return 0;
@@ -25566,7 +25570,793 @@ mat=(int (*)[col])malloc(sizeof(*mat)*row);*/
 
 }
 
+void memoryFree(){
 
+	free(QSURF_.AXX );
+	free(QSURF_.AXY );
+	free(QSURF_.AXZ );
+	free(QSURF_.AYY );
+	free(QSURF_.AYZ );
+	free(QSURF_.AZZ );
+	free(QSURF_.AX );
+	free(QSURF_.AY );
+	free(QSURF_.AZ );
+	free(QSURF_.A0 );
+	free(QSURF_.NSURF );
+	free(QSURF_.KPLANE	);	
+
+	//QTREE);
+	free(QTREE_.NBODYS);
+	free(QTREE_.KMOTH );
+	free(QTREE_.KDGHT   );
+	free(QTREE_.KSURF );
+	free(QTREE_.KFLAG );
+	free(QTREE_.KSP);
+	free(QTREE_.NWARN );
+
+	//TRACK_mod);
+	free(TRACK_mod_.E  );
+	free(TRACK_mod_.X );
+	free(TRACK_mod_.Y  );
+	free(TRACK_mod_.Z  );
+	free(TRACK_mod_.U  );
+	free(TRACK_mod_.V  );
+	free(TRACK_mod_.W );
+	free(TRACK_mod_.WGHT);
+	free(TRACK_mod_.SP1 );
+	free(TRACK_mod_.SP2 );
+	free(TRACK_mod_.SP3 );
+	free(TRACK_mod_.PAGE);
+	free(TRACK_mod_.KPAR);
+	free(TRACK_mod_.IBODY);
+	free(TRACK_mod_.MAT );
+	free(TRACK_mod_.ILB );
+	free(TRACK_mod_.IPOL );
+	free(TRACK_mod_.LAGE );
+
+	//PENELOPE_mod);
+	free(PENELOPE_mod_.EABS );
+	free(PENELOPE_mod_.C1); 
+	free(PENELOPE_mod_.C2); 
+	free(PENELOPE_mod_.WCC);
+	free(PENELOPE_mod_.WCR);
+	free(PENELOPE_mod_.DEN);
+	free(PENELOPE_mod_.RDEN);
+	free(PENELOPE_mod_.E0STEP);
+	free(PENELOPE_mod_.DESOFT);
+	free(PENELOPE_mod_.SSOFT); 
+	free(PENELOPE_mod_.NMS); 
+	free(PENELOPE_mod_.NEGP);
+	free(PENELOPE_mod_.NMAT);
+
+	//PENGEOM_mod);
+	free(PENGEOM_mod_.BALIAS);
+	free(PENGEOM_mod_.DSTOT); 
+	free(PENGEOM_mod_.MATER); 
+	free(PENGEOM_mod_.KDET); 
+	free(PENGEOM_mod_.KSLAST);
+	free(PENGEOM_mod_.NBODY); 
+	free(PENGEOM_mod_.LVERB); 
+
+	//QBODY);
+	free(QBODY_.KBODY );
+	free(QBODY_.KBOMO );
+
+	//CECUTR);
+	free(CECUTR_.ECUTR);
+
+	//CSGAWR);
+	free(CSGAWR_.ISGAW);
+
+	//CERSEC);
+	free(CERSEC_.IERSEC);
+
+	//CEGRID);
+	free(CEGRID_.EMIN );
+	free(CEGRID_.EL  );
+	free(CEGRID_.EU  );
+	free(CEGRID_.ET );
+    free(CEGRID_.DLEMP);
+	free(CEGRID_.DLEMP1);
+	free(CEGRID_.DLFC );
+	free(CEGRID_.XEL );
+	free(CEGRID_.XE );
+	free(CEGRID_.XEK  );
+	free(CEGRID_.KE );
+
+	//CESI0);
+	free(CESI0_.XESI );
+	free(CESI0_.IESIF );
+	free(CESI0_.IESIL );
+	free(CESI0_.NSESI );
+	free(CESI0_.NCURE );
+
+	//CPSI0);
+	free(CPSI0_.XPSI );
+	free(CPSI0_.IPSIF );
+	free(CPSI0_.IPSIL );
+	free(CPSI0_.NSPSI );
+	free(CPSI0_.NCURP );
+
+	//CADATA_);
+	free(CADATA_.ATW );
+	free(CADATA_.EPX );
+	free(CADATA_.RSCR);
+	free(CADATA_.ETA );
+	free(CADATA_.EB);
+	free(CADATA_.ALW);
+	free(CADATA_.CP0 	);
+	free(CADATA_.IFI );
+	free(CADATA_.IKS );
+	free(CADATA_.NSHT);
+	free(CADATA_.LASYMB);
+
+
+	//CGPH00_);
+	free(CGPH00_.EPH );
+	free(CGPH00_.XPH );
+	free(CGPH00_.IPHF);
+	free(CGPH00_.IPHL);
+	free(CGPH00_.NPHS);
+	free(CGPH00_.NCUR);
+
+	//CRELAX_);
+	free(CRELAX_.P );
+	free(CRELAX_.ET );
+	free(CRELAX_.F  );
+	free(CRELAX_.IS0 );
+	free(CRELAX_.IS1 );
+	free(CRELAX_.IS2 );
+	free(CRELAX_.IFIRST);
+	free(CRELAX_.ILAST );
+	free(CRELAX_.NCUR );
+	free(CRELAX_.KS );
+	free(CRELAX_.MODER );
+
+	//CRITAA_);
+	free(CRITAA_.XA );
+	free(CRITAA_.AA );
+	free(CRITAA_.BA );
+	free(CRITAA_.FA );
+	free(CRITAA_.IA );
+	free(CRITAA_.NPM1A );
+
+	//CRNDG3_);
+	free(CRNDG3_.X );
+	free(CRNDG3_.A );
+	free(CRNDG3_.B );
+	free(CRNDG3_.F );
+	free(CRNDG3_.KA);
+	free(CRNDG3_.NPM1);
+
+	//CRITA_
+	free(CRITA_.XT );
+	free(CRITA_.PAC );
+	free(CRITA_.DPAC);
+	free(CRITA_.A  );
+	free(CRITA_.B  );
+	free(CRITA_.IL );
+	free(CRITA_.IU );
+	free(CRITA_.NPM1);
+	
+	/*CRITA_.QTI = CRIT);A_.XT;
+	CRITA_.PACI = CRITA);_.PAC;
+	CRITA_.DPACI = CRIT);A_.DPAC;
+	CRITA_.AI = CRITA_.);A;
+	CRITA_.BI = CRITA_.);B; 
+	CRITA_.ITLI = CRITA);_.IL;
+	CRITA_.ITUI = CRITA);_.IU;
+	CRITA_.NPM1I = CRIT);A_.NPM1;
+	);
+	CRITA_.XTI = CRITA_);.XT;*/
+
+	//CRITAN_);
+	free(CRITAN_.CNORM);
+
+	//COMPOS_);
+	free(COMPOS_.STF );
+	free(COMPOS_.ZT);
+	free(COMPOS_.AT);
+	free(COMPOS_.RHO );
+	free(COMPOS_.VMOL);
+	free(COMPOS_.IZ);
+	free(COMPOS_.NELEM);
+
+	//CRANGE_);
+	free(CRANGE_.RANGE );
+	free(CRANGE_.RANGEL);
+
+	//CEIN_);
+	free(CEIN_.EXPOT);
+	free(CEIN_.OP2 );
+	free(CEIN_.F );
+	free(CEIN_.UI );
+	free(CEIN_.WRI);
+	free(CEIN_.KZ );
+	free(CEIN_.KS );
+	free(CEIN_.NOSC );
+
+	//CEINTF_);
+	free(CEINTF_.T1EI );
+	free(CEINTF_.T2EI );
+	free(CEINTF_.T1PI );
+	free(CEINTF_.T2PI );
+
+	//CEIN00_);
+	free(CEIN00_.SEH0 );
+	free(CEIN00_.SEH1 );
+	free(CEIN00_.SEH2 );
+	free(CEIN00_.SES0 );
+	free(CEIN00_.SES1 );
+	free(CEIN00_.SES2 );
+	free(CEIN00_.SET0 );
+	free(CEIN00_.SET1 );
+	free(CEIN00_.SET2 );
+
+	//CPIN00_);
+	free(CPIN00_.SPH0 );
+	free(CPIN00_.SPH1 );
+	free(CPIN00_.SPH2 );
+	free(CPIN00_.SPS0 );
+	free(CPIN00_.SPS1 );
+	free(CPIN00_.SPS2 );
+	free(CPIN00_.SPT0 );
+	free(CPIN00_.SPT1 );
+	free(CPIN00_.SPT2 );
+
+	//CEINAC_);
+	free(CEINAC_.EINAC);
+	free(CEINAC_.IEIN );
+	free(CEINAC_.NEIN );
+
+	//CESIAC_);
+	free(CESIAC_.ESIAC);
+	free(CESIAC_.IESI );
+	free(CESIAC_.NESI );
+
+	//CESIN_);
+	free(CESIN_.XSEIN );
+	free(CESIN_.XSESI );
+	free(CESIN_.ISIE );
+
+	//CPINAC_);
+	free(CPINAC_.PINAC);
+	free(CPINAC_.IPIN );
+	free(CPINAC_.NPIN );
+
+	//CPSIAC_);
+	free(CPSIAC_.PSIAC );
+	free(CPSIAC_.IPSI );
+	free(CPSIAC_.NPSI );
+
+	//CPSIN_);
+	free(CPSIN_.XSPIN );
+	free(CPSIN_.XSPSI );
+	free(CPSIN_.ISIP );
+
+	//CGCO_);
+	free(CGCO_.FCO    );
+	free(CGCO_.UICO  );
+	free(CGCO_.FJ0   );
+	free(CGCO_.PTRSH  );
+	free(CGCO_.KZCO   );
+	free(CGCO_.KSCO   );
+	free(CGCO_.NOSCCO );
+
+	//CEIMFP_);
+	free(CEIMFP_.SEHEL );
+	free(CEIMFP_.SEHIN );
+	free(CEIMFP_.SEISI );
+	free(CEIMFP_.SEHBR );
+	free(CEIMFP_.SEAUX );
+    free(CEIMFP_.SETOT );
+	free(CEIMFP_.CSTPE );
+	free(CEIMFP_.RSTPE );
+	free(CEIMFP_.DEL  );
+	free(CEIMFP_.W1E );
+    free(CEIMFP_.W2E );
+	free(CEIMFP_.DW1EL );
+	free(CEIMFP_.DW2EL );
+	free(CEIMFP_.RNDCE );
+	free(CEIMFP_.AE   );
+	free(CEIMFP_.BE   );
+    free(CEIMFP_.T1E  );
+	free(CEIMFP_.T2E );
+
+	//CLAS1E_);
+	free(CLAS1E_.TSTPE );
+	free(CLAS1E_.TSTRE );
+	free(CLAS1E_.TRL1E );
+	free(CLAS1E_.TRL2E );
+
+	//CPIMFP_);
+	free(CPIMFP_.SPHEL );
+	free(CPIMFP_.SPHIN );
+	free(CPIMFP_.SPISI );
+	free(CPIMFP_.SPHBR );
+	free(CPIMFP_.SPAN );
+	free(CPIMFP_.SPAUX );
+	free(CPIMFP_.SPTOT );
+	free(CPIMFP_.CSTPP );
+	free(CPIMFP_.RSTPP );
+	free(CPIMFP_.W1P  );
+	free(CPIMFP_.W2P  );
+	free(CPIMFP_.DW1PL );
+	free(CPIMFP_.DW2PL );
+	free(CPIMFP_.RNDCP );
+	free(CPIMFP_.AP   );
+	free(CPIMFP_.BP   );
+	free(CPIMFP_.T1P );
+	free(CPIMFP_.T2P  );
+
+	//CLAS1P_);
+	free(CLAS1P_.TSTPP );
+	free(CLAS1P_.TSTRP );
+	free(CLAS1P_.TRL1P );
+	free(CLAS1P_.TRL2P );
+
+	//CEEL00_.);
+	free(CEEL00_.EJT  );
+	free(CEEL00_.XE0  );
+	free(CEEL00_.XE1  );
+	free(CEEL00_.XE2  );
+	free(CEEL00_.XP0  );
+	free(CEEL00_.XP1  );
+	free(CEEL00_.XP2  );
+	free(CEEL00_.T1E0 );
+	free(CEEL00_.T2E0 );
+	free(CEEL00_.T1P0 );
+	free(CEEL00_.T2P0 );
+	free(CEEL00_.EJTL );
+	free(CEEL00_.FJL  );
+	free(CEEL00_.A     );
+	free(CEEL00_.B     );
+	free(CEEL00_.C     );
+	free(CEEL00_.D  );
+
+	//CBRYLD_);
+	free(CBRYLD_.EBRY );
+	free(CBRYLD_.PBRY );
+
+	//CGIMFP_);
+	free(CGIMFP_.SGRA );
+	free(CGIMFP_.SGCO );
+	free(CGIMFP_.SGPH );
+	free(CGIMFP_.SGPP );
+	free(CGIMFP_.SGAUX);
+
+	//CGPH01_);
+	free(CGPH01_.ER );
+	free(CGPH01_.XSR );
+	free(CGPH01_.NPHD);
+
+	//CGPP01_);
+	free(CGPP01_.TRIP );
+
+	//CEBR_);
+	free(CEBR_.WB  );
+	free(CEBR_.PBCUT );
+	free(CEBR_.WBCUT );
+	free(CEBR_.PDFB  );
+	free(CEBR_.DPDFB);
+	free(CEBR_.PACB );
+	free(CEBR_.ZBR2 );
+
+	//CEBR01_);
+	free(CEBR01_.EBT );
+	free(CEBR01_.XS );
+	free(CEBR01_.TXS );
+	free(CEBR01_.X );
+	free(CEBR01_.Y );
+
+	//CEBR02_);
+	free(CEBR02_.P0 );
+
+	//CBRANG_);
+	free(CBRANG_.BET );
+	free(CBRANG_.BK  );
+	free(CBRANG_.BP1 );
+	free(CBRANG_.BP2 );
+	free(CBRANG_.ZBEQ );
+
+	//CEIN01_);
+	free(CEIN01_.EI  );
+	free(CEIN01_.EE  );
+	free(CEIN01_.CPS );
+	free(CEIN01_.AMOL );
+	free(CEIN01_.MOM );
+
+	//CSUMGA_);
+	free(CSUMGA_.IERGA);
+	free(CSUMGA_.NCALL);
+
+	//CPIN01_);
+	free(CPIN01_.EI );
+	free(CPIN01_.CPS );
+	free(CPIN01_.BHA1 );
+	free(CPIN01_.BHA2 );
+	free(CPIN01_.BHA3 );
+	free(CPIN01_.BHA4 );
+	free(CPIN01_.MOM );
+
+	//CDCSEP_);
+	free(CDCSEP_.ETS );
+	free(CDCSEP_.ETL   );
+	free(CDCSEP_.TH );
+	free(CDCSEP_.THR );
+	free(CDCSEP_.XMU );
+	free(CDCSEP_.XMUL );
+	free(CDCSEP_.ECS );
+	free(CDCSEP_.ETCS1);
+	free(CDCSEP_.ETCS2);
+	free(CDCSEP_.EDCS );
+	free(CDCSEP_.PCS );
+	free(CDCSEP_.PTCS1);
+	free(CDCSEP_.PTCS2);
+	free(CDCSEP_.PDCS );
+	free(CDCSEP_.DCSI );
+	free(CDCSEP_.DCSIL);
+	free(CDCSEP_.CSI );
+	free(CDCSEP_.TCS1I);
+	free(CDCSEP_.TCS2I);
+
+	//CEELDB_);
+	free(CEELDB_.XSE );
+	free(CEELDB_.PSE );
+	free(CEELDB_.ASE );
+	free(CEELDB_.BSE );
+	free(CEELDB_.ITLE );
+	free(CEELDB_.ITUE );
+
+	//CPELDB_);
+	free(CPELDB_.XSP );
+	free(CPELDB_.PSP );
+	free(CPELDB_.ASP );
+	free(CPELDB_.BSP );
+	free(CPELDB_.ITLP );
+	free(CPELDB_.ITUP );
+
+	//CELSEP_);
+	free(CELSEP_.EELMAX); 
+	free(CELSEP_.PELMAX); 
+	free(CELSEP_.RNDCED); 
+	free(CELSEP_.RNDCPD); 
+
+	//CGRA00_);
+	free(CGRA00_.FACTE );
+	free(CGRA00_.Q2MAX );
+	free(CGRA00_.MM );
+	free(CGRA00_.MOM );
+
+	//CGRA01_);
+	free(CGRA01_.FF);
+	free(CGRA01_.ERA );
+	free(CGRA01_.XSRA );
+	free(CGRA01_.IED );
+	free(CGRA01_.IEU );
+	free(CGRA01_.NE );
+
+	//CGRA02_);
+	free(CGRA02_.QQ );
+	free(CGRA02_.AR );
+	free(CGRA02_.BR );
+	free(CGRA02_.CR );
+	free(CGRA02_.DR );
+	free(CGRA02_.FF0 );
+	free(CGRA02_.QQM );
+
+	//);
+	free(CGRA03_.QRA );
+	free(CGRA03_.PRA );
+	free(CGRA03_.DPRA);
+	free(CGRA03_.ARA );
+	free(CGRA03_.BRA );
+	free(CGRA03_.PMAX);
+	free(CGRA03_.ITLRA );
+	free(CGRA03_.ITURA );
+
+	//CGPP00_);
+	free(CGPP00_.ZEQPP );
+	free(CGPP00_.F0 );
+	free(CGPP00_.BCB );
+
+	//RSEED_);
+	free(RSEED_.ISEED1 );
+	free(RSEED_.ISEED2 );
+
+	//CTITLE_);
+	free(CTITLE_.TITLE );
+	free(CTITLE_.TITLE2);
+
+	//CDATE_);
+	free(CDATE_.DATE23 );
+
+	//CSPGEO_);
+	free(CSPGEO_.DSMAX );
+	free(CSPGEO_.EABSB );
+
+	//CFORCI_);
+	free(CFORCI_.WLOW );
+	free(CFORCI_.WHIG );
+	free(CFORCI_.LFORCE);
+
+	//CXRSPL_);
+	free(CXRSPL_.IXRSPL);
+	free(CXRSPL_.ILBA );
+	free(CXRSPL_.LXRSPL);
+
+	//CSOUR0_);
+	free(CSOUR0_.CTHL );
+    free(CSOUR0_.DCTH );
+    free(CSOUR0_.PHIL );
+    free(CSOUR0_.DPHI );
+    free(CSOUR0_.KPARP );
+    free(CSOUR0_.JOBEND);
+    free(CSOUR0_.LSCONE);
+    free(CSOUR0_.LGPOL );
+    free(CSOUR0_.LPSF );
+
+	//CSOUR1_);
+	free(CSOUR1_.E0    );
+	free(CSOUR1_.EPMAX );
+	free(CSOUR1_.SP10  );
+	free(CSOUR1_.SP20  );
+	free(CSOUR1_.SP30  );
+
+	// CSOUR2_);
+	free(CSOUR2_.ESRC  );
+	free(CSOUR2_.PSRC );
+	free(CSOUR2_.IASRC );
+	free(CSOUR2_.FSRC );
+	free(CSOUR2_.LSPEC );
+
+	//CSOUR3_);
+	free(CSOUR3_.SX0  );
+	free(CSOUR3_.SY0  );
+	free(CSOUR3_.SZ0  );
+	free(CSOUR3_.SSX  );
+	free(CSOUR3_.SSY );
+	free(CSOUR3_.SSZ );
+	free(CSOUR3_.IXSBOD);
+	free(CSOUR3_.LEXSRC);
+	free(CSOUR3_.LEXBD );
+
+	//CSOUR4_);
+	free(CSOUR4_.WGMIN );
+	free(CSOUR4_.RWGMIN); 
+	free(CSOUR4_.WGMAX );
+	free(CSOUR4_.RLREAD); 
+	free(CSOUR4_.IPSFI );
+	free(CSOUR4_.NPSF );
+	free(CSOUR4_.NPSN );
+	free(CSOUR4_.NSPLIT); 
+	free(CSOUR4_.KODEPS); 
+
+	//CSOUR5_);
+	free(CSOUR5_.PSFI  );
+
+	//CNT0);
+	free(CNT0_.PRIM );
+	free(CNT0_.PRIM2);
+	free(CNT0_.DPRIM);
+	free(CNT0_.SEC	);
+	free(CNT0_.SEC2);
+	free(CNT0_.DSEC);
+	free(CNT0_.AVW	);
+	free(CNT0_.AVW2);
+	free(CNT0_.DAVW);
+	free(CNT0_.AVA	);
+	free(CNT0_.AVA2);
+	free(CNT0_.DAVA);
+	free(CNT0_.AVE	);
+	free(CNT0_.AVE2);
+	free(CNT0_.DAVE);
+
+	//CNT1_);
+	free(CNT1_.TDEBO );
+	free(CNT1_.TDEBO2);
+	free(CNT1_.DEBO );
+
+	//CNT2_);
+	free(CNT2_.SHIST );
+	free(CNT2_.NSEB );
+
+	//CNT3_);
+	free(CNT3_.SEDS );
+	free(CNT3_.SEDS2  );
+	free(CNT3_.DSDE );
+	free(CNT3_.RDSDE );
+	free(CNT3_.NSDE );
+
+	//CNT4_);
+	free(CNT4_.RLAST	);
+	free(CNT4_.RWRITE);
+	free(CNT4_.IDCUT	);
+	free(CNT4_.KKDI);
+	free(CNT4_.IPSF);
+	free(CNT4_.NID 	);
+	free(CNT4_.NPSFO	);
+	free(CNT4_.IPSFO	);
+
+	//CNT5_);
+	free(CNT5_.DEDE );
+	free(CNT5_.KBDE );
+	free(CNT5_.NED );
+
+	//CNT6_);
+	free(CNT6_.LDOSEM );
+
+	//CDUMP_);
+	free(CDUMP_.LDUMP );
+	free(CDUMP_.PFILED );
+
+	//CNTRL_
+	free(CNTRL_.TSIM	);
+	free(CNTRL_.TSEC );
+	free(CNTRL_.TSECA );
+	free(CNTRL_.TSECAD );
+	free(CNTRL_.CPUT0 );
+	free(CNTRL_.DUMPP );
+	free(CNTRL_.DSHN );
+	free(CNTRL_.SHN );
+	free(CNTRL_.N );
+
+	//CGCONE_);
+	free(CGCONE_.CPCT );
+	free(CGCONE_.CPST );
+	free(CGCONE_.SPCT );
+	free(CGCONE_.SPST );
+	free(CGCONE_.SPHI );
+	free(CGCONE_.CPHI );
+	free(CGCONE_.STHE );
+	free(CGCONE_.CTHE );
+	free(CGCONE_.CAPER);
+
+	//CENANG_);
+	free(CENANG_.EL );
+	free(CENANG_.EU );
+	free(CENANG_.THL );
+	free(CENANG_.THU	);
+	free(CENANG_.BSE	);
+	free(CENANG_.RBSE);
+	free(CENANG_.BSTH);
+	free(CENANG_.RBSTH);
+	free(CENANG_.BSPH);
+	free(CENANG_.RBSPH);
+	free(CENANG_.PDE    );
+	free(CENANG_.PDE2);
+	free(CENANG_.PDEP);
+	free(CENANG_.PDA    );
+	free(CENANG_.PDA2);
+	free(CENANG_.PDAP);
+	free(CENANG_.LPDE   );
+	free(CENANG_.LPDA);
+	free(CENANG_.NE);
+	free(CENANG_.NTH	);
+	free(CENANG_.NPH);
+	free(CENANG_.LLE	);
+	free(CENANG_.LLTH      );
+
+	//CIMDET_
+	free(CIMDET_.EL); 
+	free(CIMDET_.EU); 
+	free(CIMDET_.BSE); 
+	free(CIMDET_.RBSE); 
+	free(CIMDET_.ET); 
+	free(CIMDET_.EDEP); 
+	free(CIMDET_.EDEP2);
+	free(CIMDET_.EDEPP); 
+	free(CIMDET_.DIT); 
+	free(CIMDET_.DIT2); 
+	free(CIMDET_.DITP); 
+	free(CIMDET_.DIP); 
+	free(CIMDET_.DIP2); 
+	free(CIMDET_.DIPP); 
+	free(CIMDET_.FLT); 
+	free(CIMDET_.FLT2); 
+	free(CIMDET_.FLTP); 
+	free(CIMDET_.FLP); 
+	free(CIMDET_.FLP2); 
+	free(CIMDET_.FLPP); 
+	free(CIMDET_.AGEL); 
+	free(CIMDET_.AGEU); 
+	free(CIMDET_.BAGE); 
+	free(CIMDET_.RBAGE); 
+	free(CIMDET_.AGE); 
+	free(CIMDET_.AGE2); 
+	free(CIMDET_.AGEP); 
+	free(CIMDET_.LEDEP); 
+	free(CIMDET_.LDIT); 
+	free(CIMDET_.LDIP); 
+	free(CIMDET_.LFLT); 
+	free(CIMDET_.LFLP); 
+	free(CIMDET_.LAGEA); 
+	free(CIMDET_.IDCUT); 
+	free(CIMDET_.NE); 
+	free(CIMDET_.LLE); 
+	free(CIMDET_.LLAGE); 
+	free(CIMDET_.NAGE); 
+	free(CIMDET_.NID); 
+
+	//CENDET);
+	free(CENDET_.EL  );
+	free(CENDET_.EU  );
+	free(CENDET_.BSE );
+	free(CENDET_.RBSE );
+	free(CENDET_.EDEP );
+	free(CENDET_.EDEP2);
+	free(CENDET_.DET );
+	free(CENDET_.NE  );
+	free(CENDET_.NID );
+	free(CENDET_.LLE );
+
+	//CDOSE1_);
+	free(CDOSE1_.DOSE );
+	free(CDOSE1_.DOSE2);
+	free(CDOSE1_.DOSEP);
+	free(CDOSE1_.LDOSE);
+	free(CDOSE1_.KDOSE);
+
+	//CDOSE2_);
+	free(CDOSE2_.DDOSE);
+	free(CDOSE2_.DDOSE2 );
+	free(CDOSE2_.DDOSEP );
+	free(CDOSE2_.LDDOSE );
+
+	//CDOSE3_);
+	free(CDOSE3_.DXL );
+	free(CDOSE3_.DXU );
+	free(CDOSE3_.BDOSE    );
+	free(CDOSE3_.RBDOSE );
+	free(CDOSE3_.NDB );
+
+	//CDOSE4_);
+	free(CDOSE4_.VMASS );
+	//CJUMP1_);
+	free(CJUMP1_.ELAST1  );
+	free(CJUMP1_.ELAST2 );
+	free(CJUMP1_.MHINGE );
+	free(CJUMP1_.KSOFTE );
+	free(CJUMP1_.KSOFTI );
+	free(CJUMP1_.KDELTA );
+
+	//SECST_);
+	free(SECST_.ES );
+	free(SECST_.XS );
+	free(SECST_.YS );
+	free(SECST_.ZS );
+	free(SECST_.US );
+	free(SECST_.VS );
+	free(SECST_.WS );
+	free(SECST_.WGHTS );
+	free(SECST_.SP1S );
+	free(SECST_.SP2S );
+	free(SECST_.SP3S );
+	free(SECST_.PAGES );
+    free(SECST_.KS );
+	free(SECST_.IBODYS);
+	free(SECST_.MS );
+	free(SECST_.ILBS );
+	free(SECST_.IPOLS );
+	free(SECST_.NSEC );
+
+	//CJUMP0_);
+	free(CJUMP0_.P );
+	free(CJUMP0_.ST );
+	free(CJUMP0_.DST);
+	free(CJUMP0_.DSR);
+	free(CJUMP0_.W1 );
+	free(CJUMP0_.W2 );
+	free(CJUMP0_.T1 );
+	free(CJUMP0_.T2 ); 
+
+	//CHIST_
+	free(CHIST_.ILBA); 
+
+
+
+
+}
 
 
 
