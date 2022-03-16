@@ -1211,8 +1211,8 @@ C
 
 
 
-c      CALL PMRDR
-	  CALL pmrdr2
+      CALL PMRDR
+c	  CALL pmrdr2
 	  
 	 
 	  
