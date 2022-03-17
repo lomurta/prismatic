@@ -75,6 +75,9 @@ char SPCFLO[NIDM][20];
 char SPCAGE[NIDM][20];
 char SPCDEO[NIDM][20];
 
+double S[NS2M];
+int IS[NS2M];
+
 int imprimiu=0;
 int wIPOLI=0;
 
@@ -1011,7 +1014,9 @@ void fsurf2_(int &KS, double &A, double &B, double &C);
 
 void step2_(double *DS, double *DSEF, int *NCROSS);
 
-void stepsi2_(int &KB, double *S, int *IS, int &NSC);
+void stepsi2_(int &KB, int &NSC);
+
+//void stepsi2_(int &KB, double *S, int *IS, int &NSC);
 
 void stepsi_(int &KB, double *S, int *IS, int &NSC);
 
@@ -2628,8 +2633,7 @@ d102: ;
  
 }
 
-	double S[NS2M];
-	int IS[NS2M];
+
 
 
 void step2_(double *DS, double *DSEF, int *NCROSS){
@@ -2743,7 +2747,8 @@ void step2_(double *DS, double *DSEF, int *NCROSS){
 	
 	if (*TRACK_mod_.IBODY > *QTREE_.NBODYS){
 		KB1 = *QTREE_.NBODYS;
-		stepsi2_(KB1, S, IS, NSC);
+		//stepsi2_(KB1, S, IS, NSC);
+		stepsi2_(KB1, NSC);
 	//	printf("4\n");
 		if (NSC == 0)
 			goto L300;
@@ -2788,7 +2793,8 @@ void step2_(double *DS, double *DSEF, int *NCROSS){
 			// A partícula entra em um submódulo.
 			if (IERR == -1){
 				KB1 = *TRACK_mod_.IBODY;
-				stepsi2_(KB1, S, IS, NSC);
+				//stepsi2_(KB1, S, IS, NSC);
+				stepsi2_(KB1, NSC);
 				goto L100;
 			} else{
 				//A particula entrou em um corpo material
@@ -2799,7 +2805,9 @@ void step2_(double *DS, double *DSEF, int *NCROSS){
 					return;
 				} else{
 					KB1 = *TRACK_mod_.IBODY;
-					stepsi2_(KB1, S, IS, NSC);
+					//stepsi2_(KB1, S, IS, NSC);
+					stepsi2_(KB1, NSC);
+				
 					goto L200;
 				}
 						
@@ -2823,7 +2831,8 @@ void step2_(double *DS, double *DSEF, int *NCROSS){
 		NERR = 0;
 L102:;
 	KB1 = *TRACK_mod_.IBODY;
-	stepsi2_(KB1, S, IS, NSC);
+	//stepsi2_(KB1, S, IS, NSC);
+	stepsi2_(KB1, NSC);
 	steplb2_(KB1, IERR);
 	
 	//Evidência de erros de arredondamento.
@@ -2975,14 +2984,16 @@ L201:;
 		KB1 = *TRACK_mod_.IBODY;
 		if (IERR == -1){
 			// A particula entrou em um submodulo
-			stepsi2_(KB1, S, IS, NSC);
+			//stepsi2_(KB1, S, IS, NSC);
+			stepsi2_(KB1, NSC);
 			steplb2_(KB1, IERR);
 			goto L201;
 		} 
 		else if (IERR == 1){
 			//A partícula deixa o corpo ou módulo.
 			if (*TRACK_mod_.IBODY <= *QTREE_.NBODYS){
-				stepsi2_(KB1, S, IS, NSC);
+				//stepsi2_(KB1, S, IS, NSC);
+				stepsi2_(KB1, NSC);
 				steplb2_(KB1, IERR);
 				goto L201;
 			} 
@@ -3020,7 +3031,8 @@ L201:;
 			return;
 		}
 L202:;
-		stepsi2_(KB1, S, IS, NSC);
+		//stepsi2_(KB1, S, IS, NSC);
+		stepsi2_(KB1, NSC);
 		goto L200;
 		//Neste ponto, o programa saiu do ciclo DO.	
 L203:;	
@@ -3042,17 +3054,17 @@ L203:;
 }
 
 
-void stepsi2_(int &KB, double *S, int *IS, int &NSC){
-
-
-	//stepsi_(KB, S, IS, NSC);
-	//return;
-
-	/*Calcula as interseções da trajetória com o limite
+//void stepsi2_(int &KB, double *S, int *IS, int &NSC){
+//void stepsi2_(int &KB, double S[NS2M], int IS[NS2M], int &NSC){
+void stepsi2_(int &KB,  int &NSC){
+/*Calcula as interseções da trajetória com o limite
 	Superfícies do corpo KB. Os cruzamentos são adicionados à lista e
 	classificados em ordem decrescente. 
 	Esta sub-rotina funciona apenas quando chamada de dentro da sub-rotina STEP.*/
 	
+//stepsi_(KB, S, IS, NSC);
+	//return;
+
 	int KFL;
 	int KS;
 	double ABSA;
@@ -3082,11 +3094,11 @@ void stepsi2_(int &KB, double *S, int *IS, int &NSC){
 		/*As interseções com uma determinada superfície são calculadas apenas uma vez.
 		O ponteiro lateral de uma superfície deve ser alterado cada vez que o a superfície está cruzada.*/
 		
-		KFL = QTREE_.KFLAG[KSS - 1 ][KB -1];
+		KFL = QTREE_.KFLAG[KSS-1][KB-1];
 		if (KFL > 4)
 			goto L100;
-		KS = QTREE_.KSURF[KSS - 1][KB - 1];
-		if (QTREE_.KSP[KS - 1] != 0) 
+		KS = QTREE_.KSURF[KSS-1][KB-1];
+		if (QTREE_.KSP[KS-1] != 0) 
 			goto L100;
 		fsurf2_(KS, A, B, C);
 		ABSA = fabs(A);
@@ -3199,11 +3211,9 @@ L100:;
    	   			KKMAX = IS[KI -1];
    	   			IS[KI-1] = IS[KMAX -1];
 				IS[KMAX -1] = KKMAX; 
-			}
-			
+			}	
 		}
-	}
-		
+	}	
 }
 
 
@@ -3293,6 +3303,18 @@ L100:;
 		*TRACK_mod_.MAT = 0;
 	}
 }
+	
+
+
+
+
+
+
+
+
+
+
+	
 
 
 
@@ -6424,9 +6446,9 @@ void peinit2_(double *EMAX, int &NMATER, FILE *IWR, int *INFO, char (*PMFILE)[10
 	esia02_(); //Inicializa rotinas de ioniza��o por impacto de el�trons.
 	psia02_(); //Inicializa as rotinas de ioniza��o por impacto de p�sitrons.
 	gpha02_(); //Inicializa rotinas fotoel�tricas.
-	relax0_();
+	//relax0_();
 	relax02_(); //Inicializa rotinas de relaxamento at�mico.
-	rndg30_();
+	//rndg30_();
 	rndg302_(); //Inicializa a rotina de amostragem gaussiana.
 
 
@@ -6494,8 +6516,6 @@ void peinit2_(double *EMAX, int &NMATER, FILE *IWR, int *INFO, char (*PMFILE)[10
 		PENELOPE_mod_.EABS[M-1][2-1] = EABS0[M-1][2-1];
 		PENELOPE_mod_.EABS[M-1][3-1] = EABS0[M-1][3-1];
 	}
-	
-	printf("\n\nPEINIT\n\n");
 	
 	
 }
@@ -6716,14 +6736,11 @@ void rndg302_(){ //OK
 	
 	rita02_(PDF, XMIN, XMAX, N, NU, ERRM, F);
 
-	
-	
 	if (N != NR){
 		printf ("RNDG30: initialisation error (1).");
 		exit(0);
 	}
 	
-	printf("ERRM: %2.12f\n", ERRM );
 	if (ERRM > 1.0e-6){
 		printf ("RNDG30: initialisation error (2).");
 		exit(0);	
@@ -6825,6 +6842,12 @@ void pematr2_(int *M, FILE *IRD, FILE *IWR, int *INFO){
 	� determinada pelo valor de INFO.
 	
 	*/
+
+    static const int NO = 512;
+	static const int NRP = 8000;
+	static const int NOCO=512;
+	static const int NDIM=12000;
+	static const int NEGP = 200;
 	
 	//arrays auxiliares
 /*	double STFI[NO];
@@ -6840,11 +6863,7 @@ void pematr2_(int *M, FILE *IRD, FILE *IWR, int *INFO){
 	double RADY[NEGP];
 	double RADN[NEGP];*/
 	
-    static const int NO = 512;
-	static const int NRP = 8000;
-	static const int NOCO=512;
-	static const int NDIM=12000;
-	static const int NEGP = 200;
+
 
     
 	
@@ -8433,17 +8452,17 @@ void ritai02_(int &PDF, double &XLOW, double &XHIGH, int &N, int &NU, double &ER
 	static const int NIP = 51;
 	
 	
-//	double XS[NIP];
-//	double YS[NIP];
-//	double SUMI[NIP];
-//	double ERR[NM];
-//	double C[NM];
+	double XS[NIP];
+	double YS[NIP];
+	double SUMI[NIP];
+	double ERR[NM];
+	double C[NM];
 	
-	double *XS = (double *) malloc(NIP * sizeof(double));
+/*	double *XS = (double *) malloc(NIP * sizeof(double));
 	double *YS = (double *) malloc(NIP * sizeof(double));
 	double *SUMI = (double *) malloc(NIP * sizeof(double));
 	double *ERR = (double *) malloc(NM * sizeof(double));
-	double *C = (double *) malloc(NM * sizeof(double));
+	double *C = (double *) malloc(NM * sizeof(double));*/
 	
 	
 	
@@ -8910,11 +8929,11 @@ L400:;
 	 
 	 fclose(IW2);
 	 
-	 free(XS);
-	 free(YS);
-	 free(SUMI);
-	 free(ERR);
-	 free(C);
+//	 free(XS);
+//	 free(YS);
+//	 free(SUMI);
+//	 free(ERR);
+//	 free(C);
 
 	 
 	 
@@ -8923,9 +8942,14 @@ L400:;
 	
 }
 
-int teste = 1;
+
+
+ 
+
 
 void relaxr2_(FILE *IRD, FILE *IWR, int *INFO){
+
+
 	
 	/*
 	
@@ -8938,8 +8962,7 @@ void relaxr2_(FILE *IRD, FILE *IWR, int *INFO){
 	static const int NTRAN = 2500;
 	static const int NRX = 60000;
 	
-	
-    int *JS0 = (int *) malloc(NTRAN * sizeof(int));
+	int *JS0 = (int *) malloc(NTRAN * sizeof(int));
     int *JS1 = (int *) malloc(NTRAN * sizeof(int));
     int *JS2 = (int *) malloc(NTRAN * sizeof(int));
     int *KK = (int *) malloc(NTRAN * sizeof(int));
@@ -8949,6 +8972,7 @@ void relaxr2_(FILE *IRD, FILE *IWR, int *INFO){
 	double *ER = (double *) malloc(NTRAN * sizeof(double));
 	double *WW = (double *) malloc(NTRAN * sizeof(double));
 	double *FF = (double *) malloc(NTRAN * sizeof(double));
+
 		
 	
 	int IQQ[30];
@@ -13150,14 +13174,16 @@ sua aproxima��o RITA.
 
 
 void graar2_(int *M, FILE *IRD, FILE *IWR, int *INFO){
+
 	/*
-	This subroutine reads the squared molecular form factor and the DCS
-    for Rayleigh scattering of photons in material M. These two functions
-    are tabulated using the same grids for all materials.
-    The random sampling of the scattering angle is performed using the
-    RITA algorithm.
-	
+	Esta sub-rotina lê o fator de forma molecular quadrado e o DCS
+    para espalhamento Rayleigh de fótons no material M. Essas duas funções
+    são tabulados usando as mesmas grades para todos os materiais.
+    A amostragem aleatória do ângulo de espalhamento é realizada usando o
+    algoritmo RITA.
+
 	*/
+
 	
 	double REV=5.10998928e5;
 	double RREV = 1.0e0/REV;
@@ -14181,7 +14207,7 @@ void pmrdr2_(){
 
 	//Inicialização do contador de tempo.
 //	auto begin = std::chrono::high_resolution_clock::now();
-	start = clock();
+	
 
 
 
@@ -14789,7 +14815,7 @@ L33:;
 
 	//Inicializando o PENELOPE
 
-	printf("  Initialising PENELOPE ...\n");
+	printf("  Initialising PENELOPE 2...\n");
 
 	FILE* MATERIAL2 = fopen("material2.dat", "w");
 	if (MATERIAL2 == NULL){
@@ -14806,7 +14832,7 @@ L33:;
 
 	// Definicão da Geometria
 
-	printf("'  Initialising PENGEOM ...\n");
+	printf("  Initialising PENGEOM 2...\n");
 	if (!strcmp(KWORD, KWGEOM)){
 		PCH = strtok(BUFFER, " ");
 		strcpy(PFILE, PCH);
@@ -15930,12 +15956,8 @@ L78:;
 
 	//end = clock();
 	//double tempo = (double)(end - start) / CLOCKS_PER_SEC;
-	start = clock();
-	double TSECIN;
-	timer2_(TSECIN);
-
-	*CNTRL_.TSECA=TIMEA+TSECIN;
-    *CNTRL_.TSECAD=TSECIN;
+	
+	
 
 	//printf("TEMPO DE EXECUCAO: %f\n",*CNTRL_.TSECAD );
 	
@@ -16322,6 +16344,16 @@ L92:;
 
  //Inicializar  Constantes
 
+
+	start = clock();
+	double TSECIN;
+	timer2_(TSECIN);
+
+	*CNTRL_.TSECA=TIMEA+TSECIN;
+    *CNTRL_.TSECAD=TSECIN;
+
+
+
 	*CNTRL_.SHN=SHNA;  //Contador de simulações partículas do arquivo de despejo
     *CNTRL_.N=fmod(*CNTRL_.SHN,2.0e9)+0.5e0;
     *CNTRL_.TSIM=CPUTA;
@@ -16343,8 +16375,6 @@ L92:;
 	//		printf("\n\nCaracteristicas do trabalh\n\n");
 //		exit(0);
 
-
-	printf("\nFIM PMRDR2\n");
 }
 
 
@@ -18542,15 +18572,17 @@ void doser2_(ifstream &IRD, FILE *IWDUMP){
 }
 
 
+
+
 void shower2_(){
 
 	//Simula uma nova particula e registra as quantidades relevantes.
 	//printf("shower2\n");
 
-		if (imprimiu==0){
+/*		if (imprimiu==0){
 		printf("\n\nSHOWER2\n\n");
 		imprimiu++;
-	}
+	}*/
 
 	bool LINTF;
 
@@ -20190,10 +20222,10 @@ void knock2_(double &DE, int &ICOL){
 	ICOL ... tipo de interação sofrida pela partícula.
 	*/
 
-	if (imprimiu==0){
+/*	if (imprimiu==0){
 		printf("\n\nKNOCK2\n\n");
 		imprimiu++;
-	}
+	}*/
 
 	double PI=3.1415926535897932e0;
 	double TWOPI=PI+PI; 
@@ -23674,7 +23706,7 @@ void pmwrt2_(int ICLOSE){
 
 	fprintf(IWR2,"   Secondary-particle generation probabilities:\n" );
 	fprintf(IWR2,"                   ----------------------------------------------\n" );
-	fprintf(IWR2, "                   |  electrons    |   photons     |  positrons    |\n");
+	fprintf(IWR2, "                   |  electrons    |   photons     |  positrons  |\n");
 	fprintf(IWR2, "   --------------------------------------------------------------\n");
 	fprintf(IWR2, "   |   upbound     | %.6E | %.6E | %.6E |\n", WSEC[1-1][1-1],WSEC[1-1][2-1],WSEC[1-1][3-1]);
 	fprintf(IWR2, "   |               |  +- %.1E  |  +- %.1E  |  +- %.1E  |\n",  WSEC2[1-1][1-1],WSEC2[1-1][2-1],WSEC2[1-1][3-1]);
@@ -24439,7 +24471,7 @@ void dosew2_(double &SHN, double &TSIM, FILE *IWR){
 					YERR=3.0e0*sqrt(fabs(YAV2-pow(YAV,2)*DF));
 					YAV=YAV*DF*CDOSE4_.VMASS[I3-1][I2-1][I1-1];
 					YERR=YERR*DF*CDOSE4_.VMASS[I3-1][I2-1][I1-1];
-					fprintf(IWR3, " %.3E  %.3E  %.3E  %.6E  %.2E  %d  %d  %d\n", XX,YY,ZZ,fmax(YAV,1.0e-35),fmax(YERR,1.0e-35),I1,I2,I3);
+					fprintf(IWR3, " %.3E  %.3E  %.3E  %.6E  %.2E %4d  %4d  %4d\n", XX,YY,ZZ,fmax(YAV,1.0e-35),fmax(YERR,1.0e-35),I1,I2,I3);
 				}
 				fprintf(IWR3, "	\n");
 			}
@@ -24640,7 +24672,7 @@ void dosew2_(double &SHN, double &TSIM, FILE *IWR){
 }
 
 
-/*int main(){
+int main(){
 
 	inicializarStructs();
 	
@@ -24685,9 +24717,9 @@ L103:;
 
 	memoryFree();
 
-	system("PAUSE");   
+	//system("PAUSE");   
 	return 0;
-}*/
+}
 
 void timer2_(double &SEC){
 
@@ -24712,7 +24744,7 @@ int (*mat)[col];
 mat=(int (*)[col])malloc(sizeof(*mat)*row);*/
 
 
-	printf("\ninicializarStructs\n");
+	//printf("\ninicializarStructs\n");
 	//QSURF
 	QSURF_.AXX = (double *) malloc(NS*sizeof(double));
 	QSURF_.AXY = (double *) malloc(NS*sizeof(double));

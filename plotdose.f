@@ -129,19 +129,25 @@ C
         V=0.0D0
         W=0.0D0
         X=PCOOR
-        I1=1+(PCOOR-DXL(1))*RBDOSE(1)
-        DO I2=1,NDB(2)+1
-          Y=DXL(2)+(I2-0.5D0)*BDOSE(2)
-          YW=Y-0.5D0*BDOSE(2)
-          Y=MIN(MAX(Y,DXL(2)+1.0D-9),DXU(2)-1.0D-9)
-          DO I3=1,NDB(3)+1
-            Z=DXL(3)+(I3-0.5D0)*BDOSE(3)
-            ZW=Z-0.5D0*BDOSE(3)
-            Z=MIN(MAX(Z,DXL(3)+1.0D-9),DXU(3)-1.0D-9)
-            CALL LOCATE
-            WRITE(19,9440) PCOOR,YW,ZW,DOSE(I1,I2,I3),I1,I2,I3,MAT
-          ENDDO
-          WRITE(19,*) '   '
+C        I1=1+(PCOOR-DXL(1))*RBDOSE(1)
+		DO I1=1,NDB(1)+1
+          X=DXL(1)+(I1-0.5D0)*BDOSE(1)
+          XW=X-0.5D0*BDOSE(1)
+          X=MIN(MAX(X,DXL(1)+1.0D-9),DXU(1)-1.0D-9)
+			DO I2=1,NDB(2)+1
+				Y=DXL(2)+(I2-0.5D0)*BDOSE(2)
+				YW=Y-0.5D0*BDOSE(2)
+				Y=MIN(MAX(Y,DXL(2)+1.0D-9),DXU(2)-1.0D-9)
+				DO I3=1,NDB(3)+1
+					Z=DXL(3)+(I3-0.5D0)*BDOSE(3)
+					ZW=Z-0.5D0*BDOSE(3)
+					Z=MIN(MAX(Z,DXL(3)+1.0D-9),DXU(3)-1.0D-9)
+					CALL LOCATE
+					WRITE(19,9440) XW,YW,ZW,DOSE(I1,I2,I3),I1,I2,I3,IBODY
+				ENDDO
+				WRITE(19,*) '   '
+			ENDDO	
+			WRITE(19,*) '   '
         ENDDO
       ELSE IF(LAX.EQ.'y'.OR.LAX.EQ.'Y') THEN
         WRITE(6,*) 'Enter the Y coordinate of the plane...'
@@ -166,7 +172,7 @@ C
             ZW=Z-0.5D0*BDOSE(3)
             Z=MIN(MAX(Z,DXL(3)+1.0D-9),DXU(3)-1.0D-9)
             CALL LOCATE
-            WRITE(19,9440) PCOOR,XW,ZW,DOSE(I1,I2,I3),I1,I2,I3,MAT
+            WRITE(19,9440) PCOOR,XW,ZW,DOSE(I1,I2,I3),I1,I2,I3,IBODY
           ENDDO
           WRITE(19,*) '   '
         ENDDO
@@ -193,7 +199,7 @@ C
             YW=Y-0.5D0*BDOSE(2)
             Y=MIN(MAX(Y,DXL(2)+1.0D-9),DXU(2)-1.0D-9)
             CALL LOCATE
-            WRITE(19,9440) PCOOR,XW,YW,DOSE(I1,I2,I3),I1,I2,I3,MAT
+            WRITE(19,9440) PCOOR,XW,YW,DOSE(I1,I2,I3),I1,I2,I3,IBODY
           ENDDO
           WRITE(19,*) '   '
         ENDDO
