@@ -6,7 +6,6 @@
 #include <math.h>
 #include <algorithm>
 #include <stdint.h>
-//#include <chrono>
 #include <time.h>
 #include <iostream>
 #include <fstream>
@@ -153,7 +152,7 @@ typedef struct{
 typedef struct {
 	double *ATW, *EPX, *RSCR, *ETA, (*EB)[99], (*ALW)[99], (*CP0)[99];
 	int (*IFI)[99], (*IKS)[99], *NSHT;
-	char (*LASYMB)[2];  
+	char (*LASYMB)[3];  
 	
 } CADATA; //Dados elemento
 
@@ -1012,7 +1011,9 @@ void locate2_();
     
 void fsurf2_(int &KS, double &A, double &B, double &C);
 
-void step2_(double *DS, double *DSEF, int *NCROSS);
+//void step2_(double *DS, double *DSEF, int *NCROSS);
+
+void step2_(double &DS, double &DSEF, int &NCROSS);
 
 void stepsi2_(int &KB, int &NSC);
 
@@ -1022,7 +1023,7 @@ void stepsi_(int &KB, double *S, int *IS, int &NSC);
 
 void steplb2_(int &KB, int &IERR);
 
-void geomin2_(double *PARINP, int *NPINP, int *NMATG, int *NBOD, FILE *IRD, FILE *IWR);
+void geomin2_(double *PARINP, int *NPINP, int *NMATG, int *NBOD, FILE *IR, FILE *IW);
 
 void rotshf2_(double &OMEGA, double &THETA, double &PHI, double &DX, double &DY, double &DZ, double &AXX, double &AXY, double &AXZ, double &AYY, double &AYZ, double &AZZ, double &AX, double &AY, double &AZ, double &A0);
 
@@ -1241,7 +1242,7 @@ void dirpol2_(double &CDT, double &DF, double &CONS, double &SP1, double &SP2, d
 
 void gcoa2_(double &E, double &DE, double &EP, double &CDT, double &ES, double &CDTS, int &M, int &IZZ, int &ISH);
 
-void  gpha2_(double &ES, int &IZZ, int &ISH);
+void gpha2_(double &ES, int &IZZ, int &ISH);
 
 void sauter2_(double &ES, double &CDTS);
 
@@ -1289,6 +1290,8 @@ double cputim2_();
 void inicializarStructs();
 
 void memoryFree();
+
+void plotdose2_();
 
 }
 
@@ -1580,7 +1583,7 @@ void transfcpsi0_(double (*XPSI)[NRP], int *IPSIF, int *IPSIL, int *NSPSI, int *
 } 
 
 
-void transfcadata_(double *ATW, double *EPX, double *RSCR, double *ETA, double (*EB)[99], double (*ALW)[99], double (*CP0)[99], int (*IFI)[99], int (*IKS)[99], int *NSHT,  char (*LASYMB)[2]){
+void transfcadata_(double *ATW, double *EPX, double *RSCR, double *ETA, double (*EB)[99], double (*ALW)[99], double (*CP0)[99], int (*IFI)[99], int (*IKS)[99], int *NSHT,  char (*LASYMB)[3]){
 	
 	CADATA_.IFI = IFI;
 	CADATA_.IKS = IKS;
@@ -2510,14 +2513,16 @@ void fsurf2_(int& KS, double& A, double& B, double& C){
 	/*
 	Calcula os par�metros da fun��o mestre da superf�cie KS e o raio (X, Y, Z) + S * (U, V, W).
 	*/
+	double XXX, YYY, ZZZ;
+
  
      
     if (QSURF_.KPLANE[KS-1] == 0) {
         A = *TRACK_mod_.U * (QSURF_.AXX[KS-1] * *TRACK_mod_.U + QSURF_.AXY[KS-1] * *TRACK_mod_.V + QSURF_.AXZ[KS-1] * *TRACK_mod_.W) +
             *TRACK_mod_.V * (QSURF_.AYY[KS-1] * *TRACK_mod_.V + QSURF_.AYZ[KS-1] * *TRACK_mod_.W) + *TRACK_mod_.W * QSURF_.AZZ[KS-1] * *TRACK_mod_.W;
-		double XXX = QSURF_.AXX[KS-1] * *TRACK_mod_.X + QSURF_.AXY[KS-1] * *TRACK_mod_.Y + QSURF_.AXZ[KS-1] * *TRACK_mod_.Z + QSURF_.AX[KS-1];
-        double YYY = QSURF_.AYY[KS-1] * *TRACK_mod_.Y + QSURF_.AYZ[KS-1] * *TRACK_mod_.Z + QSURF_.AY[KS-1];
-        double ZZZ = QSURF_.AZZ[KS-1] * *TRACK_mod_.Z + QSURF_.AZ[KS-1];
+		XXX = QSURF_.AXX[KS-1] * *TRACK_mod_.X + QSURF_.AXY[KS-1] * *TRACK_mod_.Y + QSURF_.AXZ[KS-1] * *TRACK_mod_.Z + QSURF_.AX[KS-1];
+        YYY = QSURF_.AYY[KS-1] * *TRACK_mod_.Y + QSURF_.AYZ[KS-1] * *TRACK_mod_.Z + QSURF_.AY[KS-1];
+        ZZZ = QSURF_.AZZ[KS-1] * *TRACK_mod_.Z + QSURF_.AZ[KS-1];
 
         B = *TRACK_mod_.U * (QSURF_.AXX[KS-1] * *TRACK_mod_.X + XXX) + *TRACK_mod_.V * (QSURF_.AXY[KS-1] * *TRACK_mod_.X + QSURF_.AYY[KS-1] * *TRACK_mod_.Y + YYY) +
             *TRACK_mod_.W * (QSURF_.AXZ[KS-1] * *TRACK_mod_.X + QSURF_.AYZ[KS-1] * *TRACK_mod_.Y + QSURF_.AZZ[KS-1] * *TRACK_mod_.Z + ZZZ);
@@ -2529,7 +2534,6 @@ void fsurf2_(int& KS, double& A, double& B, double& C){
     	B = *TRACK_mod_.U * QSURF_.AX[KS-1] + *TRACK_mod_.V * QSURF_.AY[KS-1] + *TRACK_mod_.W * QSURF_.AZ[KS-1];
     	C = *TRACK_mod_.X * QSURF_.AX[KS-1] + *TRACK_mod_.Y * QSURF_.AY[KS-1] + *TRACK_mod_.Z * QSURF_.AZ[KS-1] + QSURF_.A0[KS-1];
 	} 
-     
      
 }
 
@@ -2636,7 +2640,7 @@ d102: ;
 
 
 
-void step2_(double *DS, double *DSEF, int *NCROSS){
+void step2_(double &DS, double &DSEF, int &NCROSS){
 
 	/*if (imprimiu == 0){
 		printf("\n\nStep2\n\n");
@@ -2693,9 +2697,9 @@ void step2_(double *DS, double *DSEF, int *NCROSS){
 	static const int NS = 10000;
 	static const int NS2M = 2*NS;
 	
-	*DSEF = 0.0e0;
+	DSEF = 0.0e0;
 	*PENGEOM_mod_.DSTOT = 0.0e0;
-	*NCROSS = 0;
+	NCROSS = 0;
 	*PENGEOM_mod_.KSLAST = 0;
 	double DSRES;
 	int KB1;
@@ -2739,7 +2743,7 @@ void step2_(double *DS, double *DSEF, int *NCROSS){
 	if (*TRACK_mod_.MAT == 0){
 		DSRES = 1.0e35; //No vácuo, as partículas voam livremente.
 	} else {
-		DSRES = *DS; // comprimento do camimho residual
+		DSRES = DS; // comprimento do camimho residual
 	}
 	
 //		printf("3\n");
@@ -2749,26 +2753,21 @@ void step2_(double *DS, double *DSEF, int *NCROSS){
 		KB1 = *QTREE_.NBODYS;
 		//stepsi2_(KB1, S, IS, NSC);
 		stepsi2_(KB1, NSC);
-	//	printf("4\n");
 		if (NSC == 0)
 			goto L300;
 		NSCT = NSC;
 		NST = QTREE_.KSURF[NXG -1][KB1 - 1];
 			
 		for (int KI = NSCT; KI >= 1; KI--){
-	//		printf("5\n");
-		//	printf("KI: %d\n", KI);
-	//		printf("*PENGEOM_mod_.KSLAST : %d\n" ,*PENGEOM_mod_.KSLAST); 
 			// a particula atravessa uma superficie
 			*PENGEOM_mod_.KSLAST = IS[KI - 1];
-	//		printf("6\n");
 			if (QTREE_.KSP[*PENGEOM_mod_.KSLAST - 1] == 1)
 				QTREE_.KSP[*PENGEOM_mod_.KSLAST - 1] = 2;
 			else 
 				QTREE_.KSP[*PENGEOM_mod_.KSLAST - 1] = 1;
 			
-			DSP = S[KI - 1];
-			*DSEF = *DSEF + DSP;
+			DSP = S[KI-1];
+			DSEF = DSEF + DSP;
 			*PENGEOM_mod_.DSTOT = *PENGEOM_mod_.DSTOT + DSP;
 			*TRACK_mod_.X = *TRACK_mod_.X + DSP * *TRACK_mod_.U;
 			*TRACK_mod_.Y = *TRACK_mod_.Y + DSP * *TRACK_mod_.V;
@@ -2799,15 +2798,14 @@ void step2_(double *DS, double *DSEF, int *NCROSS){
 			} else{
 				//A particula entrou em um corpo material
 				if (*TRACK_mod_.MAT != 0){
-					*NCROSS = 1;
+					NCROSS = 1;
 	//				free(S);
 	//				free(IS);
 					return;
 				} else{
 					KB1 = *TRACK_mod_.IBODY;
 					//stepsi2_(KB1, S, IS, NSC);
-					stepsi2_(KB1, NSC);
-				
+					stepsi2_(KB1, NSC);			
 					goto L200;
 				}
 						
@@ -2817,16 +2815,12 @@ void step2_(double *DS, double *DSEF, int *NCROSS){
 			L101:;
 		}
 		//	printf("6\n");
-			goto L300;		
+		goto L300;		
 	}
 	
 	//Cruzamentos de superfície.
 	
 	IBODYL = *TRACK_mod_.IBODY;
-//	printf("teste\n");
-//	printf("LVERB: %d\n", *PENGEOM_mod_.LVERB);
-	
-//	printf(*PENGEOM_mod_.LVERB ? "true\n" : "false\n");
 	if (*PENGEOM_mod_.LVERB)
 		NERR = 0;
 L102:;
@@ -2836,7 +2830,6 @@ L102:;
 	steplb2_(KB1, IERR);
 	
 	//Evidência de erros de arredondamento.
-//printf("7\n");
 	if (IERR != 0){
 		if (NSC > 0){
 			//Quando uma superfície está muito próxima, movemos a partícula além dela.
@@ -2853,7 +2846,7 @@ L102:;
 				*TRACK_mod_.Y = *TRACK_mod_.Y + DSP * *TRACK_mod_.V;
 				*TRACK_mod_.Z = *TRACK_mod_.Z + DSP * *TRACK_mod_.W;
 				if (*TRACK_mod_.MAT == MAT0){
-					*DSEF  = *DSEF + DSP;
+					DSEF  = DSEF + DSP;
 					DSRES = DSRES - DSP;
 				}
 				
@@ -2864,8 +2857,6 @@ L102:;
 					goto L102;		
 			}
 		}
-	//	printf("8\n");
-       // printf("LVERB %d\n", *PENGEOM_mod_.LVERB);
 		if (*PENGEOM_mod_.LVERB){
 			
 			NERR = NERR +1;
@@ -2902,10 +2893,10 @@ L103:;
 		if (*TRACK_mod_.IBODY <= *QTREE_.NBODYS)
 			goto L102;
 	}
-//	printf("9\n");
+
 	if ((PENGEOM_mod_.KDET[*TRACK_mod_.IBODY - 1] != PENGEOM_mod_.KDET[IBODYL -1]) || (*TRACK_mod_.MAT != MAT0)){
-		*NCROSS = 1;
-		*DSEF = 0.0e0;
+		NCROSS = 1;
+		DSEF = 0.0e0;
 //		free(S);
 //		free(IS);
 		return;
@@ -2915,7 +2906,7 @@ L103:;
 	
 	if ((*TRACK_mod_.MAT != 0) && (DSRES < S[NSC -1])){
 		if (*TRACK_mod_.MAT == MAT0)
-			*DSEF = *DSEF + DSRES;
+			DSEF = DSEF + DSRES;
 		*PENGEOM_mod_.DSTOT = *PENGEOM_mod_.DSTOT + DSRES;
 		*TRACK_mod_.X = *TRACK_mod_.X + DSRES * *TRACK_mod_.U;
 		*TRACK_mod_.Y = *TRACK_mod_.Y + DSRES * *TRACK_mod_.V;
@@ -2929,10 +2920,9 @@ L103:;
 	// Nova posição
 	
 	L200:;
-//	printf("10\n");
 	if (NSC == 0 ){
 		if (*TRACK_mod_.MAT == MAT0)
-			*DSEF = *DSEF + DSRES;
+			DSEF = DSEF + DSRES;
 		*PENGEOM_mod_.DSTOT = *PENGEOM_mod_.DSTOT + DSRES;
 		*TRACK_mod_.X = *TRACK_mod_.X + DSRES * *TRACK_mod_.U;
 		*TRACK_mod_.Y = *TRACK_mod_.Y + DSRES * *TRACK_mod_.V;
@@ -2946,7 +2936,7 @@ L103:;
 		//A etapa termina dentro do corpo
 		if (DSRES < S[KI -1]){
 			if (*TRACK_mod_.MAT == MAT0)
-				*DSEF = *DSEF + DSRES;
+				DSEF = DSEF + DSRES;
 			*PENGEOM_mod_.DSTOT = *PENGEOM_mod_.DSTOT + DSRES;
 			*TRACK_mod_.X = *TRACK_mod_.X + DSRES * *TRACK_mod_.U;
 			*TRACK_mod_.Y = *TRACK_mod_.Y + DSRES * *TRACK_mod_.V;
@@ -2968,11 +2958,11 @@ L103:;
 		*TRACK_mod_.Y = *TRACK_mod_.Y + DSP * *TRACK_mod_.V;
 		*TRACK_mod_.Z = *TRACK_mod_.Z + DSP * *TRACK_mod_.W;
 		if (*TRACK_mod_.MAT == MAT0){
-			*DSEF = *DSEF + DSP;
+			DSEF = DSEF + DSP;
 			DSRES = DSRES - DSP;
 		}
 		*PENGEOM_mod_.DSTOT = *PENGEOM_mod_.DSTOT + DSP;
-		NSC = NSC -1;
+		NSC = NSC-1;
 		if (NSC > 0){
 			for (int I = 1; I <= NSC; I++){
 				S[I-1] = S[I-1] - DSP;
@@ -3000,7 +2990,7 @@ L201:;
 			else{
 				//A partícula sai do recinto.
 				if (*TRACK_mod_.MAT != MATL)
-					*NCROSS = *NCROSS + 1;
+					NCROSS = NCROSS + 1;
 				goto L300;
 			}
 		}
@@ -3008,7 +2998,7 @@ L201:;
 		//A partícula continua voando quando entra em uma região vazia 
 		if (*TRACK_mod_.MAT == 0){
 			if (MATL == MAT0)
-				*NCROSS = *NCROSS +1;
+				NCROSS = NCROSS +1;
 			MATL=0;
 			DSRES = 1.0e35;
 			goto L202;
@@ -3020,12 +3010,12 @@ L201:;
 				goto L202;
 			} 
 			else{
-				*NCROSS = *NCROSS +1;
+				NCROSS = NCROSS +1;
 				return;
 			}
 					//.. e para quando penetra um novo corpo material ou umDetector
 		} else {
-			*NCROSS = *NCROSS +1;
+			NCROSS = NCROSS +1;
 //			free(S);
 //			free(IS);
 			return;
@@ -3044,7 +3034,7 @@ L203:;
 	*TRACK_mod_.IBODY = *QTREE_.NBODYS +1;
 	*TRACK_mod_.MAT = 0;
 	if (*TRACK_mod_.MAT == MAT0)
-		*DSEF = *DSEF + DSP;
+		DSEF = DSEF + DSP;
 	*PENGEOM_mod_.DSTOT = *PENGEOM_mod_.DSTOT + DSP;
 	*TRACK_mod_.X = *TRACK_mod_.X + DSP * *TRACK_mod_.U;
 	*TRACK_mod_.Y = *TRACK_mod_.Y + DSP * *TRACK_mod_.V;
@@ -3123,8 +3113,8 @@ void stepsi2_(int &KB,  int &NSC){
 				T1 = -C/B;
 				if (T1 > 0.0e0){
 					NSC = NSC +1;
-					IS[NSC -1] = KS;
-					S [NSC -1] = T1;
+					IS[NSC-1] = KS;
+					S[NSC-1] = T1;
 				}
 			}
 			else {
@@ -3143,7 +3133,7 @@ void stepsi2_(int &KB,  int &NSC){
 			FUZZ = FUZZL*DISCR/ABSA;
 			if (C < -FUZZ){
 				IAMBIG = 0;
-				QTREE_.KSP[KS -1] = 1;
+				QTREE_.KSP[KS-1] = 1;
 			} else if (C > FUZZ){
 				IAMBIG = 0;
 				QTREE_.KSP[KS -1] = 2;
@@ -3196,21 +3186,21 @@ L100:;
    // printf("\nNSC %d\n", NSC);
 	if (NSC > 1){
 		for (int KI = 1; KI <= (NSC - 1); KI++){
-			SMAX = S[KI -1];
+			SMAX = S[KI-1];
 			KMAX = KI;
 			for ( int KJ = (KI+1); KJ <= NSC; KJ++){
-				if (S[KJ -1] > SMAX){
-					SMAX = S[KJ -1];
+				if (S[KJ-1] > SMAX){
+					SMAX = S[KJ-1];
 			   	   	KMAX = KJ;
 				}	
 			}
 			if (KMAX != KI){
-				SMAX = S[KI -1];
-				S[KI -1] = S[KMAX -1];
-				S[KMAX -1] = SMAX;
-   	   			KKMAX = IS[KI -1];
-   	   			IS[KI-1] = IS[KMAX -1];
-				IS[KMAX -1] = KKMAX; 
+				SMAX = S[KI-1];
+				S[KI-1] = S[KMAX-1];
+				S[KMAX-1] = SMAX;
+   	   			KKMAX = IS[KI-1];
+   	   			IS[KI-1] = IS[KMAX-1];
+				IS[KMAX-1] = KKMAX; 
 			}	
 		}
 	}	
@@ -3232,7 +3222,7 @@ void steplb2_( int &KB, int &IERR){
 	 
 	//Analisa o corpo ou o modulo atual. 
 	
-	if (QBODY_.KBOMO[KB -1] == 0){
+	if (QBODY_.KBOMO[KB-1] == 0){
 		//Corpo
 		NLBOD = QBODY_.KBODY[NXG - 1][KB - 1];
 		if (NLBOD > 0) {
@@ -3290,36 +3280,22 @@ L100:;
 				}
 			}
 			return;
-			L200:;		
+L200:;		
 		}	
 	}
 	
 	//A partícula está fora do corpo ou módulo atual.
-	L300:
+L300:;
 	IERR=1;
-	*TRACK_mod_.IBODY = QTREE_.KMOTH[KB - 1];
+	*TRACK_mod_.IBODY = QTREE_.KMOTH[KB-1];
 	if (*TRACK_mod_.IBODY == 0){
-		*TRACK_mod_.IBODY = *QTREE_.NBODYS +1;
+		*TRACK_mod_.IBODY = *QTREE_.NBODYS+1;
 		*TRACK_mod_.MAT = 0;
 	}
 }
 	
 
-
-
-
-
-
-
-
-
-
-	
-
-
-
-void geomin2_(double *PARINP, int *NPINP, int *NMATG, int *NBOD, FILE *IRD, FILE *IWR){
-//	printf("\ngeomin2\n");
+void geomin2_(double *PARINP, int *NPINP, int *NMATG, int *NBOD, FILE *IR, FILE *IW){
 	/*
 	Lê o arquivo de definição de geometria e configura os arrays usados para rastrear partículas através do sistema.
 	
@@ -3515,7 +3491,7 @@ void geomin2_(double *PARINP, int *NPINP, int *NMATG, int *NBOD, FILE *IRD, FILE
 
 	
 	
- 	FILE* IR = fopen("quadril.geo", "r");
+ /*	FILE* IR = fopen("quadril.geo", "r");
 	if (IR == NULL){
 		printf("Não foi possível abrir o arquivo de geometria");
 		exit(0);
@@ -3528,7 +3504,7 @@ void geomin2_(double *PARINP, int *NPINP, int *NMATG, int *NBOD, FILE *IRD, FILE
 	}
 
 	//FILE* IR = IRD;
-//	FILE* IW = IWR;
+//	FILE* IW = IWR;*/
 
 
 	
@@ -5450,7 +5426,7 @@ L501:;
 		exit(0);
 	}
 	extrairString(LKEYW, BLINE, 0, 8);
-	extrairString(GFILE, BLINE, 9, 20);
+	extrairString(GFILE, BLINE, 9, 12);
 	
 	if (strcmp(LKEYW, LFIL)){
 		fputs(BLINE, IW);
@@ -5502,7 +5478,8 @@ L600:;
 		//strcpy(C5, APOIO);
 		if (C5[4] == '0'){
 		//	strcpy(PENGEOM_mod_.BALIAS[KB-1], 
-			extrairString(PENGEOM_mod_.BALIAS[KB-1], C5, 0, 4);
+			//extrairString(PENGEOM_mod_.BALIAS[KB-1], C5, 0, 4);
+			strncpy(PENGEOM_mod_.BALIAS[KB-1], C5, 4);
 			//strncpyy(PENGEOM_mod_.BALIAS[KB-1], C5, 4); 
 		//	PENGEOM_mod_.BALIAS[KB-1][4] = '\0';
 		//	printf("BALIAS %s   -   C5: %s\n", PENGEOM_mod_.BALIAS[KB-1], C5);
@@ -5845,9 +5822,7 @@ L701:;
 							}
 							QTREE_.KSURF[NSB-1][KB-1] = 0;
 							QTREE_.KFLAG[NSB-1][KB-1] = 5;
-
 							QTREE_.KSURF[NXG-1][KB-1] = NSB-1;
-							printf("\n\nKSURF NXG-1 NB-1 = %d\n\n", NSB-1);
 							if (KB < *QTREE_.NBODYS) {
 								KBI = KB;
 								goto L701;
@@ -5911,7 +5886,7 @@ L704:;
 			for (int J = 1; J <= QTREE_.KSURF[NXG-1][KB1-1]; J++){
 				if (QTREE_.KSURF[J-1][KB1-1] == KS){
 					//Surface tem filha e mãe em lados opostos.
-					if (((KF == 1) && (QTREE_.KSURF[J-1][KB1-1] == 2)) || ((KF == 2) &&  (QTREE_.KSURF[J-1][KB1-1] == 1))) {
+					if (((KF == 1) && (QTREE_.KFLAG[J-1][KB1-1] == 2)) || ((KF == 2) &&  (QTREE_.KFLAG[J-1][KB1-1] == 1))) {
 						if (QBODY_.KBOMO[KB-1] == 0){
 							fputs("linha 2200 ERROR: the SURFACE  which limits BODY as inconsistent side pointers\n", IW);
 						} else{
@@ -6192,6 +6167,7 @@ void extrairString(char destino[], char origem[], int inicio, int qtde){
 	
 	strncpy(destino, origem+inicio, qtde);
 	destino[qtde] = '\0';
+
 	
 }
 
@@ -6446,9 +6422,9 @@ void peinit2_(double *EMAX, int &NMATER, FILE *IWR, int *INFO, char (*PMFILE)[10
 	esia02_(); //Inicializa rotinas de ioniza��o por impacto de el�trons.
 	psia02_(); //Inicializa as rotinas de ioniza��o por impacto de p�sitrons.
 	gpha02_(); //Inicializa rotinas fotoel�tricas.
-	//relax0_();
+//	relax0_();
 	relax02_(); //Inicializa rotinas de relaxamento at�mico.
-	//rndg30_();
+//	rndg30_();
 	rndg302_(); //Inicializa a rotina de amostragem gaussiana.
 
 
@@ -6917,7 +6893,7 @@ void pematr2_(int *M, FILE *IRD, FILE *IWR, int *INFO){
 		exit(0);
 	}
 	
-	char LNAME[58] = " PENELOPE (v. 2014)  Material data file ...............";
+	char LNAME[63] = " PENELOPE (v. 2014)  Material data file ...............";
 	
 	fgets(LINHA, sizeof(LINHA), IRD);
 	
@@ -6965,16 +6941,12 @@ void pematr2_(int *M, FILE *IRD, FILE *IWR, int *INFO){
 		extrairString(APOIO, LINHA, 18, 3);
 		COMPOS_.IZ[I-1][*M-1] = atoi(APOIO);
 	
-	
 		extrairString(APOIO, LINHA, 40, 15);
 		COMPOS_.STF[I-1][*M-1] = atof(APOIO);
-		char teste[3];
-		strcpy(teste,CADATA_.LASYMB[COMPOS_.IZ[I-1][*M-1]-1]); 
-		teste[2] = '\0';
 		
 	//	printf("\n\nELEMENTO %s\n\n", CADATA_.LASYMB[COMPOS_.IZ[I-1][*M-1]-1]);
 		
-		fprintf(IWR, " Element: %s (Z=%2d), atoms/molecule = %.8E\n", teste, COMPOS_.IZ[I-1][*M-1], COMPOS_.STF[I-1][*M-1]);
+		fprintf(IWR, " Element: %s (Z=%2d), atoms/molecule = %.8E\n", CADATA_.LASYMB[COMPOS_.IZ[I-1][*M-1]-1], COMPOS_.IZ[I-1][*M-1], COMPOS_.STF[I-1][*M-1]);
 		COMPOS_.ZT[*M-1] = COMPOS_.ZT[*M-1] + COMPOS_.STF[I-1][*M-1] * COMPOS_.IZ[I-1][*M-1];
 		IZZ = COMPOS_.IZ[I-1][*M-1];
 		COMPOS_.AT[*M-1] = COMPOS_.AT[*M-1] + CADATA_.ATW[IZZ-1] * COMPOS_.STF[I-1][*M-1];
@@ -10631,7 +10603,7 @@ void einat12_(double &E, double &UK, double &WK, double &DELTA, double &WCCM, do
 	         +(2.0e0-*CEIN01_.AMOL)*log((*CEIN01_.EE-WU)/(*CEIN01_.EE-WL))
 	         +*CEIN01_.AMOL*(pow(WU,2)- pow(WL,2))/(2.0e0*pow(*CEIN01_.EE,2));
 	         
-	         H2=H2+(2.0e0-*CEIN01_.AMOL)*(WU-WL)+(WU*(2.0e0**CEIN01_.EE-WU)/(*CEIN01_.EE-WU))
+	         H2=H2+(2.0e0-*CEIN01_.AMOL)*(WU-WL)+(WU*(2.0e0* *CEIN01_.EE-WU)/(*CEIN01_.EE-WU))
 	         -(WL*(2.0e0* *CEIN01_.EE-WL)/(*CEIN01_.EE-WL))
 	         +(3.0e0-*CEIN01_.AMOL)* *CEIN01_.EE*log((*CEIN01_.EE-WU)/(*CEIN01_.EE-WL))
 			 +*CEIN01_.AMOL*(pow(WU,3)- pow(WL,3))/(3.0e0*pow(*CEIN01_.EE,2));
@@ -13528,7 +13500,10 @@ void gphar2_(int *M, FILE *IRD, FILE *IWR, int *INFO){
 	*/
     const static int NTP = 12000;
     const static int NDIM = 12000;
-	double XGPHR[17][NDIM];
+	//double XGPHR[17][NDIM];
+
+	double (*XGPHR)[NDIM];
+	XGPHR =	(double (*)[NDIM])malloc(17*NDIM*sizeof(double)); 
 	
 /*	double X1[NDIM]; 
 	double Y1[NDIM];
@@ -13773,6 +13748,7 @@ L1:;
 	free(X2);
 	free(Y1);
 	free(Y2);
+	free(XGPHR);
 	
 //	printf("\n\nGPHAR2\n\n");
 	
@@ -14097,7 +14073,6 @@ void pmrdr2_(){
 
 	//Lê o arquivo de entrada e inicializa PENELOPE e PENGEOM.
 
-
     char LINHA[100];
 	char KWORD[100];
 	char APOIO[100];
@@ -14270,7 +14245,7 @@ L11:;
 
 	fgets(LINHA, sizeof(LINHA), IRD);
 	extrairString(KWORD, LINHA, 0, 6);
-	extrairString(BUFFER, LINHA, 7, 127);
+	extrairString(BUFFER, LINHA, 7, 121);
 	if (!strcmp(KWORD, KWCOMM))
 		goto L11;
 	if (!strcmp(KWORD, KWPSFN))
@@ -14284,7 +14259,7 @@ L11:;
 L12:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, 127);
+		extrairString(BUFFER, LINHA, 7, 121);
 		if (!strcmp(KWORD, KWCOMM))
 			goto L12;
 		if (!strcmp(KWORD, KWPSFN))
@@ -16365,7 +16340,7 @@ L92:;
 		printf("  **** The simulation was already completed.\n");
 		*CSOUR0_.JOBEND=3;
 	}else{
-		printf("   The simulation is started ...\n");
+		printf("  The simulation is started ...\n");
 	}
 
 
@@ -16450,7 +16425,7 @@ void enang02_(double &EMIN, double &EMAX, int &NBE, int &NBTH, int &NBPH, FILE *
         *CENANG_.NE=NBE;
 	}
 
-	*CENANG_.BSE=FSAFE*(*CENANG_.EU - *CENANG_.EL) / *CENANG_.NE;
+	*CENANG_.BSE=FSAFE*(*CENANG_.EU - *CENANG_.EL) / double(*CENANG_.NE);
     *CENANG_.RBSE=1.0e0/ *CENANG_.BSE;
 
 	if (NBTH < 0){
@@ -16465,7 +16440,7 @@ void enang02_(double &EMIN, double &EMAX, int &NBE, int &NBTH, int &NBPH, FILE *
         *CENANG_.NTH=NBTH;
 	}
 
-	*CENANG_.BSTH=FSAFE*(*CENANG_.THU-*CENANG_.THL)/ *CENANG_.NTH;
+	*CENANG_.BSTH=FSAFE*(*CENANG_.THU-*CENANG_.THL)/ double(*CENANG_.NTH);
     *CENANG_.RBSTH=1.0e0/ *CENANG_.BSTH;
 
 	if (NBPH < 0)
@@ -16473,7 +16448,7 @@ void enang02_(double &EMIN, double &EMAX, int &NBE, int &NBTH, int &NBPH, FILE *
 	else
 		*CENANG_.NPH=NBPH;
 
-	*CENANG_.BSPH=FSAFE*360.0e0/ *CENANG_.NPH;
+	*CENANG_.BSPH=FSAFE*360.0e0/ double(*CENANG_.NPH);
     *CENANG_.RBSPH=1.0e0/ *CENANG_.BSPH;
 
 	
@@ -18012,8 +17987,8 @@ void enangr2_(ifstream &IRD, FILE *IWDUMP){
 	for (int K = 1; K <= *CENANG_.NE; K++){
 		for (int J = 1; J <= 2; J ++){
 			for (int I = 1; I <= 3; I++){
-				CENANG_.PDE[I-1][J-1][K-1] = atof(PCH);
-				fprintf(IWDUMP, "		%f", CENANG_.PDE[I-1][J-1][K-1]);
+				CENANG_.PDE[K-1][J-1][I-1] = atof(PCH);
+				fprintf(IWDUMP, "		%f", CENANG_.PDE[K-1][J-1][I-1]);
 				PCH = strtok(NULL, " ");
 			}
 		}
@@ -18027,8 +18002,8 @@ void enangr2_(ifstream &IRD, FILE *IWDUMP){
 	for (int K = 1; K <= *CENANG_.NE; K++){
 		for (int J = 1; J <= 2; J ++){
 			for (int I = 1; I <= 3; I++){
-				CENANG_.PDE2[I-1][J-1][K-1] = atof(PCH);
-				fprintf(IWDUMP, "		%f", CENANG_.PDE2[I-1][J-1][K-1]);
+				CENANG_.PDE2[K-1][J-1][I-1] = atof(PCH);
+				fprintf(IWDUMP, "		%f", CENANG_.PDE2[K-1][J-1][I-1]);
 				PCH = strtok(NULL, " ");
 			}
 		}
@@ -18734,7 +18709,7 @@ L302:;
 	if (*TRACK_mod_.MAT == 0){
 		IBODYL=*TRACK_mod_.IBODY;	
 		DS = 1.0e30;
-		step2_(&DS,&DSEF,&NCROSS);
+		step2_(DS,DSEF,NCROSS);
 		/*if (*TRACK_mod_.LAGE)
 			DPAGE(DSEF,DSTOT)*/ //Funcao para contabilizar o tempo de vida de uma particula, não sera implementada
 		
@@ -18836,7 +18811,7 @@ L103:;
 	jump2_(CSPGEO_.DSMAX[*TRACK_mod_.IBODY-1], DS);
     LINTF=false;
 
-	step2_(&DS,&DSEF,&NCROSS); //Determina a posição final do passo.
+	step2_(DS,DSEF,NCROSS); //Determina a posição final do passo.
 
 	//Distribuição de energia de fluência.
 	IDET=PENGEOM_mod_.KDET[IBODYL-1];
@@ -20731,7 +20706,6 @@ L3000:;
 		DE=0.0e0;
 	}
 	
-
 	//Deflexão Angular
 	if (CPIMFP_.T1P[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1] > -78.3e0){
 		*CJUMP0_.T1=exp(CPIMFP_.T1P[*CEGRID_.KE-1][*TRACK_mod_.MAT-1]+(CPIMFP_.T1P[*CEGRID_.KE+1-1][*TRACK_mod_.MAT-1]-CPIMFP_.T1P[*CEGRID_.KE-1][*TRACK_mod_.MAT-1])* *CEGRID_.XEK);
@@ -22644,7 +22618,7 @@ L2:;
 		goto L1;
 L3:;
 	//Eletron
-	EE=EPS**TRACK_mod_.E-REV;
+	EE=EPS* *TRACK_mod_.E-REV;
     CDTE=2.0e0*rand2_(7.0e0)-1.0e0;
     A1=EE+REV;
     A2=sqrt(EE*(EE+TREV));
@@ -23211,7 +23185,7 @@ L1:;
 	//Colisoes Proximas
 	RCL=WTHR/E;
     RL1=1.0e0-RCL;
-    RRL1=1.0e0/RL1;
+
     XHC=((1.0e0/RCL-1.0e0)+BHA1*log(RCL)+BHA2*RL1
        +(BHA3/2.0e0)*(pow(RCL,2)-1.0e0)+(BHA4/3.0e0)*(1.0e0-pow(RCL,3)))/E;
 
@@ -23656,6 +23630,11 @@ void pmwrt2_(int ICLOSE){
 	fprintf(IWR2,"\n\n   ***********************************\n");
 	fprintf(IWR2,"   **   Program PENMAIN2. Results.  **\n");
 	fprintf(IWR2,"   ***********************************\n\n");
+	
+	time_t now;
+
+	time(&now);
+	strcpy(CDATE_.DATE23, ctime(&now));
 
 	fprintf(IWR2,"   Date and time: %s\n\n", CDATE_.DATE23);
 	fprintf(IWR2, "   %s\n\n", CTITLE_.TITLE);
@@ -24288,8 +24267,8 @@ void enangw2_(double &SHN){
 				YERR2=3.0e0*sqrt(fabs(CENANG_.PDA2[L-1][KTH-1][2-1]-pow(CENANG_.PDA[L-1][KTH-1][2-1],2)*DF));
 				YAV2=CENANG_.PDA[L-1][KTH-1][1-1]*DF/DSANG;
 				YERR2=YERR2*DF/DSANG;
-				YERR3=3.0e0*sqrt(fabs(CENANG_.PDE2[L-1][KTH-1][3-1]-pow(CENANG_.PDE[L-1][KTH-1][3-1],2)*DF));
-				YAV3=CENANG_.PDE[L-1][KTH-1][3-1]*DF/DSANG;
+				YERR3=3.0e0*sqrt(fabs(CENANG_.PDA2[L-1][KTH-1][3-1]-pow(CENANG_.PDA[L-1][KTH-1][3-1],2)*DF));
+				YAV3=CENANG_.PDA[L-1][KTH-1][3-1]*DF/DSANG;
 				YERR3=YERR3*DF/DSANG;
 				fprintf(IWR3,"  %.6E  %.6E  %.6E  %.2E  %.6E  %.2E  %.6E  %.2E\n", XX,YY,fmax(YAV1,1.0e-35),YERR1, fmax(YAV2,1.0e-35),YERR2,fmax(YAV3,1.0e-35),YERR3);
 			}
@@ -24699,7 +24678,7 @@ L101:;
 			if (*CNTRL_.TSEC-*CNTRL_.TSECAD > *CNTRL_.DUMPP){
 				*CNTRL_.TSIM=*CNTRL_.TSIM+cputim2_()-*CNTRL_.CPUT0;
                 pmwrt2_(-1);
-				printf("Number of simulated showers = %.6E\n", *CNTRL_.SHN);
+				printf("  Number of simulated showers = %.6E\n", *CNTRL_.SHN);
                 *CNTRL_.TSECAD=*CNTRL_.TSEC;
                 *CNTRL_.CPUT0=cputim2_();
 				goto L101;
@@ -24712,12 +24691,11 @@ L102:;
 	*CNTRL_.TSIM=*CNTRL_.TSIM+cputim2_()-*CNTRL_.CPUT0;
 L103:;
 	pmwrt2_(1);
-	printf("Number of simulated showers = %.6E\n", *CNTRL_.SHN);
-	printf("*** END ***\n");
-
+	printf("  Number of simulated showers = %.6E\n", *CNTRL_.SHN);
+	plotdose2_();
 	memoryFree();
-
-	//system("PAUSE");   
+	printf("  *** END ***\n");
+		
 	return 0;
 }
 
@@ -24896,7 +24874,7 @@ mat=(int (*)[col])malloc(sizeof(*mat)*row);*/
 	CADATA_.IFI = (int (*)[99]) malloc(30*99*sizeof(int));
 	CADATA_.IKS = (int (*)[99]) malloc(30*99*sizeof(int));
 	CADATA_.NSHT = (int *) malloc(99*sizeof(int));
-	CADATA_.LASYMB = (char (*)[2]) malloc(99*2*sizeof(char));
+	CADATA_.LASYMB = (char (*)[3]) malloc(99*3*sizeof(char));
 
 
 	
@@ -24984,6 +24962,21 @@ mat=(int (*)[col])malloc(sizeof(*mat)*row);*/
 
 	for (int I = 1; I <= 99; I++){
 		CADATA_.ETA[I-1] = ETA[I-1];
+	}
+
+	char LASYMB[99][3] =  {{"H "},{"He"},{"Li"},{"Be"},{"B "},{"C "},{"N "},{"O "},{"F "},
+            {"Ne"},{"Na"},{"Mg"},{"Al"},{"Si"},{"P "},{"S "},{"Cl"},{"Ar"},{"K "},
+            {"Ca"},{"Sc"},{"Ti"},{"V "},{"Cr"},{"Mn"},{"Fe"},{"Co"},{"Ni"},{"Cu"},
+            {"Zn"},{"Ga"},{"Ge"},{"As"},{"Se"},{"Br"},{"Kr"},{"Rb"},{"Sr"},{"Y "},
+            {"Zr"},{"Nb"},{"Mo"},{"Tc"},{"Ru"},{"Rh"},{"Pd"},{"Ag"},{"Cd"},{"In"},
+            {"Sn"},{"Sb"},{"Te"},{"I "},{"Xe"},{"Cs"},{"Ba"},{"La"},{"Ce"},{"Pr"},
+            {"Nd"},{"Pm"},{"Sm"},{"Eu"},{"Gd"},{"Tb"},{"Dy"},{"Ho"},{"Er"},{"Tm"},
+            {"Yb"},{"Lu"},{"Hf"},{"Ta"},{"W "},{"Re"},{"Os"},{"Ir"},{"Pt"},{"Au"},
+            {"Hg"},{"Tl"},{"Pb"},{"Bi"},{"Po"},{"At"},{"Rn"},{"Fr"},{"Ra"},{"Ac"},
+            {"Th"},{"Pa"},{"U "},{"Np"},{"Pu"},{"Am"},{"Cm"},{"Bk"},{"Cf"},{"Es"}};
+
+	for (int I = 1; I <= 99; I++){
+		strcpy(CADATA_.LASYMB[I-1], LASYMB[I-1]);
 	}
 
 
@@ -25654,6 +25647,8 @@ mat=(int (*)[col])malloc(sizeof(*mat)*row);*/
 
 void memoryFree(){
 
+	printf("  Liberando a Memoria alocada\n");
+
 	free(QSURF_.AXX );
 	free(QSURF_.AXY );
 	free(QSURF_.AXZ );
@@ -26235,9 +26230,9 @@ void memoryFree(){
 	free(CNT0_.DAVE);
 
 	//CNT1_);
-	free(CNT1_.TDEBO );
+	free(CNT1_.TDEBO);
 	free(CNT1_.TDEBO2);
-	free(CNT1_.DEBO );
+	free(CNT1_.DEBO);
 
 	//CNT2_);
 	free(CNT2_.SHIST );
@@ -26251,14 +26246,14 @@ void memoryFree(){
 	free(CNT3_.NSDE );
 
 	//CNT4_);
-	free(CNT4_.RLAST	);
+	free(CNT4_.RLAST);
 	free(CNT4_.RWRITE);
-	free(CNT4_.IDCUT	);
+	free(CNT4_.IDCUT);
 	free(CNT4_.KKDI);
 	free(CNT4_.IPSF);
-	free(CNT4_.NID 	);
-	free(CNT4_.NPSFO	);
-	free(CNT4_.IPSFO	);
+	free(CNT4_.NID);
+	free(CNT4_.NPSFO);
+	free(CNT4_.IPSFO);
 
 	//CNT5_);
 	free(CNT5_.DEDE );
@@ -26266,7 +26261,7 @@ void memoryFree(){
 	free(CNT5_.NED );
 
 	//CNT6_);
-	free(CNT6_.LDOSEM );
+	free(CNT6_.LDOSEM);
 
 	//CDUMP_);
 	free(CDUMP_.LDUMP );
@@ -26435,10 +26430,181 @@ void memoryFree(){
 	//CHIST_
 	free(CHIST_.ILBA); 
 
+}
 
+
+void plotdose2_(){
+
+	printf("  Imprimindo arquivo PlotDose2.map\n");
+
+	double DXL[3], DXU[3];
+	int NDB[3];
+	double BDOSE[3], RBDOSE[3];
+	static const int NP = 250;
+	//double DOSE[250][250][250];
+	//double EDOSE[250][250][250];
+
+	double (*DOSE)[250][250];
+	double (*EDOSE)[250][250];
+
+	DOSE=(double (*)[250][250])malloc(250*250*250*sizeof(double));
+	EDOSE=(double (*)[250][250])malloc(250*250*250*sizeof(double));
+
+
+	int PARINP[20];
+	char *PCH;
+
+	double XW, YW, ZW;
+
+	for (int I = 1; I <= NP; I++){
+		for (int J = 1; J <= NP; J++){
+			for (int K = 1; K <= NP; K++){
+				DOSE[K-1][J-1][I-1] = 0.0E0;
+				EDOSE[K-1][J-1][I-1] = 0.0E0;
+			}
+		}
+	}
+
+/*	FILE* IR = fopen("3d-dose-map2.dat", "r");
+	if (IR == NULL){
+		printf("Não foi possível abrir o arquivo 3d-dose-map2.dat");
+		exit(0);
+	}*/
+
+	FILE* IW = fopen("plotdose2.dat", "w");
+	if (IW == NULL){
+		printf("Não foi possível abrir o arquivo plotdose2.dat");
+		exit(0);
+	}
+
+	
+
+	ifstream inFILE;
+	string LINE;
+
+	inFILE.open("3d-dose-map2.dat");
+	getline(inFILE, LINE);
+
+	char *sArray = (char *) malloc((LINE.length()+1) * sizeof(char));
+
+	fprintf(IW,"#  Results from PENMAIN. 3D dose distribution.\n");
+
+	getline(inFILE, LINE);
+	sArray = (char *) realloc(NULL, (LINE.length()+1) * sizeof(char));
+	strcpy(sArray, LINE.c_str());
+	PCH = strtok(sArray, "  # Dose map cm XL XU = box : ,");
+	PCH = strtok(NULL, " # Dose map cm XL XU = box : ,");
+	DXL[1-1] = atof(PCH);
+	PCH = strtok(NULL, " # Dose map cm XL XU = box : ,");
+	DXU[1-1] = atof(PCH);
+	fprintf(IW, " #  Dose-map box:  XL = %.6E cm,  XU = %.6E cm\n", DXL[1-1],DXU[1-1]);
+
+	getline(inFILE, LINE);
+	sArray = (char *) realloc(NULL, (LINE.length()+1) * sizeof(char));
+	strcpy(sArray, LINE.c_str());
+	PCH = strtok(sArray, "  # cm YL YU = box : ,");
+	DXL[2-1] = atof(PCH);
+	PCH = strtok(NULL, " # cm YL YU = box : ,");
+	DXU[2-1] = atof(PCH);
+	fprintf(IW, " #                 YL = %.6E cm,  YU = %.6E cm\n", DXL[2-1], DXU[2-1]);
+
+	getline(inFILE, LINE);
+	sArray = (char *) realloc(NULL, (LINE.length()+1) * sizeof(char));
+	strcpy(sArray, LINE.c_str());
+	PCH = strtok(sArray, "  # cm ZL ZU = box : ,");
+	DXL[3-1] = atof(PCH);
+	PCH = strtok(NULL, " # cm ZL ZU = box : ,");
+	DXU[3-1] = atof(PCH);
+	fprintf(IW, " #                 ZL = %.6E cm,  ZU = %.6E cm\n", DXL[3-1], DXU[3-1]);
+
+	getline(inFILE, LINE);
+	sArray = (char *) realloc(NULL, (LINE.length()+1) * sizeof(char));
+	strcpy(sArray, LINE.c_str());
+
+	PCH = strtok(sArray, " #  Numbers of bins: NBX NBY NBZ = ,");
+	NDB[1-1] = atoi(PCH);
+	PCH = strtok(NULL, " #  Numbers of bins: NBX NBY NBZ = ,");
+	NDB[2-1] = atoi(PCH);
+	PCH = strtok(NULL, " #  Numbers of bins: NBX NBY NBZ = ,");
+	NDB[3-1] = atoi(PCH);
+	fprintf(IW, " #  Numbers of bins:     NBX =%4d, NBY =%4d, NBZ =%4d\n", NDB[1-1], NDB[2-1], NDB[3-1]);
+
+	getline(inFILE, LINE);
+	getline(inFILE, LINE);
+	getline(inFILE, LINE);
+	getline(inFILE, LINE);
+	getline(inFILE, LINE);
+
+	double FSAFE = 1.000000001e0;
+	for (int I = 1; I <= 3; I++){
+		BDOSE[I-1]=FSAFE*(DXU[I-1]-DXL[I-1])/(NDB[I-1]);
+        RBDOSE[I-1]=1.0e0/BDOSE[I-1];
+	}
+
+	for (int I3 = 1; I3 <= NDB[3-1]; I3++){
+		for (int I1 = 1; I1 <= NDB[1-1]; I1++){
+			for (int I2 = 1; I2 <= NDB[2-1]; I2++){
+				getline(inFILE, LINE);
+				sArray = (char *) realloc(NULL, (LINE.length()+1) * sizeof(char));
+				strcpy(sArray, LINE.c_str());
+				PCH = strtok(sArray, " ");
+				*TRACK_mod_.X = atof(PCH);
+				PCH = strtok(NULL, " ");
+				*TRACK_mod_.Y = atof(PCH);
+				PCH = strtok(NULL, " ");
+				*TRACK_mod_.Z = atof(PCH);
+				PCH = strtok(NULL, " ");
+				DOSE[I3-1][I2-1][I1-1] = atof(PCH);
+				PCH = strtok(NULL, " ");
+				DOSE[I3-1][I2-1][I1-1] = atof(PCH);
+			}
+			getline(inFILE, LINE);
+		}
+		getline(inFILE, LINE);
+	}
+
+	fprintf(IW, " #\n");
+	fprintf(IW, " #  Columns 1 to 3: X,Y,Z coordinates of the bin centres (cm).\n");
+	fprintf(IW, " #  4th column: dose (eV/g).\n");
+	fprintf(IW, " #  5th column: statistical uncertainty (3 sigma).\n");
+	fprintf(IW, " #  columns 6 to 8: bin indices IX,IY,IZ. Column 9: IBODY.\n\n");
+
+	int ICASO = 1;
+
+	*TRACK_mod_.U = 1.0e0;
+	*TRACK_mod_.V = 0.0e0;
+	*TRACK_mod_.W = 0.0e0;
+	*TRACK_mod_.X = 0.0e0;
+	for (int I1 = 1; I1 <= NDB[1-1] + 1; I1++){
+		*TRACK_mod_.X=DXL[1-1]+(I1-0.5e0)*BDOSE[1-1];
+        XW=*TRACK_mod_.X-0.5e0*BDOSE[1-1];
+        *TRACK_mod_.X=fmin(fmax( *TRACK_mod_.X,DXL[1-1]+1.0e-9),DXU[1-1]-1.0e-9);
+		for (int I2 = 1; I2 <= NDB[2-1] + 1; I2++){
+			*TRACK_mod_.Y=DXL[2-1]+(I2-0.5e0)*BDOSE[2-1];
+			YW=*TRACK_mod_.Y-0.5e0*BDOSE[2-1];
+			*TRACK_mod_.Y=fmin(fmax( *TRACK_mod_.Y,DXL[2-1]+1.0e-9),DXU[2-1]-1.0e-9);
+			for (int I3 = 1; I3 <= NDB[3-1] + 1; I3++){
+				*TRACK_mod_.Z=DXL[3-1]+(I3-0.5e0)*BDOSE[3-1];
+				ZW=*TRACK_mod_.Z-0.5e0*BDOSE[3-1];
+				*TRACK_mod_.Z=fmin(fmax( *TRACK_mod_.Z,DXL[3-1]+1.0e-9),DXU[3-1]-1.0e-9);
+				locate2_();
+				fprintf(IW, " %2.3E  %2.3E  %2.3E  %2.3E  %4d  %4d  %4d  %4d\n", XW,YW,ZW,DOSE[I3-1][I2-1][I1-1],I1,I2,I3,*TRACK_mod_.IBODY);
+			}
+			fprintf(IW, "\n");
+		}
+		fprintf(IW, "\n");
+	}
+
+
+	free(DOSE);
+	free(EDOSE);
+	inFILE.close();
+	fclose(IW);
 
 
 }
+
+
 
 
 
