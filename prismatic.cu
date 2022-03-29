@@ -1,6 +1,9 @@
 
+
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
+
+#include "cuda_common.cuh"
 
 
 #include <stdlib.h>
@@ -82,9 +85,6 @@ int imprimiu = 0;
 int wIPOLI = 0;
 
 clock_t start, end;
-
-
-
 
 typedef	struct {
 	double* AXX, * AXY, * AXZ, * AYY, * AYZ,
@@ -413,11 +413,14 @@ typedef struct {
 } CDCSEP;
 
 typedef struct {
-
 	double(*XSE)[NEGP][NP], (*PSE)[NEGP][NP], (*ASE)[NEGP][NP], (*BSE)[NEGP][NP];
 	int(*ITLE)[NEGP][NP], (*ITUE)[NEGP][NP];
-
 }CEELDB;
+
+typedef struct{
+    double XSE[MAXMAT][NEGP][NP], PSE[MAXMAT][NEGP][NP], ASE[MAXMAT][NEGP][NP], BSE[MAXMAT][NEGP][NP];
+	int ITLE[MAXMAT][NEGP][NP], ITUE[MAXMAT][NEGP][NP];
+}hd_CEELDB;
 
 
 typedef struct {
@@ -609,7 +612,7 @@ typedef struct {
 	double(*PDE)[2][3], (*PDE2)[2][3], (*PDEP)[2][3];
 	double(*PDA)[NBTHM][3], (*PDA2)[NBTHM][3], (*PDAP)[NBTHM][3];
 	int(*LPDE)[2][3];
-    int (*LPDA)[NBTHM][3];
+	int(*LPDA)[NBTHM][3];
 	int* NE, * NTH, * NPH;
 	bool* LLE, * LLTH;
 }CENANG;
@@ -625,11 +628,11 @@ typedef struct {
 	double* AGEL, * AGEU, * BAGE, * RBAGE, (*AGE)[NIDM];
 	double(*AGE2)[NIDM], (*AGEP)[NIDM];
 	int* LEDEP;
-    int (*LDIT)[NIDM];
-    int (*LDIP)[NBEM2][NIDM];
-    int (*LFLT)[NIDM];
-    int (*LFLP)[NBEM2][NIDM];
-    int (*LAGEA)[NIDM];
+	int(*LDIT)[NIDM];
+	int(*LDIP)[NBEM2][NIDM];
+	int(*LFLT)[NIDM];
+	int(*LFLP)[NBEM2][NIDM];
+	int(*LAGEA)[NIDM];
 	int* IDCUT, * NE;
 	bool* LLE, * LLAGE;
 	int* NAGE, * NID;
@@ -1030,7 +1033,7 @@ extern "C" {
 
 	void steplb2_(int& KB, int& IERR);
 
-	void geomin2_(double* PARINP, int* NPINP, int* NMATG, int* NBOD, FILE* IR, FILE* IW);
+	void geomin2_(double* PARINP, int& NPINP, int& NMATG, int* NBOD, FILE* IR, FILE* IW);
 
 	void rotshf2_(double& OMEGA, double& THETA, double& PHI, double& DX, double& DY, double& DZ, double& AXX, double& AXY, double& AXZ, double& AYY, double& AYZ, double& AZZ, double& AX, double& AY, double& AZ, double& A0);
 
@@ -1299,6 +1302,12 @@ extern "C" {
 	void memoryFree();
 
 	void plotdose2_();
+
+    void transfCPU_to_GPU();
+
+    void transfGPU_to_CPU();
+
+    void memoryFreeGPU();
 
 }
 
@@ -2891,7 +2900,7 @@ L102:;
 						}
 
 						SW = 0.0e0;
-L103:;
+					L103:;
 						fsurf2_(KS, A, B, C);
 						if (KFLO == QTREE_.KSP[KS - 1]) {
 							printf("KS, KFLO, KSP, SW %lf", SW);
@@ -3321,7 +3330,10 @@ L300:;
 }
 
 
-void geomin2_(double* PARINP, int* NPINP, int* NMATG, int* NBOD, FILE* IR, FILE* IW) {
+void geomin2_(double* PARINP, int& NPINP, int& NMATG, int* NBOD, FILE* IR, FILE* IW) {
+
+
+
 	/*
 	Lê o arquivo de definição de geometria e configura os arrays usados para rastrear partículas através do sistema.
 
@@ -3348,11 +3360,11 @@ void geomin2_(double* PARINP, int* NPINP, int* NMATG, int* NBOD, FILE* IR, FILE*
 		Os detectores devem ser definidos no programa principal, após a chamada à sub-rotina GEOMIN
 	*/
 
-//	bool LOPCLO;
+	//	bool LOPCLO;
 
 	char CHR[6];
-//	char CCR[2];
-//	char CNL[2];
+	//	char CCR[2];
+	//	char CNL[2];
 	char C5[6];
 	char C5C[6];
 	char C4[5];
@@ -3406,9 +3418,10 @@ void geomin2_(double* PARINP, int* NPINP, int* NMATG, int* NBOD, FILE* IR, FILE*
 	static const char LFIL[] = "   FILE=";
 	static const char ZEROS[] = "0000000000000000000000000000000000000000000000000000000000000000\n";
 
-	//int LARRAY[9];
+	//int LARRAY[9]
+
 	int KQ[5];
-	int KM[NS];
+	/*int KM[NS];
 	int IDESC[NB];
 	int IDONE[NB];
 	int ISCL[NS];
@@ -3418,12 +3431,33 @@ void geomin2_(double* PARINP, int* NPINP, int* NMATG, int* NBOD, FILE* IR, FILE*
 	char DEFS[NS][73];
 	char ALIAS[NS][6];
 	char ALIAB[NB][6];
-	int KSFF[NS];
+	int KSFF[NS];*/
+
+
+
+	int* KM = (int*)malloc(NS * sizeof(int));
+	int* IDESC = (int*)malloc(NB * sizeof(int));
+	int* IDONE = (int*)malloc(NB * sizeof(int));
+	int* ISCL = (int*)malloc(NS * sizeof(int));
+	int* IBCL = (int*)malloc(NB * sizeof(int));
+	int* IBOR = (int*)malloc(NB * sizeof(int));
+	int* KSFF = (int*)malloc(NS * sizeof(int));
+
+	char(*DEFB)[73];
+	char(*DEFS)[73];
+	char(*ALIAS)[6];
+	char(*ALIAB)[6];
+
+	DEFB = (char(*)[73])malloc(NB * 73 * sizeof(char));
+	DEFS = (char(*)[73])malloc(NS * 73 * sizeof(char));
+	ALIAS = (char(*)[6])malloc(NS * 6 * sizeof(char));
+	ALIAB = (char(*)[6])malloc(NB * 6 * sizeof(char));
+
 	int NSFF;
 	int ICLONE;
 	int KEEPL;
 	int NINCL;
-//	int IRI;
+	//	int IRI;
 	int IMODE;
 	int ICHPAR;
 	int IMAT;
@@ -3450,8 +3484,8 @@ void geomin2_(double* PARINP, int* NPINP, int* NMATG, int* NBOD, FILE* IR, FILE*
 	int ND;
 	int NDC;
 	int KDG;
-//	int IN;
-//	int ID;
+	//	int IN;
+	//	int ID;
 	int KSD;
 	int KBO;
 	int MLESS;
@@ -3510,8 +3544,8 @@ void geomin2_(double* PARINP, int* NPINP, int* NMATG, int* NBOD, FILE* IR, FILE*
 
 
 
-//	CCR[1] = char(13);
-//	CNL[1] = char(10);
+	//	CCR[1] = char(13);
+	//	CNL[1] = char(10);
 
 	NSFF = 0;
 
@@ -3550,6 +3584,8 @@ void geomin2_(double* PARINP, int* NPINP, int* NMATG, int* NBOD, FILE* IR, FILE*
 		QSURF_.KPLANE[KS - 1] = 0;
 	}
 
+
+
 	for (int KB = 1; KB <= NB; KB++) {
 		PENGEOM_mod_.KDET[KB - 1] = 0; //KDET (KB) .ne.0 se o corpo KB fizer parte de um detector.
 		strcpy(ALIAB[KB - 1], "    0"); //Aliases de corpo (rótulos de usuário).
@@ -3575,12 +3611,14 @@ void geomin2_(double* PARINP, int* NPINP, int* NMATG, int* NBOD, FILE* IR, FILE*
 
 	//	printf("linha 1121\n");
 
-	*NMATG = 0;
+	NMATG = 0;
 	*QSURF_.NSURF = 0;
 	*QTREE_.NBODYS = 0;
 	ICLONE = 0;
 	KEEPL = 0;
 	*QTREE_.NWARN = 0;
+
+
 
 
 
@@ -3611,14 +3649,14 @@ void geomin2_(double* PARINP, int* NPINP, int* NMATG, int* NBOD, FILE* IR, FILE*
 
 
 
-//L9:;
+	//L9:;
 
-	/*FILE* file = fopen("penmain-res.dat", "r");
-	if (file == NULL){
-		IRI = IRI + 1;
-		goto L9;
+		/*FILE* file = fopen("penmain-res.dat", "r");
+		if (file == NULL){
+			IRI = IRI + 1;
+			goto L9;
 
-	}*/
+		}*/
 
 L1:;
 
@@ -3904,7 +3942,7 @@ L101:;
 	if (!strcmp(LKEYW, LNUL))
 		goto L102;
 	if (ICHPAR > 0) {
-		if (ICHPAR <= *NPINP) {
+		if (ICHPAR <= NPINP) {
 			VALUE = PARINP[ICHPAR - 1];
 			ICHPAR = -ICHPAR; //Desativa a opção de alteração de parâmetro.
 		}
@@ -4088,7 +4126,7 @@ L193:;
 	if (!strcmp(LKEYW, LNUL)) goto L107;
 	if (!strcmp(LKEYW, LONE)) goto L104;
 	if (ICHPAR > 0) {
-		if (ICHPAR <= *NPINP) {
+		if (ICHPAR <= NPINP) {
 			VALUE = PARINP[ICHPAR - 1];
 			ICHPAR = -ICHPAR; //Desativa a opção de alteração de parâmetro.
 		}
@@ -4188,7 +4226,7 @@ L105:;
 	if (!strcmp(LKEYW, LNUL))
 		goto L106;
 	if (ICHPAR > 0)
-		if (ICHPAR <= *NPINP) {
+		if (ICHPAR <= NPINP) {
 			VALUE = PARINP[ICHPAR - 1];
 			ICHPAR = -ICHPAR; //Desativa a opção de alteração de parâmetro.
 		}
@@ -4363,9 +4401,9 @@ L295:;
 	//	printf("linha 1710\n");
 	PENGEOM_mod_.MATER[*QTREE_.NBODYS - 1] = IMAT;
 	//	printf("linha 1710\n");
-	//	printf("Linha 1717 IMAT: %d    NMATG: %d\n", IMAT, *NMATG);
+	//	printf("Linha 1717 IMAT: %d    NMATG: %d\n", IMAT, NMATG);
 
-	*NMATG = max(*NMATG, IMAT);
+	NMATG = max(NMATG, IMAT);
 
 
 
@@ -4624,7 +4662,7 @@ L391:;
 	if (IMAT < 0)
 		IMAT = 0;
 	PENGEOM_mod_.MATER[*QTREE_.NBODYS - 1] = IMAT;
-	*NMATG = max(*NMATG, IMAT);
+	NMATG = max(NMATG, IMAT);
 
 	QTREE_.KDGHT[NXG - 1][*QTREE_.NBODYS - 1] = 1;
 	QTREE_.KDGHT[1 - 1][*QTREE_.NBODYS - 1] = *QTREE_.NBODYS;
@@ -4929,7 +4967,7 @@ L309:;
 	if (!strcmp(LKEYW, LNUL))
 		goto L310;
 	if (ICHPAR > 0) {
-		if (ICHPAR <= *NPINP) {
+		if (ICHPAR <= NPINP) {
 			VALUE = PARINP[ICHPAR - 1];
 			ICHPAR = -ICHPAR; //Desativa a opção de alteração de parâmetro.
 		}
@@ -5197,7 +5235,7 @@ L404:;
 	if (!strcmp(LKEYW, LNUL))
 		goto L405;
 	if (ICHPAR > 0) {
-		if (ICHPAR <= *NPINP) {
+		if (ICHPAR <= NPINP) {
 			VALUE = PARINP[ICHPAR - 1];
 			ICHPAR = -ICHPAR; //Desativa a opção de alteração de parâmetro.
 		}
@@ -5296,7 +5334,7 @@ L406:;
 	if (KDG > 0)
 		goto L406;
 
-//	IN = 0;
+	//	IN = 0;
 	for (int I = 1; I <= NB; I++) {
 		IBCL[I - 1] = 0; //Rótulo de um corpo ou módulo clonado.
 		IBOR[I - 1] = 0; //Label of the original body or module.
@@ -6084,12 +6122,23 @@ L704:;
 	}
 	fputs("\n************  The end.\n", IW);
 
+	free(KM);
+	free(IDESC);
+	free(IDONE);
+	free(IBCL);
+	free(IBOR);
+	free(KSFF);
+	free(DEFB);
+	free(DEFS);
+	free(ALIAS);
+	free(ALIAB);
+
 	return;
 
-/*L900:;
-	fputs(BLINE, IW);
-	fputs("\n*** Wrong input format.\n", IW);
-	exit(0);*/
+	/*L900:;
+		fputs(BLINE, IW);
+		fputs("\n*** Wrong input format.\n", IW);
+		exit(0);*/
 
 }
 
@@ -8407,7 +8456,7 @@ void pematr2_(int* M, FILE* IRD, FILE* IWR, int* INFO) {
 		if ((CGPH01_.ER[I - 1] >= *CEGRID_.EL) && (CGPH01_.ER[I - 1] <= *CEGRID_.EU)) {
 			*CEGRID_.XEL = log(CGPH01_.ER[I - 1]);
 			*CEGRID_.XE = 1.0e0 + (*CEGRID_.XEL - *CEGRID_.DLEMP1) * *CEGRID_.DLFC;
-			*CEGRID_.KE = *CEGRID_.XE;
+			*CEGRID_.KE = (int)*CEGRID_.XE;
 			*CEGRID_.XEK = *CEGRID_.XE - *CEGRID_.KE;
 			graati2_(CGPH01_.ER[I - 1], ECS, M);
 			PRA = ECS * COMPOS_.VMOL[*M - 1] / COMPOS_.RHO[*M - 1];
@@ -9337,15 +9386,15 @@ void relaxr2_(FILE* IRD, FILE* IWR, int* INFO) {
 	double TST = 0.0;
 
 	for (int IS = 1; IS <= 16; IS++) {
-		double I0 = CRELAX_.IFIRST[IS - 1][IZ - 1];
-		double IN = CRELAX_.ILAST[IS - 1][IZ - 1];
-		double PT = 0.0;
+		int I0 = CRELAX_.IFIRST[IS - 1][IZ - 1];
+		int IN = CRELAX_.ILAST[IS - 1][IZ - 1];
+		double PT = 0.0e0;
 		for (int I = I0; I <= IN; I++) {
 			PT = PT + CRELAX_.P[I - 1];
 		}
 
 		for (int I = I0; I <= IN; I++) {
-			double PPI = 0.0;
+			double PPI = 0.0e0;
 			for (int J = I0; J <= IN; J++) {
 				if (CRELAX_.IS0[J - 1] == I)
 					PPI = PPI + (1.0 - CRELAX_.F[J - 1]);
@@ -11839,7 +11888,7 @@ void ebrat2_(double& E, double& WCRM, double& XH0, double& XH1, double& XH2, dou
 
 	*CEGRID_.XEL = fmax(log(E), *CEGRID_.DLEMP1);
 	*CEGRID_.XE = 1.0e0 + (*CEGRID_.XEL - *CEGRID_.DLEMP1) * *CEGRID_.DLFC;
-	*CEGRID_.KE = *CEGRID_.XE;
+	*CEGRID_.KE = (int)*CEGRID_.XE;
 	*CEGRID_.XEK = *CEGRID_.XE - *CEGRID_.KE;
 
 	//Fator de se��o x global.
@@ -12186,14 +12235,14 @@ void pbrat2_(double& E, double& WCRM, double& XH0, double& XH1, double& XH2, dou
 	double REV = 5.10998928e5;  //Electron rest energy (eV)
 	double TREV = 2.0e0 * REV;
 
-//	static const int NBE = 57;
+	//	static const int NBE = 57;
 	static const int NBW = 32;
 
 
 
 	*CEGRID_.XEL = fmax(log(E), *CEGRID_.DLEMP1);
 	*CEGRID_.XE = 1.0e0 + (*CEGRID_.XEL - *CEGRID_.DLEMP1) * *CEGRID_.DLFC;
-	*CEGRID_.KE = *CEGRID_.XE;
+	*CEGRID_.KE = (int)*CEGRID_.XE;
 	*CEGRID_.XEK = *CEGRID_.XE - *CEGRID_.KE;
 
 	//Fator de se��o x global.
@@ -13417,8 +13466,8 @@ void graar2_(int* M, FILE* IRD, FILE* IWR, int* INFO) {
 	//double Q[NQ], F[NQ], FFI[NQ], ER[NEX], A[NQ], B[NQ], C[NQ], D[NQ], QI[NIP], FUN[NIP], SUM[NIP];
 
 	int NQQ;
-	double XS1, Q2MIN, ERRM, DQ, Q1, Q2, QM, Q2M, TAU, CON1, CI, CON2, ETAP, EE, J1, XSMAX;
-	int J, NPT, NU, NPI, II, IT;
+	double XS1, Q2MIN, ERRM, DQ, Q1, Q2, QM, Q2M, TAU, CON1, CI, CON2, ETAP, EE, XSMAX;
+	int J, NPT, NU, NPI, II, IT, J1;
 
 	fgets(LINHA, sizeof(LINHA), IRD);
 	extrairString(APOIO, LINHA, 32, 3);
@@ -14237,7 +14286,7 @@ void graati2_(double E, double& ECS, int* M) {
 
 	XELN = log(E);
 	XEN = 1.0e0 + (XELN - *CEGRID_.DLEMP1) * *CEGRID_.DLFC;
-	KEN = XEN;
+	KEN = (int)XEN;
 	if (KEN == 0)
 		KEN = 1;
 
@@ -14286,7 +14335,7 @@ Se��o .
 	}
 
 	CGPP00_.ZEQPP[*M - 1] = FACT / COMPOS_.AT[*M - 1];
-	IZZ = CGPP00_.ZEQPP[*M - 1] + 0.25e0;
+	IZZ = (int)(CGPP00_.ZEQPP[*M - 1] + 0.25e0);
 	if (IZZ <= 0)
 		IZZ = 1;
 	if (IZZ > 99)
@@ -14325,8 +14374,8 @@ void pmrdr2_() {
 	char PSFDIO[21];
 	char SPCFSO[21];
 	char SPCAGE[21];
-	char BUFFER[121];
-	char BUF2[121];
+	char BUFFER[127];
+	char BUF2[127];
 	char KWTITL[7] = "TITLE "; char KWKPAR[7] = "SKPAR "; char KWSENE[7] = "SENERG"; char KWSPEC[7] = "SPECTR";
 	char KWSPOL[7] = "SGPOL "; char KWSPOS[7] = "SPOSIT"; char KWSBOX[7] = "SBOX  "; char KWSBOD[7] = "SBODY ";
 	char KWSCON[7] = "SCONE "; char KWSREC[7] = "SRECTA"; char KWPSFN[7] = "IPSFN "; char KWPSPL[7] = "IPSPLI";
@@ -14469,7 +14518,7 @@ void pmrdr2_() {
 	*CSOUR4_.RLREAD = 0.0e0;
 	*CSOUR4_.RWGMIN = 1.0e35;
 	KBSMAX = 0;
-//	ISEC = 0;
+	//	ISEC = 0;
 	*CDUMP_.LDUMP = false;
 	*CSOUR0_.LPSF = false;
 	*CSOUR2_.LSPEC = false;
@@ -14496,7 +14545,7 @@ L11:;
 	if (!strcmp(KWORD, KWKPAR)) {
 		extrairString(APOIO, BUFFER, 0, 1);
 		*CSOUR0_.KPARP = atoi(APOIO);
-L12:;
+	L12:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
 		extrairString(BUFFER, LINHA, 7, 121);
@@ -14531,7 +14580,9 @@ L12:;
 	L13:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
+
+
 		if (!strcmp(KWORD, KWCOMM))
 			goto L13;
 		if (!strcmp(KWORD, KWPSFN))
@@ -14559,7 +14610,7 @@ L12:;
 		L15:;
 			fgets(LINHA, sizeof(LINHA), IRD);
 			extrairString(KWORD, LINHA, 0, 6);
-			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 			if (!strcmp(KWORD, KWCOMM))
 				goto L15;
 			if (!strcmp(KWORD, KWSPEC))
@@ -14624,7 +14675,7 @@ L12:;
 	L20:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L20;
 		if (!strcmp(KWORD, KWPSFN))
@@ -14648,7 +14699,7 @@ L12:;
 	L16:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L16;
 		if (!strcmp(KWORD, KWPSFN))
@@ -14678,7 +14729,7 @@ L12:;
 	L17:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L17;
 		if (!strcmp(KWORD, KWPSFN))
@@ -14714,7 +14765,7 @@ L717:;
 	L766:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L766;
 		if (!strcmp(KWORD, KWSBOD))
@@ -14759,7 +14810,7 @@ L777:;
 	L18:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L18;
 		if (!strcmp(KWORD, KWPSFN))
@@ -14799,7 +14850,7 @@ L777:;
 	L19:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L19;
 		if (!strcmp(KWORD, KWPSFN))
@@ -14856,7 +14907,7 @@ L21:;
 	L22:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L22;
 		if (!strcmp(KWORD, KWPSFN))
@@ -14875,7 +14926,7 @@ L21:;
 		L23:;
 			fgets(LINHA, sizeof(LINHA), IRD);
 			extrairString(KWORD, LINHA, 0, 6);
-			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 			if (!strcmp(KWORD, KWCOMM))
 				goto L23;
 		}
@@ -14898,7 +14949,7 @@ L21:;
 		L24:;
 			fgets(LINHA, sizeof(LINHA), IRD);
 			extrairString(KWORD, LINHA, 0, 6);
-			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 			if (!strcmp(KWORD, KWCOMM))
 				goto L24;
 		}
@@ -14922,7 +14973,7 @@ L21:;
 	L25:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L25;
 	}
@@ -14965,7 +15016,7 @@ L31:;
 	L32:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L32;
 		if (!strcmp(KWORD, KWMATF))
@@ -14990,7 +15041,7 @@ L31:;
 	L33:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L33;
 		if (!strcmp(KWORD, KWMATF))
@@ -15075,7 +15126,7 @@ L31:;
 	L34:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L34;
 		if (!strcmp(KWORD, KWGPAR)) {
@@ -15111,11 +15162,9 @@ L31:;
 			exit(0);
 		}
 
-		geomin2_(PARINP, &NPINP, &NMATG, PENGEOM_mod_.NBODY, GEOMETRIA, GEOMETRY2);
+		geomin2_(PARINP, NPINP, NMATG, PENGEOM_mod_.NBODY, GEOMETRIA, GEOMETRY2);
 		fclose(GEOMETRIA);
 		fclose(GEOMETRY2);
-
-
 
 		if (NMATG < 1) {
 			fprintf(IWR, "NMATG must be greater than 0.\n");
@@ -15139,14 +15188,14 @@ L31:;
 			fprintf(IWR, "      NBODY = %4d\n", *PENGEOM_mod_.NBODY);
 			fprintf(IWR, "      Some source bodies are undefined. STOP.\n");
 			printf("Some source bodies are undefined. STOP.\n");
-            exit(0);
+			exit(0);
 		}
 	}
 	else {
 		fprintf(IWR, "%s %s\n", KWORD, BUFFER);
 		fprintf(IWR, "You have to specify a geometry file.\n");
 		printf("You have to specify a geometry file\n");
-        exit(0);
+		exit(0);
 	}
 
 
@@ -15171,7 +15220,7 @@ L31:;
 	L35_2:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L35_2;
 		if (!strcmp(KWORD, KWSMAX))
@@ -15192,7 +15241,7 @@ L31:;
 
 
 	if (!strcmp(KWORD, KWEABS)) {
-    L36:;
+	L36:;
 		PCH = strtok(BUFFER, " ");
 		KB = atoi(PCH);
 		PCH = strtok(NULL, " ");
@@ -15217,7 +15266,7 @@ L31:;
 	L37:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L37;
 		if (!strcmp(KWORD, KWEABS))
@@ -15234,10 +15283,10 @@ L31:;
 	}
 
 
-    if (!strcmp(KWORD, KWIFOR)) {
-        printf("%s, %s, %s\n", KWIFOR, KBRSPL, KXRSPL);
-    }
-    //Reduções de Variancia (Não será implementado nessa versão do programa)
+	if (!strcmp(KWORD, KWIFOR)) {
+		printf("%s, %s, %s\n", KWIFOR, KBRSPL, KXRSPL);
+	}
+	//Reduções de Variancia (Não será implementado nessa versão do programa)
 
 	/*Forçando Interação
 	IFORCE : Ativa o forçamento de interações do tipo ICOL de partículas
@@ -15306,7 +15355,7 @@ L31:;
 	L51:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L51;
 	}
@@ -15343,7 +15392,7 @@ L31:;
 	L52:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L52;
 	}
@@ -15448,7 +15497,7 @@ L61:;
 	L62:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L62;
 
@@ -15465,7 +15514,7 @@ L61:;
 		L64:;
 			fgets(LINHA, sizeof(LINHA), IRD);
 			extrairString(KWORD, LINHA, 0, 6);
-			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 			if (!strcmp(KWORD, KWCOMM))
 				goto L64;
 		}
@@ -15499,7 +15548,7 @@ L61:;
 		L63:;
 			fgets(LINHA, sizeof(LINHA), IRD);
 			extrairString(KWORD, LINHA, 0, 6);
-			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 			if (!strcmp(KWORD, KWCOMM))
 				goto L63;
 		}
@@ -15538,7 +15587,7 @@ L61:;
 		L83:;
 			fgets(LINHA, sizeof(LINHA), IRD);
 			extrairString(KWORD, LINHA, 0, 6);
-			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 			if (!strcmp(KWORD, KWCOMM))
 				goto L83;
 
@@ -15600,7 +15649,7 @@ L61:;
 		L84:;
 			fgets(LINHA, sizeof(LINHA), IRD);
 			extrairString(KWORD, LINHA, 0, 6);
-			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 			if (!strcmp(KWORD, KWCOMM))
 				goto L84;
 		}
@@ -15626,7 +15675,7 @@ L61:;
 
 			fgets(LINHA, sizeof(LINHA), IRD);
 			extrairString(KWORD, LINHA, 0, 6);
-			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 			if (!strcmp(KWORD, KWCOMM))
 				goto L85;
 
@@ -15679,7 +15728,7 @@ L61:;
 		L66:;
 			fgets(LINHA, sizeof(LINHA), IRD);
 			extrairString(KWORD, LINHA, 0, 6);
-			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 			if (!strcmp(KWORD, KWCOMM))
 				goto L66;
 			if (!strcmp(KWORD, KWIBOD))
@@ -15690,7 +15739,7 @@ L61:;
 					printf("This detector has no active bodies.\n");
 					exit(0);
 				}
-				ITST = fmax(CNT4_.KKDI[1 - 1][*CNT4_.NID - 1], fmax(CNT4_.KKDI[2 - 1][*CNT4_.NID - 1], CNT4_.KKDI[3 - 1][*CNT4_.NID - 1]));
+				ITST = int(fmax(CNT4_.KKDI[1 - 1][*CNT4_.NID - 1], fmax(CNT4_.KKDI[2 - 1][*CNT4_.NID - 1], CNT4_.KKDI[3 - 1][*CNT4_.NID - 1])));
 				if (ITST == 0) {
 					CNT4_.KKDI[1 - 1][*CNT4_.NID - 1] = 1;
 					CNT4_.KKDI[2 - 1][*CNT4_.NID - 1] = 1;
@@ -15736,7 +15785,7 @@ L61:;
 		L68:;
 			fgets(LINHA, sizeof(LINHA), IRD);
 			extrairString(KWORD, LINHA, 0, 6);
-			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 			if (!strcmp(KWORD, KWCOMM))
 				goto L68;
 			if (!strcmp(KWORD, KWIPAR))
@@ -15842,7 +15891,7 @@ L43:;
 	L44:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L44;
 		if (!strcmp(KWORD, KWESPC)) {
@@ -15852,7 +15901,7 @@ L43:;
 		L45:;
 			fgets(LINHA, sizeof(LINHA), IRD);
 			extrairString(KWORD, LINHA, 0, 6);
-			extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+			extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 			if (!strcmp(KWORD, KWCOMM))
 				goto L45;
 		}
@@ -15897,7 +15946,7 @@ L43:;
 	L47:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L47;
 		if (!strcmp(KWORD, KWEBOD))
@@ -15952,7 +16001,7 @@ L43:;
 	L70:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L70;
 	}
@@ -15988,7 +16037,7 @@ L43:;
 	L71:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L71;
 	}
@@ -16034,7 +16083,7 @@ L43:;
 	L72:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L72;
 	}
@@ -16051,7 +16100,7 @@ L43:;
 		PCH = strtok(BUFFER, " ");
 		XUD = atof(PCH);
 		PCH = strtok(NULL, " ");
-		NBR = atof(PCH);
+		NBR = atoi(PCH);
 
 		if (XUD < 1.0e-6) {
 			fprintf(IWR, "%s %s", KWORD, BUFFER);
@@ -16087,7 +16136,7 @@ L43:;
 
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L73;
 	}
@@ -16112,7 +16161,7 @@ L43:;
 	L75:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L75;
 	}
@@ -16126,7 +16175,7 @@ L43:;
 	L76:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L76;
 	}
@@ -16145,7 +16194,7 @@ L43:;
 	L77:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L77;
 	}
@@ -16161,7 +16210,7 @@ L43:;
 	L79:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L79;
 	}
@@ -16180,7 +16229,7 @@ L43:;
 	L78:;
 		fgets(LINHA, sizeof(LINHA), IRD);
 		extrairString(KWORD, LINHA, 0, 6);
-		extrairString(BUFFER, LINHA, 7, strlen(LINHA));
+		extrairString(BUFFER, LINHA, 7, (int)strlen(LINHA));
 		if (!strcmp(KWORD, KWCOMM))
 			goto L78;
 	}
@@ -16576,10 +16625,10 @@ L43:;
 		goto L92;
 
 
-/*	L90:;
-		fprintf(IWR, "   The dump file is empty or corrupted.\n");
-		printf("The dump file is empty or corrupted.\n");
-		exit(0);*/
+		/*	L90:;
+				fprintf(IWR, "   The dump file is empty or corrupted.\n");
+				printf("The dump file is empty or corrupted.\n");
+				exit(0);*/
 
 	L91:;
 		fprintf(IWR, "   WARNING: Could not resume from dump file...\n");
@@ -16608,7 +16657,7 @@ L92:;
 
 
 	*CNTRL_.SHN = SHNA;  //Contador de simulações partículas do arquivo de despejo
-	*CNTRL_.N = fmod(*CNTRL_.SHN, 2.0e9) + 0.5e0;
+	*CNTRL_.N = int(fmod(*CNTRL_.SHN, 2.0e9) + 0.5e0);
 	*CNTRL_.TSIM = CPUTA;
 	// end = clock();
 	 //*CNTRL_.CPUT0= (double)(end - start) / CLOCKS_PER_SEC;
@@ -18956,7 +19005,7 @@ void shower2_() {
 		//Energia Inicial
 		if (*CSOUR2_.LSPEC) {
 			RN = rand2_(6.0e0) * *CNT2_.NSEB + 1;
-			K = RN; //Espectro contínuo. E amostrado pelo método de Walker.
+			K = int(RN); //Espectro contínuo. E amostrado pelo método de Walker.
 			RNF = RN - K;
 			if (RNF > CSOUR2_.FSRC[K - 1]) {
 
@@ -19258,7 +19307,7 @@ L202:;
 	secpar2_(LEFT);
 	if (LEFT > 0) {
 		if (TRACK_mod_.ILB[1 - 1] == 1) { //Fonte da particula primaria
-			KEn = *TRACK_mod_.E * *CNT3_.RDSDE + 1.0e0;
+			KEn = int(*TRACK_mod_.E * *CNT3_.RDSDE + 1.0e0);
 			CNT3_.SEDS[KEn - 1][*TRACK_mod_.KPAR - 1] = CNT3_.SEDS[KEn - 1][*TRACK_mod_.KPAR - 1] + *TRACK_mod_.WGHT;
 			CNT3_.SEDS2[KEn - 1][*TRACK_mod_.KPAR - 1] = CNT3_.SEDS2[KEn - 1][*TRACK_mod_.KPAR - 1] + pow(*TRACK_mod_.WGHT, 2);
 			//if (*TRACK_mod_.LAGE) //nao irá contabilizar a idade da particula
@@ -19463,10 +19512,10 @@ void simdet2_(int& N, int& ID) {
 	//Espectro de energia das partículas que entram.
 
 	if (CIMDET_.LLE[ID - 1] == 1) {
-		IE = 1.0e0 + (log(*TRACK_mod_.E) - CIMDET_.EL[ID - 1]) * CIMDET_.RBSE[ID - 1];
+		IE = (int)(1.0e0 + (log(*TRACK_mod_.E) - CIMDET_.EL[ID - 1]) * CIMDET_.RBSE[ID - 1]);
 	}
 	else {
-		IE = 1.0e0 + (*TRACK_mod_.E - CIMDET_.EL[ID - 1]) * CIMDET_.RBSE[ID - 1];
+		IE = (int)(1.0e0 + (*TRACK_mod_.E - CIMDET_.EL[ID - 1]) * CIMDET_.RBSE[ID - 1]);
 	}
 
 	if (N != CIMDET_.LEDEP[ID - 1]) {
@@ -19503,10 +19552,10 @@ void simdet2_(int& N, int& ID) {
 		//Distribuição de Idades das particulas
 		if (CIMDET_.NAGE[ID - 1] > 0) {
 			if (CIMDET_.LLAGE[ID - 1] == 1) {
-				IT = 1.0e0 + (log(*TRACK_mod_.PAGE) - CIMDET_.AGEL[ID - 1]) * CIMDET_.RBAGE[ID - 1];
+				IT = (int)(1.0e0 + (log(*TRACK_mod_.PAGE) - CIMDET_.AGEL[ID - 1]) * CIMDET_.RBAGE[ID - 1]);
 			}
 			else {
-				IT = 1.0e0 + (*TRACK_mod_.PAGE - CIMDET_.AGEL[ID - 1]) * CIMDET_.RBAGE[ID - 1];
+				IT = (int)(1.0e0 + (*TRACK_mod_.PAGE - CIMDET_.AGEL[ID - 1]) * CIMDET_.RBAGE[ID - 1]);
 			}
 			if ((IT > 0) && (IT <= CIMDET_.NAGE[ID - 1])) {
 				if (N != CIMDET_.LAGEA[IT - 1][ID - 1]) {
@@ -19769,7 +19818,7 @@ void sdose2_(double& DEP, double& XD, double& YD, double& ZD, int& MATC, int& N)
 	//printf("\nKDOSE: %d\n", *CDOSE1_.KDOSE);
 	if (*CDOSE1_.KDOSE == 1) { //Caixa
 		if ((ZD > CDOSE3_.DXL[3 - 1]) && (ZD < CDOSE3_.DXU[3 - 1])) {
-			I3 = 1.0e0 + (ZD - CDOSE3_.DXL[3 - 1]) * CDOSE3_.RBDOSE[3 - 1];
+			I3 = (int)(1.0e0 + (ZD - CDOSE3_.DXL[3 - 1]) * CDOSE3_.RBDOSE[3 - 1]);
 			if (N != CDOSE2_.LDDOSE[I3 - 1]) {
 				CDOSE2_.DDOSE[I3 - 1] = CDOSE2_.DDOSE[I3 - 1] + CDOSE2_.DDOSEP[I3 - 1];
 				CDOSE2_.DDOSE2[I3 - 1] = CDOSE2_.DDOSE2[I3 - 1] + pow(CDOSE2_.DDOSEP[I3 - 1], 2);
@@ -19781,8 +19830,8 @@ void sdose2_(double& DEP, double& XD, double& YD, double& ZD, int& MATC, int& N)
 			}
 
 			if (((XD > CDOSE3_.DXL[1 - 1]) && (XD < CDOSE3_.DXU[1 - 1])) && ((YD > CDOSE3_.DXL[2 - 1]) && (YD < CDOSE3_.DXU[2 - 1]))) {
-				I1 = 1.0e0 + (XD - CDOSE3_.DXL[1 - 1]) * CDOSE3_.RBDOSE[1 - 1];
-				I2 = 1.0e0 + (YD - CDOSE3_.DXL[2 - 1]) * CDOSE3_.RBDOSE[2 - 1];
+				I1 = (int)(1.0e0 + (XD - CDOSE3_.DXL[1 - 1]) * CDOSE3_.RBDOSE[1 - 1]);
+				I2 = (int)(1.0e0 + (YD - CDOSE3_.DXL[2 - 1]) * CDOSE3_.RBDOSE[2 - 1]);
 				if (N != CDOSE1_.LDOSE[I3 - 1][I2 - 1][I1 - 1]) {
 					CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1] = CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1] + CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1];
 					CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] = CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] + pow(CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1], 2);
@@ -19797,7 +19846,7 @@ void sdose2_(double& DEP, double& XD, double& YD, double& ZD, int& MATC, int& N)
 	}
 	else if (*CDOSE1_.KDOSE == 2) { //Cilindro
 		if ((ZD > CDOSE3_.DXL[3 - 1]) && (ZD < CDOSE3_.DXU[3 - 1])) {
-			I3 = 1.0e0 + (ZD - CDOSE3_.DXL[3 - 1]) * CDOSE3_.RBDOSE[3 - 1];
+			I3 = (int)(1.0e0 + (ZD - CDOSE3_.DXL[3 - 1]) * CDOSE3_.RBDOSE[3 - 1]);
 			if (N != CDOSE2_.LDDOSE[I3 - 1]) {
 				CDOSE2_.DDOSE[I3 - 1] = CDOSE2_.DDOSE[I3 - 1] + CDOSE2_.DDOSEP[I3 - 1];
 				CDOSE2_.DDOSE2[I3 - 1] = CDOSE2_.DDOSE2[I3 - 1] + pow(CDOSE2_.DDOSEP[I3 - 1], 2);
@@ -19810,7 +19859,7 @@ void sdose2_(double& DEP, double& XD, double& YD, double& ZD, int& MATC, int& N)
 
 			RD = sqrt(XD * XD + YD * YD);
 			if (RD < CDOSE3_.DXU[1 - 1]) {
-				I1 = 1.0e0 + RD * CDOSE3_.RBDOSE[1 - 1];
+				I1 = (int)(1.0e0 + RD * CDOSE3_.RBDOSE[1 - 1]);
 				I2 = 1;
 				if (N != CDOSE1_.LDOSE[I3 - 1][I2 - 1][I1 - 1]) {
 					CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1] = CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1] + CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1];
@@ -19827,7 +19876,7 @@ void sdose2_(double& DEP, double& XD, double& YD, double& ZD, int& MATC, int& N)
 	else { //Esfera
 		RD = sqrt(XD * XD + YD * YD + ZD * ZD);
 		if (RD < CDOSE3_.DXU[1 - 1]) {
-			I1 = 1.0e0 + RD * CDOSE3_.RBDOSE[1 - 1];
+			I1 = (int)(1.0e0 + RD * CDOSE3_.RBDOSE[1 - 1]);
 			I2 = 1;
 			I3 = 1;
 			if (N != CDOSE1_.LDOSE[I3 - 1][I2 - 1][I1 - 1]) {
@@ -19909,7 +19958,7 @@ void jump2_(double& DSMAX, double& DS) {
 			if (*TRACK_mod_.E < *CJUMP1_.ELAST1) {
 				*CEGRID_.XEL = log(*TRACK_mod_.E);
 				*CEGRID_.XE = 1.0e0 + (*CEGRID_.XEL - *CEGRID_.DLEMP1) * *CEGRID_.DLFC;
-				*CEGRID_.KE = *CEGRID_.XE;
+				*CEGRID_.KE = (int)*CEGRID_.XE;
 				*CEGRID_.XEK = *CEGRID_.XE - *CEGRID_.KE;
 				int wvar = 1;
 				eimfp2_(wvar);
@@ -19922,7 +19971,7 @@ void jump2_(double& DSMAX, double& DS) {
 		if (*TRACK_mod_.E < *CJUMP1_.ELAST2) {
 			*CEGRID_.XEL = log(*TRACK_mod_.E);
 			*CEGRID_.XE = 1.0e0 + (*CEGRID_.XEL - *CEGRID_.DLEMP1) * *CEGRID_.DLFC;
-			*CEGRID_.KE = *CEGRID_.XE;
+			*CEGRID_.KE = (int)*CEGRID_.XE;
 			*CEGRID_.XEK = *CEGRID_.XE - *CEGRID_.KE;
 			int wvar = 2;
 			eimfp2_(wvar);
@@ -19979,7 +20028,7 @@ void jump2_(double& DSMAX, double& DS) {
 			}
 
 			XE1 = 1.0e0 + (log(ELOWER) - *CEGRID_.DLEMP1) * *CEGRID_.DLFC;
-			KE1 = XE1;
+			KE1 = (int)XE1;
 			XEK1 = XE1 - KE1;
 			STLWR = exp(CEIMFP_.SETOT[KE1 - 1][*TRACK_mod_.MAT - 1] + (CEIMFP_.SETOT[KE1 + 1 - 1][*TRACK_mod_.MAT - 1] - CEIMFP_.SETOT[KE1 - 1][*TRACK_mod_.MAT - 1]) * XEK1);
 			*CJUMP0_.ST = fmax(*CJUMP0_.ST, STLWR);
@@ -20083,7 +20132,7 @@ void jump2_(double& DSMAX, double& DS) {
 			if (*TRACK_mod_.E < *CJUMP1_.ELAST1) {
 				*CEGRID_.XEL = log(*TRACK_mod_.E);
 				*CEGRID_.XE = 1.0e0 + (*CEGRID_.XEL - *CEGRID_.DLEMP1) * *CEGRID_.DLFC;
-				*CEGRID_.KE = *CEGRID_.XE;
+				*CEGRID_.KE = (int)(*CEGRID_.XE);
 				*CEGRID_.XEK = *CEGRID_.XE - *CEGRID_.KE;
 				int wvar = 1;
 				pimfp2_(wvar);
@@ -20097,7 +20146,7 @@ void jump2_(double& DSMAX, double& DS) {
 		if (*TRACK_mod_.E < *CJUMP1_.ELAST2) {
 			*CEGRID_.XEL = log(*TRACK_mod_.E);
 			*CEGRID_.XE = 1.0e0 + (*CEGRID_.XEL - *CEGRID_.DLEMP1) * *CEGRID_.DLFC;
-			*CEGRID_.KE = *CEGRID_.XE;
+			*CEGRID_.KE = (int)*CEGRID_.XE;
 			*CEGRID_.XEK = *CEGRID_.XE - *CEGRID_.KE;
 			int wvar = 2;
 			pimfp2_(wvar);
@@ -20154,7 +20203,7 @@ void jump2_(double& DSMAX, double& DS) {
 			}
 
 			XE1 = 1.0e0 + (log(ELOWER) - *CEGRID_.DLEMP1) * *CEGRID_.DLFC;
-			KE1 = XE1;
+			KE1 = (int)XE1;
 			XEK1 = XE1 - KE1;
 			STLWR = exp(CPIMFP_.SPTOT[KE1 - 1][*TRACK_mod_.MAT - 1] + (CPIMFP_.SPTOT[KE1 + 1 - 1][*TRACK_mod_.MAT - 1] - CPIMFP_.SPTOT[KE1 - 1][*TRACK_mod_.MAT - 1]) * XEK1);
 			*CJUMP0_.ST = fmax(*CJUMP0_.ST, STLWR);
@@ -20257,7 +20306,7 @@ void jump2_(double& DSMAX, double& DS) {
 		if (*TRACK_mod_.E < *CJUMP1_.ELAST1) {
 			*CEGRID_.XEL = log(*TRACK_mod_.E);
 			*CEGRID_.XE = 1.0e0 + (*CEGRID_.XEL - *CEGRID_.DLEMP1) * *CEGRID_.DLFC;
-			*CEGRID_.KE = *CEGRID_.XE;
+			*CEGRID_.KE = (int)*CEGRID_.XE;
 			*CEGRID_.XEK = *CEGRID_.XE - *CEGRID_.KE;
 			gimfp2_();
 			*CJUMP1_.ELAST1 = *TRACK_mod_.E;
@@ -20438,10 +20487,10 @@ void fimdet2_(int& N, int& ID, double& DSEF) {
 	int IE;
 
 	if (CIMDET_.LLE[ID - 1] == 1) {
-		IE = 1.0e0 + (log(*TRACK_mod_.E) - CIMDET_.EL[ID - 1]) * CIMDET_.RBSE[ID - 1];
+		IE = (int)(1.0e0 + (log(*TRACK_mod_.E) - CIMDET_.EL[ID - 1]) * CIMDET_.RBSE[ID - 1]);
 	}
 	else {
-		IE = 1.0e0 + (*TRACK_mod_.E - CIMDET_.EL[ID - 1]) * CIMDET_.RBSE[ID - 1];
+		IE = (int)(1.0e0 + (*TRACK_mod_.E - CIMDET_.EL[ID - 1]) * CIMDET_.RBSE[ID - 1]);
 	}
 
 	if ((IE > 0) && (IE <= CIMDET_.NE[ID - 1])) {
@@ -20481,7 +20530,7 @@ void fimdes2_(int& N, int& ID, double& EI, double& DECSD, double& DSEF) {
 			imprimiu++;
 		}*/
 
-	
+
 
 	int IEI, IEF;
 
@@ -20496,12 +20545,12 @@ void fimdes2_(int& N, int& ID, double& EI, double& DECSD, double& DSEF) {
 		return;
 
 	if (CIMDET_.LLE[ID - 1] == 1) {
-		IEI = 1.0e0 + (log(EIC) - CIMDET_.EL[ID - 1]) * CIMDET_.RBSE[ID - 1];
-		IEF = 1.0e0 + (log(EF) - CIMDET_.EL[ID - 1]) * CIMDET_.RBSE[ID - 1];
+		IEI = (int)(1.0e0 + (log(EIC) - CIMDET_.EL[ID - 1]) * CIMDET_.RBSE[ID - 1]);
+		IEF = (int)(1.0e0 + (log(EF) - CIMDET_.EL[ID - 1]) * CIMDET_.RBSE[ID - 1]);
 	}
 	else {
-		IEI = 1.0e0 + (EIC - CIMDET_.EL[ID - 1]) * CIMDET_.RBSE[ID - 1];
-		IEF = 1.0e0 + (EF - CIMDET_.EL[ID - 1]) * CIMDET_.RBSE[ID - 1];
+		IEI = (int)(1.0e0 + (EIC - CIMDET_.EL[ID - 1]) * CIMDET_.RBSE[ID - 1]);
+		IEF = (int)(1.0e0 + (EF - CIMDET_.EL[ID - 1]) * CIMDET_.RBSE[ID - 1]);
 	}
 
 	FACT = DSEF / DECSD;
@@ -20596,7 +20645,7 @@ L1000:;
 			return;
 		*CEGRID_.XEL = log(*PENELOPE_mod_.E0STEP);
 		*CEGRID_.XE = 1.0e0 + (*CEGRID_.XEL - *CEGRID_.DLEMP1) * *CEGRID_.DLFC;
-		*CEGRID_.KE = *CEGRID_.XE;
+		*CEGRID_.KE = (int)*CEGRID_.XE;
 		*CEGRID_.XEK = *CEGRID_.XE - *CEGRID_.KE;
 	}
 	else {
@@ -21054,7 +21103,7 @@ L3000:;
 
 		*CEGRID_.XEL = log(*PENELOPE_mod_.E0STEP);
 		*CEGRID_.XE = 1.0e0 + (*CEGRID_.XEL - *CEGRID_.DLEMP1) * *CEGRID_.DLFC;
-		*CEGRID_.KE = *CEGRID_.XE;
+		*CEGRID_.KE = (int)*CEGRID_.XE;
 		*CEGRID_.XEK = *CEGRID_.XE - *CEGRID_.KE;
 	}
 	else {
@@ -21417,7 +21466,7 @@ void eeld2_(double& RNDC, double& RMU) {
 	RU = RNDC + rand2_(2.0e0) * (1.0e0 - RNDC);
 
 	//Selection of the interval (binary search in a restricted interval).
-	ITN = RU * NPM1 + 1;
+	ITN = (int)(RU * NPM1 + 1);
 	I = CEELDB_.ITLE[*TRACK_mod_.MAT - 1][JE - 1][ITN - 1];
 	J = CEELDB_.ITUE[*TRACK_mod_.MAT - 1][JE - 1][ITN - 1];
 	if ((J - I) < 2)
@@ -22232,7 +22281,7 @@ void relax2_(int& IZ, int& IS) {
 	double TWOPI = PI + PI;
 
 	double PTIM[256];
-	double ISV[256];
+	int ISV[256];
 
 	int NV, ISP, KF, KL, K1, NVIS, IS1K, IS2K, KPARS;
 	double PAGE0, RN, TST, WS, US, VS, DF, SDTS;
@@ -22422,7 +22471,7 @@ L3:;
 
 	//Seleção do intervalo (busca binária dentro de limites pré-calculados).
 
-	ITN = RU * NPM1 + 1;
+	ITN = (int)(RU * NPM1 + 1);
 	I = CGRA03_.ITLRA[M - 1][ITN - 1];
 	J = CGRA03_.ITURA[M - 1][ITN - 1];
 
@@ -22598,9 +22647,9 @@ void gcoa2_(double& E, double& DE, double& EP, double& CDT, double& ES, double& 
 	double RN[NOCO];
 	double PAC[NOCO];
 
-	double EK, EK2, EKS, EK1, TAUMIN, TAUM2, A1, A2, S0, AUX, PZOMC, RNI, TAU, CDT1, S, TST, JO, A, XQC, AF;
+	double EK, EK2, EKS, EK1, TAUMIN, TAUM2, A1, A2, S0, AUX, PZOMC, RNI, TAU, CDT1, S, TST, A, XQC, AF;
 	double FPZ, FPZMAX, T, B1, B2, Q2;
-	int I2, ISHELL, I3;
+	int I2, ISHELL, I3, JO;
 
 	EK = E * RREV;
 	EK2 = EK + EK + 1.0e0;
@@ -22806,7 +22855,7 @@ void  gpha2_(double& ES, int& IZZ, int& ISH) {
 	}*/
 
 	double ACP[35];
-	double IP[35];
+	int IP[35];
 
 	int I, IU, IT, IELAC, J;
 	double PTOT, DEE, PCSL, TST, PIS, EBB;
@@ -23151,7 +23200,7 @@ void peld2_(double& RNDC, double& RMU) {
 	RU = RNDC + rand2_(2.0e0) * (1.0e0 - RNDC);
 
 	//Selection of the interval (binary search in a restricted interval).
-	ITN = RU * NPM1 + 1;
+	ITN = (int)(RU * NPM1 + 1);
 	I = CPELDB_.ITLP[*TRACK_mod_.MAT - 1][JE - 1][ITN - 1];
 	J = CPELDB_.ITUP[*TRACK_mod_.MAT - 1][JE - 1][ITN - 1];
 	if ((J - I) < 2)
@@ -23495,7 +23544,7 @@ void psia2_(double& E, double& DELTA, double& DE, double& EP, double& CDT, doubl
 	double RTREV = 1.0e0 / TREV;
 
 	double  PK, TST, UK, WK, WTHR, WM, WKP, QKP, WCMAX, WDMAX, RB, GAM, GAM2, BETA2, AMOL, CPS, CP;
-	double CPPS, CPP, QM, RWKP, XHDL, XHDT, F0, RCL, RL1, XHC, XHTOT, TS1,RK, PHI;
+	double CPPS, CPP, QM, RWKP, XHDL, XHDT, F0, RCL, RL1, XHC, XHTOT, TS1, RK, PHI;
 	double QS, Q, QTREV, G12, BHA1, BHA2, BHA3, BHA4;
 	int IO, JO, IT, IOSC, JE;
 
@@ -23772,11 +23821,11 @@ void tenang2_(int& IEXIT, int& N) {
 	double THETA, PHI;
 
 	if (*CENANG_.LLE == 1) {
-		KEn = 1.0e0 + (log(*TRACK_mod_.E) - *CENANG_.EL) * *CENANG_.RBSE;
+		KEn = (int)(1.0e0 + (log(*TRACK_mod_.E) - *CENANG_.EL) * *CENANG_.RBSE);
 
 	}
 	else {
-		KEn = 1.0e0 + (*TRACK_mod_.E - *CENANG_.EL) * *CENANG_.RBSE;
+		KEn = (int)(1.0e0 + (*TRACK_mod_.E - *CENANG_.EL) * *CENANG_.RBSE);
 	}
 	if ((KEn > 0) && (KEn <= *CENANG_.NE)) {
 		if (N != CENANG_.LPDE[KEn - 1][IEXIT - 1][*TRACK_mod_.KPAR - 1]) {
@@ -23793,12 +23842,12 @@ void tenang2_(int& IEXIT, int& N) {
 	//Distribuição angular de partículas emergentes.
 	THETA = acos(*TRACK_mod_.W);
 	if (*CENANG_.LLTH == 1) {
-		KTH = 1.0e0 + (log(fmax(THETA, 1.0e-12) * RA2DE) - *CENANG_.THL) * *CENANG_.RBSTH;
+		KTH = (int)(1.0e0 + (log(fmax(THETA, 1.0e-12) * RA2DE) - *CENANG_.THL) * *CENANG_.RBSTH);
 		if (KTH < 1)
 			KTH = 1;
 	}
 	else {
-		KTH = 1.0e0 + THETA * RA2DE * *CENANG_.RBSTH;
+		KTH = (int)(1.0e0 + THETA * RA2DE * *CENANG_.RBSTH);
 	}
 	if (fabs(*TRACK_mod_.U) > 1.0e-16) {
 		PHI = atan2(*TRACK_mod_.V, *TRACK_mod_.U);
@@ -23811,7 +23860,7 @@ void tenang2_(int& IEXIT, int& N) {
 	}
 	if (PHI < 0.0e0)
 		PHI = TWOPI + PHI;
-	KPH = 1.0e0 + PHI * RA2DE * *CENANG_.RBSPH;
+	KPH = (int)(1.0e0 + PHI * RA2DE * *CENANG_.RBSPH);
 	if (N != CENANG_.LPDA[KPH - 1][KTH - 1][*TRACK_mod_.KPAR - 1]) {
 		CENANG_.PDA[KPH - 1][KTH - 1][*TRACK_mod_.KPAR - 1] = CENANG_.PDA[KPH - 1][KTH - 1][*TRACK_mod_.KPAR - 1] + CENANG_.PDAP[KPH - 1][KTH - 1][*TRACK_mod_.KPAR - 1];
 		CENANG_.PDA2[KPH - 1][KTH - 1][*TRACK_mod_.KPAR - 1] = CENANG_.PDA2[KPH - 1][KTH - 1][*TRACK_mod_.KPAR - 1] + pow(CENANG_.PDAP[KPH - 1][KTH - 1][*TRACK_mod_.KPAR - 1], 2);
@@ -23842,10 +23891,10 @@ void sendet2_(double& ED, int& ID) {
 	CENDET_.EDEP2[ID - 1] = CENDET_.EDEP2[ID - 1] + pow(ED, 2);
 	if (ED > 1.0e-5) {
 		if (CENDET_.LLE[ID - 1] == 1) {
-			IE = 1.0e0 + (log(ED) - CENDET_.EL[ID - 1]) * CENDET_.RBSE[ID - 1];
+			IE = (int)(1.0e0 + (log(ED) - CENDET_.EL[ID - 1]) * CENDET_.RBSE[ID - 1]);
 		}
 		else {
-			IE = 1.0e0 + (ED - CENDET_.EL[ID - 1]) * CENDET_.RBSE[ID - 1];
+			IE = (int)(1.0e0 + (ED - CENDET_.EL[ID - 1]) * CENDET_.RBSE[ID - 1]);
 		}
 		if ((IE > 0) && (IE <= CENDET_.NE[ID - 1]))
 			CENDET_.DET[IE - 1][ID - 1] = CENDET_.DET[IE - 1][ID - 1] + 1.0e0;
@@ -25091,14 +25140,35 @@ void dosew2_(double& SHN, double& TSIM, FILE* IWR) {
 }
 
 
+__device__ hd_CEELDB dg_CEELDB;
+hd_CEELDB *d_CEELDB;
+
+
+__global__ void teste(){
+    printf("\ngpu\n");
+    printf("simbol individual %lf\n", dg_CEELDB.XSE[0][0][0]);
+    printf("simbol individual %lf\n", dg_CEELDB.PSE[0][0][0]);
+    printf("simbol individual %lf\n", dg_CEELDB.ASE[0][0][0]);
+    printf("simbol individual %lf\n", dg_CEELDB.BSE[0][0][0]);
+    printf("simbol individual %d\n", dg_CEELDB.ITUE[0][0][0]);
+    printf("simbol individual %d\n", dg_CEELDB.ITLE[0][0][0]);
+    
+
+}
+
+
+
+
+
 int main() {
 
+    //Alocando memoria para atributos das structs
 	inicializarStructs();
-
-
-	//Leia os arquivos de entrada e inicialize os pacotes de simulação.
+    
+	//Lendo os arquivos de entrada e inicializando os pacotes de simulação.
 	pmrdr2_();
 
+    
 
 	if (*CSOUR0_.JOBEND != 0)
 		goto L103;
@@ -25133,8 +25203,30 @@ L103:;
 	pmwrt2_(1);
 	printf("  Number of simulated showers = %.6E\n", *CNTRL_.SHN);
 	plotdose2_();
-	memoryFree();
+	
+
+
+//Resete da GPU
+    cudaDeviceReset();
+
+    //transferindo os structs da CPU para GPU
+    transfCPU_to_GPU();
+
+    teste<<<1,1>>>();
+
+    cudaDeviceSynchronize();
+
+    transfGPU_to_CPU();
+
+    printf("\n\n %f\n\n", CEELDB_.XSE[0][0][0]);
+
+    memoryFreeGPU();
+
+    memoryFree();
 	printf("  *** END ***\n");
+
+
+
 
 	return 0;
 }
@@ -26880,7 +26972,7 @@ void plotdose2_() {
 	double DXL[3], DXU[3];
 	int NDB[3];
 	double BDOSE[3];
-    // RBDOSE[3];
+	// RBDOSE[3];
 	static const int NP = 250;
 	//double DOSE[250][250][250];
 	//double EDOSE[250][250][250];
@@ -26979,7 +27071,7 @@ void plotdose2_() {
 	double FSAFE = 1.000000001e0;
 	for (int I = 1; I <= 3; I++) {
 		BDOSE[I - 1] = FSAFE * (DXU[I - 1] - DXL[I - 1]) / (NDB[I - 1]);
-	//	RBDOSE[I - 1] = 1.0e0 / BDOSE[I - 1];
+		//	RBDOSE[I - 1] = 1.0e0 / BDOSE[I - 1];
 	}
 
 	for (int I3 = 1; I3 <= NDB[3 - 1]; I3++) {
@@ -27042,6 +27134,49 @@ void plotdose2_() {
 	inFILE.close();
 	fclose(IW);
 
+
+}
+
+
+
+void transfCPU_to_GPU(){
+
+    /* é possivel transferir struct inteira desde que seja de tamanho estatico
+     gpuErrchk(cudaMalloc((void **)&d2_CEELDB, sizeof(hd_CEELDB)));
+     gpuErrchk(cudaMemcpy(d2_CEELDB, &h_CEELDB, sizeof(hd_CEELDB), cudaMemcpyHostToDevice));
+     gpuErrchk(cudaMemcpyToSymbol(dg2_CEELDB, d2_CEELDB, sizeof(hd_CEELDB)));
+     */
+
+    //CEELDB
+    gpuErrchk(cudaMalloc((void **)&d_CEELDB, sizeof(hd_CEELDB)));
+    gpuErrchk(cudaMemcpy(d_CEELDB->XSE, CEELDB_.XSE, sizeof(double)*MAXMAT*NEGP*NP, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(d_CEELDB->PSE, CEELDB_.PSE, sizeof(double)*MAXMAT*NEGP*NP, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(d_CEELDB->ASE, CEELDB_.ASE, sizeof(double)*MAXMAT*NEGP*NP, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(d_CEELDB->BSE, CEELDB_.BSE, sizeof(double)*MAXMAT*NEGP*NP, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(d_CEELDB->ITLE, CEELDB_.ITLE, sizeof(int)*MAXMAT*NEGP*NP, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(d_CEELDB->ITUE, CEELDB_.ITUE, sizeof(int)*MAXMAT*NEGP*NP, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpyToSymbol(dg_CEELDB, d_CEELDB, sizeof(hd_CEELDB)));
+
+
+}
+
+
+void transfGPU_to_CPU(){
+
+    //CEELDB
+    gpuErrchk(cudaMemcpyFromSymbol(d_CEELDB, dg_CEELDB, sizeof(hd_CEELDB)));
+    gpuErrchk(cudaMemcpy(CEELDB_.XSE, d_CEELDB->XSE, sizeof(double)*MAXMAT*NEGP*NP, cudaMemcpyDeviceToHost));
+    gpuErrchk(cudaMemcpy(CEELDB_.PSE, d_CEELDB->PSE, sizeof(double)*MAXMAT*NEGP*NP, cudaMemcpyDeviceToHost));
+    gpuErrchk(cudaMemcpy(CEELDB_.ASE, d_CEELDB->ASE,  sizeof(double)*MAXMAT*NEGP*NP, cudaMemcpyDeviceToHost));
+    gpuErrchk(cudaMemcpy(CEELDB_.BSE, d_CEELDB->BSE,  sizeof(double)*MAXMAT*NEGP*NP, cudaMemcpyDeviceToHost));
+    gpuErrchk(cudaMemcpy(CEELDB_.ITLE, d_CEELDB->ITLE,  sizeof(int)*MAXMAT*NEGP*NP, cudaMemcpyDeviceToHost));
+    gpuErrchk(cudaMemcpy(CEELDB_.ITUE, d_CEELDB->ITUE, sizeof(int)*MAXMAT*NEGP*NP, cudaMemcpyDeviceToHost));
+
+}
+
+void memoryFreeGPU(){
+
+    gpuErrchk(cudaFree(d_CEELDB));
 
 }
 
