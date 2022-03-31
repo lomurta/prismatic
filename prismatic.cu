@@ -287,22 +287,24 @@ typedef struct {
 } CPIN00;
 
 typedef struct {
-
 	double(*EINAC)[NEGP][MAXMAT];
 	int(*IEIN)[MAXMAT], * NEIN;
-
-
-} CEINAC; //Inel�stica de el�trons. e tabelas de ioniza��o de camada interna.
-
+} CEINAC; //Inelestica de eletrons. e tabelas de ionizacao de camada interna.
 
 typedef struct {
+	double EINAC[NO][NEGP][MAXMAT];
+	int IEIN[NO][MAXMAT], NEIN[MAXMAT];
+} hd_CEINAC;
 
+typedef struct {
 	double(*ESIAC)[NEGP][MAXMAT];
 	int(*IESI)[MAXMAT], * NESI;
+} CESIAC; //Inelastica de el�trons. e tabelas de ionizazaoo de camada interna.
 
-
-} CESIAC; //Inel�stica de el�trons. e tabelas de ioniza��o de camada interna.
-
+typedef struct {
+	double ESIAC[NO][NEGP][MAXMAT];
+	int IESI[NO][MAXMAT], NESI[MAXMAT];
+} hd_CESIAC;
 
 typedef struct {
 
@@ -978,6 +980,11 @@ hd_CELSEP* d_CELSEP;
 __device__ hd_CECUTR dg_CECUTR_;
 hd_CECUTR* d_CECUTR;
 
+__device__ hd_CESIAC dg_CESIAC_;
+hd_CESIAC* d_CESIAC;
+
+__device__ hd_CEINAC dg_CEINAC_;
+hd_CEINAC* d_CEINAC;
 
 
 
@@ -27676,8 +27683,19 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpy(d_CECUTR->ECUTR,CECUTR_.ECUTR, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(dg_CECUTR_, d_CECUTR, sizeof(hd_CECUTR)));
 
+	//CESIAC
+	gpuErrchk(cudaMalloc((void **)&d_CESIAC, sizeof(hd_CESIAC)));
+	gpuErrchk(cudaMemcpy(d_CESIAC->ESIAC,CESIAC_.ESIAC, sizeof(double)*MAXMAT*NEGP*NO, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CESIAC->IESI,CESIAC_.IESI, sizeof(int)*MAXMAT*NO, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CESIAC->NESI,CESIAC_.NESI, sizeof(int)*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpyToSymbol(dg_CESIAC_, d_CESIAC, sizeof(hd_CESIAC)));
 
-
+	//CEINAC
+	gpuErrchk(cudaMalloc((void **)&d_CEINAC, sizeof(hd_CEINAC)));
+	gpuErrchk(cudaMemcpy(d_CEINAC->EINAC,CEINAC_.EINAC, sizeof(double)*MAXMAT*NEGP*NO, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEINAC->IEIN,CEINAC_.IEIN, sizeof(int)*MAXMAT*NO, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEINAC->NEIN,CEINAC_.NEIN, sizeof(int)*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpyToSymbol(dg_CEINAC_, d_CEINAC, sizeof(hd_CEINAC)));
 
 
 
@@ -27980,6 +27998,23 @@ void transfGPU_to_CPU(){
 	gpuErrchk(cudaMemcpyFromSymbol(d_CECUTR, dg_CECUTR_, sizeof(hd_CECUTR)));
 	gpuErrchk(cudaMemcpy(CECUTR_.ECUTR,d_CECUTR->ECUTR, sizeof(double)*MAXMAT, cudaMemcpyDeviceToHost));
 
+	//CESIAC
+	gpuErrchk(cudaMemcpyFromSymbol(d_CESIAC, dg_CESIAC_, sizeof(hd_CESIAC)));
+	gpuErrchk(cudaMemcpy(CESIAC_.ESIAC,d_CESIAC->ESIAC, sizeof(double)*MAXMAT*NEGP*NO, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CESIAC_.IESI,d_CESIAC->IESI, sizeof(int)*MAXMAT*NO, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CESIAC_.NESI,d_CESIAC->NESI, sizeof(int)*MAXMAT, cudaMemcpyDeviceToHost));
+
+	//CEINAC
+	gpuErrchk(cudaMemcpyFromSymbol(d_CEINAC, dg_CEINAC_, sizeof(hd_CEINAC)));
+	gpuErrchk(cudaMemcpy(CEINAC_.EINAC,d_CEINAC->EINAC, sizeof(double)*MAXMAT*NEGP*NO, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEINAC_.IEIN,d_CEINAC->IEIN, sizeof(int)*MAXMAT*NO, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEINAC_.NEIN,d_CEINAC->NEIN, sizeof(int)*MAXMAT, cudaMemcpyDeviceToHost));
+	
+
+
+
+
+
 
 }
 
@@ -28008,6 +28043,8 @@ void memoryFreeGPU(){
 	gpuErrchk(cudaFree(d_CEBR));
 	gpuErrchk(cudaFree(d_CELSEP));
 	gpuErrchk(cudaFree(d_CECUTR));
+	gpuErrchk(cudaFree(d_CESIAC));
+	gpuErrchk(cudaFree(d_CEINAC));
 
 
 
