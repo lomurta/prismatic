@@ -138,7 +138,11 @@ typedef struct {
 
 typedef struct {
 	double* ECUTR;
-} CECUTR; //parametros de simula��o
+} CECUTR; 
+
+typedef struct {
+	double ECUTR[MAXMAT];
+} hd_CECUTR; 
 
 typedef struct {
 	int* ISGAW;
@@ -179,8 +183,13 @@ typedef struct {
 	double* ATW, * EPX, * RSCR, * ETA, (*EB)[99], (*ALW)[99], (*CP0)[99];
 	int(*IFI)[99], (*IKS)[99], * NSHT;
 	char(*LASYMB)[3];
-
 } CADATA; //Dados elemento
+
+typedef struct {
+	double ATW[99], EPX[99], RSCR[99], ETA[99], EB[30][99], ALW[30][99], CP0[30][99];
+	int IFI[30][99], IKS[30][99], NSHT[99];
+	char LASYMB[99][3];
+} hd_CADATA;
 
 typedef struct {
 	double* EPH, (*XPH)[NTP];
@@ -234,8 +243,16 @@ typedef struct {
 typedef struct {
 	double(*STF)[MAXMAT], * ZT, * AT, * RHO, * VMOL;
 	int(*IZ)[MAXMAT], * NELEM;
+} COMPOS; //Dados Composicao
 
-} COMPOS; //Dados Composi��o
+typedef struct {
+	double STF[30][MAXMAT], ZT[MAXMAT], AT[MAXMAT], RHO[MAXMAT], VMOL[MAXMAT];
+	int IZ[30][MAXMAT], NELEM[MAXMAT];
+} hd_COMPOS;
+
+
+
+
 
 
 typedef struct {
@@ -247,8 +264,12 @@ typedef struct {
 typedef struct {
 	double* EXPOT, * OP2, (*F)[MAXMAT], (*UI)[MAXMAT], (*WRI)[MAXMAT];
 	int(*KZ)[MAXMAT], (*KS)[MAXMAT], * NOSC;
-
 }CEIN; //Colisoes Inelasticas
+
+typedef struct {
+	double EXPOT[MAXMAT], OP2[MAXMAT], F[NO][MAXMAT], UI[NO][MAXMAT], WRI[NO][MAXMAT];
+	int KZ[NO][MAXMAT], KS[NO][MAXMAT], NOSC[MAXMAT];
+}hd_CEIN;
 
 typedef struct {
 	double* T1EI, * T2EI, * T1PI, * T2PI;
@@ -319,11 +340,14 @@ typedef struct {
 
 //novos
 typedef struct {
-
 	double(*FCO)[MAXMAT], (*UICO)[MAXMAT], (*FJ0)[MAXMAT], (*PTRSH)[MAXMAT];
 	int(*KZCO)[MAXMAT], (*KSCO)[MAXMAT], * NOSCCO;
-
 } CGCO; //Espalhamento Compton
+
+typedef struct {
+	double FCO[NOCO][MAXMAT], UICO[NOCO][MAXMAT], FJ0[NOCO][MAXMAT], PTRSH[NOCO][MAXMAT];
+	int KZCO[NOCO][MAXMAT], KSCO[NOCO][MAXMAT], NOSCCO[MAXMAT];
+} hd_CGCO;
 
 typedef struct {
 	double(*SEHEL)[MAXMAT], (*SEHIN)[MAXMAT], (*SEISI)[MAXMAT], (*SEHBR)[MAXMAT], (*SEAUX)[MAXMAT],
@@ -332,6 +356,13 @@ typedef struct {
 		(*T1E)[MAXMAT], (*T2E)[MAXMAT];
 
 } CEIMFP; //Tabela e simula��o do Eletron
+
+typedef struct {
+	double SEHEL[NEGP][MAXMAT], SEHIN[NEGP][MAXMAT], SEISI[NEGP][MAXMAT], SEHBR[NEGP][MAXMAT], SEAUX[NEGP][MAXMAT],
+		SETOT[NEGP][MAXMAT], CSTPE[NEGP][MAXMAT], RSTPE[NEGP][MAXMAT], DEL[NEGP][MAXMAT], W1E[NEGP][MAXMAT],
+		W2E[NEGP][MAXMAT], DW1EL[NEGP][MAXMAT], DW2EL[NEGP][MAXMAT], RNDCE[NEGP][MAXMAT], AE[NEGP][MAXMAT], BE[NEGP][MAXMAT],
+		T1E[NEGP][MAXMAT], T2E[NEGP][MAXMAT];
+} hd_CEIMFP;
 
 
 typedef struct {
@@ -345,6 +376,13 @@ typedef struct {
 		(*W2P)[MAXMAT], (*DW1PL)[MAXMAT], (*DW2PL)[MAXMAT], (*RNDCP)[MAXMAT], (*AP)[MAXMAT], (*BP)[MAXMAT],
 		(*T1P)[MAXMAT], (*T2P)[MAXMAT];
 } CPIMFP; // Tabelas de simula��o dos positrons
+
+typedef struct {
+	double SPHEL[NEGP][MAXMAT], SPHIN[NEGP][MAXMAT], SPISI[NEGP][MAXMAT], SPHBR[NEGP][MAXMAT], SPAN[NEGP][MAXMAT],
+		SPAUX[NEGP][MAXMAT], SPTOT[NEGP][MAXMAT], CSTPP[NEGP][MAXMAT], RSTPP[NEGP][MAXMAT], W1P[NEGP][MAXMAT],
+		W2P[NEGP][MAXMAT], DW1PL[NEGP][MAXMAT], DW2PL[NEGP][MAXMAT], RNDCP[NEGP][MAXMAT], AP[NEGP][MAXMAT], BP[NEGP][MAXMAT],
+		T1P[NEGP][MAXMAT], T2P[NEGP][MAXMAT];
+} hd_CPIMFP;
 
 
 typedef struct {
@@ -371,8 +409,11 @@ typedef struct {
 
 typedef struct {
 	double(*SGRA)[MAXMAT], (*SGCO)[MAXMAT], (*SGPH)[MAXMAT], (*SGPP)[MAXMAT], (*SGAUX)[MAXMAT];
-
 } CGIMFP;
+
+typedef struct {
+	double SGRA[NEGP][MAXMAT], SGCO[NEGP][MAXMAT], SGPH[NEGP][MAXMAT], SGPP[NEGP][MAXMAT], SGAUX[NEGP][MAXMAT];
+} hd_CGIMFP;
 
 typedef struct {
 	double* ER, * XSR;
@@ -387,8 +428,11 @@ typedef struct {
 
 typedef struct {
 	double* WB, (*PBCUT)[MAXMAT], (*WBCUT)[MAXMAT], (*PDFB)[NEGP][MAXMAT], (*DPDFB)[NEGP][MAXMAT], (*PACB)[NEGP][MAXMAT], * ZBR2;
-
 } CEBR;
+
+typedef struct {
+	double WB[NBW], PBCUT[NEGP][MAXMAT], WBCUT[NEGP][MAXMAT], PDFB[NBW][NEGP][MAXMAT], DPDFB[NBW][NEGP][MAXMAT], PACB[NBW][NEGP][MAXMAT], ZBR2[MAXMAT];
+} hd_CEBR;
 
 
 typedef struct {
@@ -457,8 +501,11 @@ typedef struct {
 
 typedef struct {
 	double* EELMAX, * PELMAX, (*RNDCED)[MAXMAT], (*RNDCPD)[MAXMAT];
-
 }CELSEP;
+
+typedef struct {
+	double EELMAX[MAXMAT], PELMAX[MAXMAT], RNDCED[NEGP][MAXMAT], RNDCPD[NEGP][MAXMAT];
+} hd_CELSEP;
 
 typedef struct {
 	double* FACTE, * Q2MAX;
@@ -727,6 +774,11 @@ typedef struct {
 }CJUMP1;
 
 typedef struct {
+	double ELAST1, ELAST2;
+	int MHINGE, KSOFTE, KSOFTI, KDELTA;
+}hd_CJUMP1;
+
+typedef struct {
 	double* ES, * XS, * YS, * ZS, * US, * VS, * WS, * WGHTS, * SP1S, * SP2S, * SP3S, * PAGES;
 	int* KS, * IBODYS, * MS, (*ILBS)[5], * IPOLS, * NSEC;
 }SECST;
@@ -741,8 +793,16 @@ typedef struct {
 }CJUMP0;
 
 typedef struct {
+	double P[8], ST, DST, DSR, W1, W2, T1, T2;
+}hd_CJUMP0;
+
+typedef struct {
 	int* ILBA;
 }CHIST;
+
+typedef struct {
+	int ILBA[5];
+} hd_CHIST;
 
 
 
@@ -878,6 +938,60 @@ hd_CERSEC* d_CERSEC;
 
 __device__ hd_CEGRID dg_CEGRID_;
 hd_CEGRID* d_CEGRID;
+
+__device__ hd_CJUMP1 dg_CJUMP1_;
+hd_CJUMP1* d_CJUMP1;
+
+__device__ hd_CEIMFP dg_CEIMFP_;
+hd_CEIMFP* d_CEIMFP;
+
+__device__ hd_CPIMFP dg_CPIMFP_;
+hd_CPIMFP* d_CPIMFP;
+
+__device__ hd_CJUMP0 dg_CJUMP0_;
+hd_CJUMP0* d_CJUMP0;
+
+__device__ hd_CGIMFP dg_CGIMFP_;
+hd_CGIMFP* d_CGIMFP;
+
+__device__ hd_CHIST dg_CHIST_;
+hd_CHIST* d_CHIST;
+
+__device__ hd_COMPOS dg_COMPOS_;
+hd_COMPOS* d_COMPOS;
+
+__device__ hd_CADATA dg_CADATA_;
+hd_CADATA* d_CADATA;
+
+__device__ hd_CEIN dg_CEIN_;
+hd_CEIN* d_CEIN;
+
+__device__ hd_CGCO dg_CGCO_;
+hd_CGCO* d_CGCO;
+
+__device__ hd_CEBR dg_CEBR_;
+hd_CEBR* d_CEBR;
+
+__device__ hd_CELSEP dg_CELSEP_;
+hd_CELSEP* d_CELSEP;
+
+__device__ hd_CECUTR dg_CECUTR_;
+hd_CECUTR* d_CECUTR;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -27374,13 +27488,12 @@ void transfCPU_to_GPU(){
     gpuErrchk(cudaMemcpy(d_CIMDET->RBAGE, CIMDET_.RBAGE, sizeof(double)*NIDM, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_CIMDET->AGE, CIMDET_.AGE, sizeof(double)*NIDM*NBEM2, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_CIMDET->AGE2, CIMDET_.AGE2, sizeof(double)*NIDM*NBEM2, cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpy(d_CIMDET->AGEP, CIMDET_.AGEP, sizeof(double)*NIDM*NBEM2*3, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(d_CIMDET->AGEP, CIMDET_.AGEP, sizeof(double)*NIDM*NBEM2, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_CIMDET->LEDEP, CIMDET_.LEDEP, sizeof(int)*NIDM, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_CIMDET->LDIT, CIMDET_.LDIT, sizeof(int)*NIDM*NBEM2, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_CIMDET->LDIP, CIMDET_.LDIP, sizeof(int)*NIDM*NBEM2*3, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_CIMDET->LFLT, CIMDET_.LFLT, sizeof(int)*NIDM*NBEM2, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_CIMDET->LFLP, CIMDET_.LFLP, sizeof(int)*NIDM*NBEM2*3, cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpy(d_CIMDET->LFLT, CIMDET_.LFLT, sizeof(int)*NIDM*NBEM2, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_CIMDET->LAGEA, CIMDET_.LAGEA, sizeof(int)*NIDM*NBEM2, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_CIMDET->IDCUT, CIMDET_.IDCUT, sizeof(int)*NIDM, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_CIMDET->NE, CIMDET_.NE, sizeof(int)*NIDM, cudaMemcpyHostToDevice));
@@ -27409,6 +27522,168 @@ void transfCPU_to_GPU(){
     gpuErrchk(cudaMemcpy(&d_CEGRID->XEK,CEGRID_.XEK, sizeof(double), cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(&d_CEGRID->KE,CEGRID_.KE, sizeof(int), cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpyToSymbol(dg_CEGRID_, d_CEGRID, sizeof(hd_CEGRID)));
+
+	//CJUMP1
+    gpuErrchk(cudaMalloc((void **)&d_CJUMP1, sizeof(hd_CJUMP1)));
+    gpuErrchk(cudaMemcpy(&d_CJUMP1->ELAST1,CJUMP1_.ELAST1, sizeof(double), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(&d_CJUMP1->ELAST2,CJUMP1_.ELAST2, sizeof(double), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(&d_CJUMP1->MHINGE,CJUMP1_.MHINGE, sizeof(int), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(&d_CJUMP1->KSOFTE,CJUMP1_.KSOFTE, sizeof(int), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(&d_CJUMP1->KSOFTI,CJUMP1_.KSOFTI, sizeof(int), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(&d_CJUMP1->KDELTA,CJUMP1_.KDELTA, sizeof(int), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpyToSymbol(dg_CJUMP1_, d_CJUMP1, sizeof(hd_CJUMP1)));
+
+	//CEIMFP
+	gpuErrchk(cudaMalloc((void **)&d_CEIMFP, sizeof(hd_CEIMFP)));
+    gpuErrchk(cudaMemcpy(d_CEIMFP->SEHEL,CEIMFP_.SEHEL, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIMFP->SEHIN,CEIMFP_.SEHIN, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIMFP->SEISI,CEIMFP_.SEISI, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIMFP->SEHBR,CEIMFP_.SEHBR, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIMFP->SEAUX,CEIMFP_.SEAUX, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIMFP->SETOT,CEIMFP_.SETOT, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIMFP->CSTPE,CEIMFP_.CSTPE, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIMFP->RSTPE,CEIMFP_.RSTPE, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIMFP->DEL,CEIMFP_.DEL, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIMFP->W1E,CEIMFP_.W1E, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIMFP->W2E,CEIMFP_.W2E, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIMFP->DW1EL,CEIMFP_.DW1EL, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIMFP->DW2EL,CEIMFP_.DW2EL, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIMFP->RNDCE,CEIMFP_.RNDCE, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIMFP->AE,CEIMFP_.AE, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIMFP->BE,CEIMFP_.BE, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIMFP->T1E,CEIMFP_.T1E, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIMFP->T2E,CEIMFP_.T2E, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpyToSymbol(dg_CEIMFP_, d_CEIMFP, sizeof(hd_CEIMFP)));
+
+	//CPIMFP
+	gpuErrchk(cudaMalloc((void **)&d_CPIMFP, sizeof(hd_CPIMFP)));
+    gpuErrchk(cudaMemcpy(d_CPIMFP->SPHEL,CPIMFP_.SPHEL, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CPIMFP->SPHIN,CPIMFP_.SPHIN, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CPIMFP->SPISI,CPIMFP_.SPISI, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CPIMFP->SPHBR,CPIMFP_.SPHBR, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CPIMFP->SPAN,CPIMFP_.SPAN, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CPIMFP->SPAUX,CPIMFP_.SPAUX, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CPIMFP->SPTOT,CPIMFP_.SPTOT, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CPIMFP->CSTPP,CPIMFP_.CSTPP, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CPIMFP->RSTPP,CPIMFP_.RSTPP, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CPIMFP->W1P,CPIMFP_.W1P, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CPIMFP->W2P,CPIMFP_.W2P, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CPIMFP->DW1PL,CPIMFP_.DW1PL, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CPIMFP->DW2PL,CPIMFP_.DW2PL, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CPIMFP->RNDCP,CPIMFP_.RNDCP, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CPIMFP->AP,CPIMFP_.AP, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CPIMFP->BP,CPIMFP_.BP, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CPIMFP->T1P,CPIMFP_.T1P, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CPIMFP->T2P,CPIMFP_.T2P, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpyToSymbol(dg_CPIMFP_, d_CPIMFP, sizeof(hd_CPIMFP)));
+
+	//CJUMP0
+	gpuErrchk(cudaMalloc((void **)&d_CJUMP0, sizeof(hd_CJUMP0)));
+    gpuErrchk(cudaMemcpy(d_CJUMP0->P,CJUMP0_.P, sizeof(double)*8, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(&d_CJUMP0->ST,CJUMP0_.ST, sizeof(double), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(&d_CJUMP0->DST,CJUMP0_.DST, sizeof(double), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(&d_CJUMP0->DSR,CJUMP0_.DSR, sizeof(double), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(&d_CJUMP0->W1,CJUMP0_.W1, sizeof(double), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(&d_CJUMP0->W2,CJUMP0_.W2, sizeof(double), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(&d_CJUMP0->T1,CJUMP0_.T1, sizeof(double), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(&d_CJUMP0->T2,CJUMP0_.T2, sizeof(double), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpyToSymbol(dg_CJUMP0_, d_CJUMP0, sizeof(hd_CJUMP0)));
+
+	//CGIMFP
+	gpuErrchk(cudaMalloc((void **)&d_CGIMFP, sizeof(hd_CGIMFP)));
+    gpuErrchk(cudaMemcpy(d_CGIMFP->SGRA,CGIMFP_.SGRA, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CGIMFP->SGCO,CGIMFP_.SGCO, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CGIMFP->SGPH,CGIMFP_.SGPH, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CGIMFP->SGPP,CGIMFP_.SGPP, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CGIMFP->SGAUX,CGIMFP_.SGAUX, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpyToSymbol(dg_CGIMFP_, d_CGIMFP, sizeof(hd_CGIMFP)));
+
+	//CHIST
+	gpuErrchk(cudaMalloc((void **)&d_CHIST, sizeof(hd_CHIST)));
+	gpuErrchk(cudaMemcpy(d_CHIST->ILBA,CHIST_.ILBA, sizeof(int)*5, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpyToSymbol(dg_CHIST_, d_CHIST, sizeof(hd_CHIST)));
+
+	//COMPOS
+	gpuErrchk(cudaMalloc((void **)&d_COMPOS, sizeof(hd_COMPOS)));
+	gpuErrchk(cudaMemcpy(d_COMPOS->STF,COMPOS_.STF, sizeof(double)*30*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_COMPOS->ZT,COMPOS_.ZT, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_COMPOS->AT,COMPOS_.AT, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_COMPOS->RHO,COMPOS_.RHO, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_COMPOS->VMOL,COMPOS_.VMOL, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_COMPOS->IZ,COMPOS_.IZ, sizeof(int)*30*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_COMPOS->NELEM,COMPOS_.NELEM, sizeof(int)*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpyToSymbol(dg_COMPOS_, d_COMPOS, sizeof(hd_COMPOS)));
+
+	//CADATA
+	gpuErrchk(cudaMalloc((void **)&d_CADATA, sizeof(hd_CADATA)));
+	gpuErrchk(cudaMemcpy(d_CADATA->ATW,CADATA_.ATW, sizeof(double)*99, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CADATA->EPX,CADATA_.EPX, sizeof(double)*99, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CADATA->RSCR,CADATA_.RSCR, sizeof(double)*99, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CADATA->ETA,CADATA_.ETA, sizeof(double)*99, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CADATA->EB,CADATA_.EB, sizeof(double)*99*30, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CADATA->ALW,CADATA_.ALW, sizeof(double)*99*30, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CADATA->CP0,CADATA_.CP0, sizeof(double)*99*30, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CADATA->IFI,CADATA_.IFI, sizeof(int)*99*30, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CADATA->IKS,CADATA_.IKS, sizeof(int)*99*30, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CADATA->NSHT,CADATA_.NSHT, sizeof(int)*99, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CADATA->LASYMB,CADATA_.LASYMB, sizeof(char)*99*3, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpyToSymbol(dg_CADATA_, d_CADATA, sizeof(hd_CADATA)));
+
+	//CEIN
+	gpuErrchk(cudaMalloc((void **)&d_CEIN, sizeof(hd_CEIN)));
+	gpuErrchk(cudaMemcpy(d_CEIN->EXPOT,CEIN_.EXPOT, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIN->OP2,CEIN_.OP2, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIN->F,CEIN_.F, sizeof(double)*MAXMAT*NO, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIN->UI,CEIN_.UI, sizeof(double)*MAXMAT*NO, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIN->WRI,CEIN_.WRI, sizeof(double)*MAXMAT*NO, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIN->KZ,CEIN_.KZ, sizeof(int)*MAXMAT*NO, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIN->KS,CEIN_.KS, sizeof(int)*MAXMAT*NO, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEIN->NOSC,CEIN_.NOSC, sizeof(int)*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpyToSymbol(dg_CEIN_, d_CEIN, sizeof(hd_CEIN)));
+
+	//CGCO
+	gpuErrchk(cudaMalloc((void **)&d_CGCO, sizeof(hd_CGCO)));
+	gpuErrchk(cudaMemcpy(d_CGCO->FCO,CGCO_.FCO, sizeof(double)*MAXMAT*NOCO, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CGCO->UICO,CGCO_.UICO, sizeof(double)*MAXMAT*NOCO, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CGCO->FJ0,CGCO_.FJ0, sizeof(double)*MAXMAT*NOCO, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CGCO->PTRSH,CGCO_.PTRSH, sizeof(double)*MAXMAT*NOCO, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CGCO->KZCO,CGCO_.KZCO, sizeof(int)*MAXMAT*NOCO, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CGCO->KSCO,CGCO_.KSCO, sizeof(int)*MAXMAT*NOCO, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CGCO->NOSCCO,CGCO_.NOSCCO, sizeof(int)*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpyToSymbol(dg_CGCO_, d_CGCO, sizeof(hd_CGCO)));
+
+	//CEBR
+	gpuErrchk(cudaMalloc((void **)&d_CEBR, sizeof(hd_CEBR)));
+	gpuErrchk(cudaMemcpy(d_CEBR->WB,CEBR_.WB, sizeof(double)*NBW, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEBR->PBCUT,CEBR_.PBCUT, sizeof(double)*MAXMAT*NEGP, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEBR->WBCUT,CEBR_.WBCUT, sizeof(double)*MAXMAT*NEGP, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEBR->PDFB,CEBR_.PDFB, sizeof(double)*NBW*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEBR->DPDFB,CEBR_.DPDFB, sizeof(double)*NBW*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEBR->PACB,CEBR_.PACB, sizeof(double)*NBW*NEGP*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CEBR->ZBR2,CEBR_.ZBR2, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpyToSymbol(dg_CEBR_, d_CEBR, sizeof(hd_CEBR)));
+
+	//CELSEP
+	gpuErrchk(cudaMalloc((void **)&d_CELSEP, sizeof(hd_CELSEP)));
+	gpuErrchk(cudaMemcpy(d_CELSEP->EELMAX,CELSEP_.EELMAX, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CELSEP->PELMAX,CELSEP_.PELMAX, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CELSEP->RNDCED,CELSEP_.RNDCED, sizeof(double)*MAXMAT*NEGP, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CELSEP->RNDCPD,CELSEP_.RNDCPD, sizeof(double)*MAXMAT*NEGP, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpyToSymbol(dg_CELSEP_, d_CELSEP, sizeof(hd_CELSEP)));
+
+	//CECUTR
+	gpuErrchk(cudaMalloc((void **)&d_CECUTR, sizeof(hd_CECUTR)));
+	gpuErrchk(cudaMemcpy(d_CECUTR->ECUTR,CECUTR_.ECUTR, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpyToSymbol(dg_CECUTR_, d_CECUTR, sizeof(hd_CECUTR)));
+
+
+
+
+
+
+
+
+
 
 
 
@@ -27533,13 +27808,12 @@ void transfGPU_to_CPU(){
     gpuErrchk(cudaMemcpy(CIMDET_.RBAGE,d_CIMDET->RBAGE,  sizeof(double)*NIDM, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(CIMDET_.AGE,d_CIMDET->AGE,  sizeof(double)*NIDM*NBEM2, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(CIMDET_.AGE2,d_CIMDET->AGE2,  sizeof(double)*NIDM*NBEM2, cudaMemcpyDeviceToHost));
-    gpuErrchk(cudaMemcpy(CIMDET_.AGEP,d_CIMDET->AGEP,  sizeof(double)*NIDM*NBEM2*3, cudaMemcpyDeviceToHost));
+    gpuErrchk(cudaMemcpy(CIMDET_.AGEP,d_CIMDET->AGEP,  sizeof(double)*NIDM*NBEM2, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(CIMDET_.LEDEP,d_CIMDET->LEDEP,  sizeof(int)*NIDM, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(CIMDET_.LDIT,d_CIMDET->LDIT,  sizeof(int)*NIDM*NBEM2, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(CIMDET_.LDIP,d_CIMDET->LDIP,  sizeof(int)*NIDM*NBEM2*3, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(CIMDET_.LFLT,d_CIMDET->LFLT,  sizeof(int)*NIDM*NBEM2, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(CIMDET_.LFLP,d_CIMDET->LFLP,  sizeof(int)*NIDM*NBEM2*3, cudaMemcpyDeviceToHost));
-    gpuErrchk(cudaMemcpy(CIMDET_.LFLT,d_CIMDET->LFLT,  sizeof(int)*NIDM*NBEM2, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(CIMDET_.LAGEA,d_CIMDET->LAGEA,  sizeof(int)*NIDM*NBEM2, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(CIMDET_.IDCUT,d_CIMDET->IDCUT,  sizeof(int)*NIDM, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(CIMDET_.NE,d_CIMDET->NE,  sizeof(int)*NIDM, cudaMemcpyDeviceToHost));
@@ -27566,6 +27840,145 @@ void transfGPU_to_CPU(){
     gpuErrchk(cudaMemcpy(CEGRID_.XEK,&d_CEGRID->XEK, sizeof(double), cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(CEGRID_.KE,&d_CEGRID->KE, sizeof(int), cudaMemcpyDeviceToHost));
 
+	//CJUMP1
+	gpuErrchk(cudaMemcpyFromSymbol(d_CJUMP1, dg_CJUMP1_, sizeof(hd_CJUMP1)));
+	gpuErrchk(cudaMemcpy(CJUMP1_.ELAST1,&d_CJUMP1->ELAST1, sizeof(double), cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CJUMP1_.ELAST2,&d_CJUMP1->ELAST2, sizeof(double), cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CJUMP1_.MHINGE,&d_CJUMP1->MHINGE, sizeof(int), cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CJUMP1_.KSOFTE,&d_CJUMP1->KSOFTE, sizeof(int), cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CJUMP1_.KSOFTI,&d_CJUMP1->KSOFTI, sizeof(int), cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CJUMP1_.KDELTA,&d_CJUMP1->KDELTA, sizeof(int), cudaMemcpyDeviceToHost));
+
+	//CEIMFP
+	gpuErrchk(cudaMemcpyFromSymbol(d_CEIMFP, dg_CEIMFP_, sizeof(hd_CEIMFP)));
+	gpuErrchk(cudaMemcpy(CEIMFP_.SEHEL,d_CEIMFP->SEHEL, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIMFP_.SEHIN,d_CEIMFP->SEHIN, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIMFP_.SEISI,d_CEIMFP->SEISI, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIMFP_.SEHBR,d_CEIMFP->SEHBR, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIMFP_.SEAUX,d_CEIMFP->SEAUX, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIMFP_.SETOT,d_CEIMFP->SETOT, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIMFP_.CSTPE,d_CEIMFP->CSTPE, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIMFP_.RSTPE,d_CEIMFP->RSTPE, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIMFP_.DEL,d_CEIMFP->DEL, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIMFP_.W1E,d_CEIMFP->W1E, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIMFP_.W2E,d_CEIMFP->W2E, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIMFP_.DW1EL,d_CEIMFP->DW1EL, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIMFP_.DW2EL,d_CEIMFP->DW2EL, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIMFP_.RNDCE,d_CEIMFP->RNDCE, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIMFP_.AE,d_CEIMFP->AE, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIMFP_.BE,d_CEIMFP->BE, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIMFP_.T1E,d_CEIMFP->T1E, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIMFP_.T2E, d_CEIMFP->T2E,sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+
+	//CPIMFP
+	gpuErrchk(cudaMemcpyFromSymbol(d_CEIMFP, dg_CPIMFP_, sizeof(hd_CPIMFP)));
+	gpuErrchk(cudaMemcpy(CPIMFP_.SPHEL,d_CPIMFP->SPHEL, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CPIMFP_.SPHIN,d_CPIMFP->SPHIN, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CPIMFP_.SPISI,d_CPIMFP->SPISI, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CPIMFP_.SPHBR,d_CPIMFP->SPHBR, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CPIMFP_.SPAN,d_CPIMFP->SPAN, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CPIMFP_.SPAUX,d_CPIMFP->SPAUX, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CPIMFP_.SPTOT,d_CPIMFP->SPTOT, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CPIMFP_.CSTPP,d_CPIMFP->CSTPP, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CPIMFP_.RSTPP,d_CPIMFP->RSTPP, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CPIMFP_.W1P,d_CPIMFP->W1P, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CPIMFP_.W2P,d_CPIMFP->W2P, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CPIMFP_.DW1PL,d_CPIMFP->DW1PL, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CPIMFP_.DW2PL,d_CPIMFP->DW2PL, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CPIMFP_.RNDCP,d_CPIMFP->RNDCP, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CPIMFP_.AP,d_CPIMFP->AP, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CPIMFP_.BP,d_CPIMFP->BP, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CPIMFP_.T1P,d_CPIMFP->T1P, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CPIMFP_.T2P, d_CPIMFP->T2P,sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+
+	//CJUMP0
+	gpuErrchk(cudaMemcpyFromSymbol(d_CJUMP0, dg_CJUMP0_, sizeof(hd_CJUMP0)));
+	gpuErrchk(cudaMemcpy(CJUMP0_.P,d_CJUMP0->P, sizeof(double)*8, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CJUMP0_.ST,&d_CJUMP0->ST, sizeof(double), cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CJUMP0_.DST,&d_CJUMP0->DST, sizeof(double), cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CJUMP0_.DSR,&d_CJUMP0->DSR, sizeof(double), cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CJUMP0_.W1,&d_CJUMP0->W1, sizeof(double), cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CJUMP0_.W2,&d_CJUMP0->W2, sizeof(double), cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CJUMP0_.T1,&d_CJUMP0->T1, sizeof(double), cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CJUMP0_.T2,&d_CJUMP0->T2, sizeof(double), cudaMemcpyDeviceToHost));
+
+	//CGIMFP
+	gpuErrchk(cudaMemcpyFromSymbol(d_CGIMFP, dg_CGIMFP_, sizeof(hd_CGIMFP)));
+	gpuErrchk(cudaMemcpy(CGIMFP_.SGRA,d_CGIMFP->SGRA, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CGIMFP_.SGCO,d_CGIMFP->SGCO, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CGIMFP_.SGPH,d_CGIMFP->SGPH, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CGIMFP_.SGPP,d_CGIMFP->SGPP, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CGIMFP_.SGAUX,d_CGIMFP->SGAUX, sizeof(double)*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+
+	//CHIST
+	gpuErrchk(cudaMemcpyFromSymbol(d_CHIST, dg_CHIST_, sizeof(hd_CHIST)));
+	gpuErrchk(cudaMemcpy(CHIST_.ILBA,d_CHIST->ILBA, sizeof(int)*5, cudaMemcpyDeviceToHost));
+
+	//COMPOS
+	gpuErrchk(cudaMemcpyFromSymbol(d_COMPOS, dg_COMPOS_, sizeof(hd_COMPOS)));
+	gpuErrchk(cudaMemcpy(COMPOS_.STF,d_COMPOS->STF, sizeof(double)*30*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(COMPOS_.ZT,d_COMPOS->ZT, sizeof(double)*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(COMPOS_.AT,d_COMPOS->AT, sizeof(double)*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(COMPOS_.RHO,d_COMPOS->RHO, sizeof(double)*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(COMPOS_.VMOL,d_COMPOS->VMOL, sizeof(double)*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(COMPOS_.IZ, d_COMPOS->IZ,sizeof(int)*30*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(COMPOS_.NELEM,d_COMPOS->NELEM, sizeof(int)*MAXMAT, cudaMemcpyDeviceToHost));
+
+	//CADATA
+	gpuErrchk(cudaMemcpyFromSymbol(d_CADATA, dg_CADATA_, sizeof(hd_CADATA)));
+	gpuErrchk(cudaMemcpy(CADATA_.ATW,d_CADATA->ATW, sizeof(double)*99, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CADATA_.EPX,d_CADATA->EPX, sizeof(double)*99, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CADATA_.RSCR,d_CADATA->RSCR, sizeof(double)*99, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CADATA_.ETA,d_CADATA->ETA, sizeof(double)*99, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CADATA_.EB,d_CADATA->EB, sizeof(double)*99*30, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CADATA_.ALW,d_CADATA->ALW, sizeof(double)*99*30, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CADATA_.CP0,d_CADATA->CP0, sizeof(double)*99*30, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CADATA_.IFI,d_CADATA->IFI, sizeof(int)*99*30, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CADATA_.IKS,d_CADATA->IKS, sizeof(int)*99*30, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CADATA_.NSHT,d_CADATA->NSHT, sizeof(int)*99, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CADATA_.LASYMB,d_CADATA->LASYMB,sizeof(char)*99*3, cudaMemcpyDeviceToHost));
+
+	//CEIN
+	gpuErrchk(cudaMemcpyFromSymbol(d_CEIN, dg_CEIN_, sizeof(hd_CEIN)));
+	gpuErrchk(cudaMemcpy(CEIN_.EXPOT,d_CEIN->EXPOT, sizeof(double)*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIN_.OP2,d_CEIN->OP2, sizeof(double)*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIN_.F,d_CEIN->F, sizeof(double)*MAXMAT*NO, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIN_.UI,d_CEIN->UI, sizeof(double)*MAXMAT*NO, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIN_.WRI,d_CEIN->WRI, sizeof(double)*MAXMAT*NO, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIN_.KZ,d_CEIN->KZ, sizeof(int)*MAXMAT*NO, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIN_.KS,d_CEIN->KS, sizeof(int)*MAXMAT*NO, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEIN_.NOSC,d_CEIN->NOSC, sizeof(int)*MAXMAT, cudaMemcpyDeviceToHost));
+
+	//CGCO
+	gpuErrchk(cudaMemcpyFromSymbol(d_CGCO, dg_CGCO_, sizeof(hd_CGCO)));
+	gpuErrchk(cudaMemcpy(CGCO_.FCO,d_CGCO->FCO, sizeof(double)*MAXMAT*NOCO, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CGCO_.UICO,d_CGCO->UICO, sizeof(double)*MAXMAT*NOCO, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CGCO_.FJ0,d_CGCO->FJ0, sizeof(double)*MAXMAT*NOCO, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CGCO_.PTRSH,d_CGCO->PTRSH, sizeof(double)*MAXMAT*NOCO, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CGCO_.KZCO,d_CGCO->KZCO, sizeof(int)*MAXMAT*NOCO, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CGCO_.KSCO,d_CGCO->KSCO, sizeof(int)*MAXMAT*NOCO, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CGCO_.NOSCCO,d_CGCO->NOSCCO, sizeof(int)*MAXMAT, cudaMemcpyDeviceToHost));
+
+	//CEBR
+	gpuErrchk(cudaMemcpyFromSymbol(d_CEBR, dg_CEBR_, sizeof(hd_CEBR)));
+	gpuErrchk(cudaMemcpy(CEBR_.WB,d_CEBR->WB, sizeof(double)*NBW, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEBR_.PBCUT,d_CEBR->PBCUT, sizeof(double)*MAXMAT*NEGP, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEBR_.WBCUT,d_CEBR->WBCUT, sizeof(double)*MAXMAT*NEGP, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEBR_.PDFB,d_CEBR->PDFB, sizeof(double)*NBW*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEBR_.DPDFB,d_CEBR->DPDFB, sizeof(double)*NBW*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEBR_.PACB,d_CEBR->PACB, sizeof(double)*NBW*NEGP*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CEBR_.ZBR2,d_CEBR->ZBR2, sizeof(double)*MAXMAT, cudaMemcpyDeviceToHost));
+
+	//CELSEP
+	gpuErrchk(cudaMemcpyFromSymbol(d_CELSEP, dg_CELSEP_, sizeof(hd_CELSEP)));
+	gpuErrchk(cudaMemcpy(CELSEP_.EELMAX,d_CELSEP->EELMAX, sizeof(double)*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CELSEP_.PELMAX,d_CELSEP->PELMAX, sizeof(double)*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CELSEP_.RNDCED,d_CELSEP->RNDCED, sizeof(double)*MAXMAT*NEGP, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CELSEP_.RNDCPD,d_CELSEP->RNDCPD, sizeof(double)*MAXMAT*NEGP, cudaMemcpyDeviceToHost));
+
+	//CECUTR
+	gpuErrchk(cudaMemcpyFromSymbol(d_CECUTR, dg_CECUTR_, sizeof(hd_CECUTR)));
+	gpuErrchk(cudaMemcpy(CECUTR_.ECUTR,d_CECUTR->ECUTR, sizeof(double)*MAXMAT, cudaMemcpyDeviceToHost));
 
 
 }
@@ -27582,6 +27995,20 @@ void memoryFreeGPU(){
     gpuErrchk(cudaFree(d_CIMDET));
     gpuErrchk(cudaFree(d_CERSEC));
     gpuErrchk(cudaFree(d_CEGRID));
+	gpuErrchk(cudaFree(d_CJUMP1));
+	gpuErrchk(cudaFree(d_CEIMFP));
+	gpuErrchk(cudaFree(d_CPIMFP));
+	gpuErrchk(cudaFree(d_CJUMP0));
+	gpuErrchk(cudaFree(d_CGIMFP));
+	gpuErrchk(cudaFree(d_CHIST));
+	gpuErrchk(cudaFree(d_COMPOS));
+	gpuErrchk(cudaFree(d_CADATA));
+	gpuErrchk(cudaFree(d_CEIN));
+	gpuErrchk(cudaFree(d_CGCO));
+	gpuErrchk(cudaFree(d_CEBR));
+	gpuErrchk(cudaFree(d_CELSEP));
+	gpuErrchk(cudaFree(d_CECUTR));
+
 
 
 
