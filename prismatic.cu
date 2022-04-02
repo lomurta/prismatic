@@ -118,6 +118,12 @@ typedef struct {
 }PENELOPE_MOD;
 
 typedef struct {
+	double EABS[MAXMAT][3], C1[MAXMAT], C2[MAXMAT], WCC[MAXMAT], WCR[MAXMAT], DEN[MAXMAT], RDEN[MAXMAT], E0STEP, DESOFT, SSOFT;
+	int NMS, NEGP, NMAT;
+}  hd_PENELOPE_MOD;
+
+
+typedef struct {
 	char(*BALIAS)[5];
 	double* DSTOT;
 	int* MATER, * KDET, * KSLAST, * NBODY;
@@ -1073,6 +1079,12 @@ hd_CENANG* d_CENANG;
 
 __device__ hd_CENDET dg_CENDET_;
 hd_CENDET* d_CENDET;
+
+__device__ hd_PENELOPE_MOD dg_PENELOPE_mod_;
+hd_PENELOPE_MOD* d_PENELOPE_mod;
+
+
+
 
 
 
@@ -27921,6 +27933,27 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpy(&d_CENDET->LLE,CENDET_.LLE, sizeof(bool), cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(dg_CENDET_, d_CENDET, sizeof(hd_CENDET)));
 
+	//PENELOPE_MOD
+	gpuErrchk(cudaMalloc((void **)&d_PENELOPE_mod, sizeof(hd_PENELOPE_MOD)));
+	gpuErrchk(cudaMemcpy(d_PENELOPE_mod->EABS,PENELOPE_mod_.EABS, sizeof(double)*3*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_PENELOPE_mod->C1,PENELOPE_mod_.C1, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_PENELOPE_mod->C2,PENELOPE_mod_.C2, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_PENELOPE_mod->WCC,PENELOPE_mod_.WCC, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_PENELOPE_mod->WCR,PENELOPE_mod_.WCR, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_PENELOPE_mod->DEN,PENELOPE_mod_.DEN, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_PENELOPE_mod->RDEN,PENELOPE_mod_.RDEN, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(&d_PENELOPE_mod->E0STEP,PENELOPE_mod_.E0STEP, sizeof(double), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(&d_PENELOPE_mod->DESOFT, PENELOPE_mod_.DESOFT, sizeof(double), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(&d_PENELOPE_mod->SSOFT, PENELOPE_mod_.SSOFT, sizeof(double), cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(&d_PENELOPE_mod->NMS, PENELOPE_mod_.NMS, sizeof(int), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(&d_PENELOPE_mod->NEGP, PENELOPE_mod_.NEGP, sizeof(int), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(&d_PENELOPE_mod->NMAT, PENELOPE_mod_.NMAT, sizeof(int), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpyToSymbol(dg_PENELOPE_mod_, d_PENELOPE_mod, sizeof(hd_PENELOPE_MOD)));
+
+
+
+
+
 }
 
 
@@ -28341,6 +28374,22 @@ void transfGPU_to_CPU(){
 	gpuErrchk(cudaMemcpy(CENDET_.NID,d_CENDET->NID, sizeof(int)*NIDM, cudaMemcpyDeviceToHost));
 	gpuErrchk(cudaMemcpy(CENDET_.LLE,&d_CENDET->LLE, sizeof(bool), cudaMemcpyDeviceToHost));
 
+	//PENELOPE_MOD
+	gpuErrchk(cudaMemcpyFromSymbol(d_PENELOPE_mod, dg_PENELOPE_mod_, sizeof(hd_PENELOPE_MOD)));
+	gpuErrchk(cudaMemcpy(PENELOPE_mod_.EABS,d_PENELOPE_mod->EABS, sizeof(double)*3*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(PENELOPE_mod_.C1,d_PENELOPE_mod->C1, sizeof(double)*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(PENELOPE_mod_.C2,d_PENELOPE_mod->C2, sizeof(double)*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(PENELOPE_mod_.WCC,d_PENELOPE_mod->WCC, sizeof(double)*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(PENELOPE_mod_.WCR,d_PENELOPE_mod->WCR, sizeof(double)*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(PENELOPE_mod_.DEN,d_PENELOPE_mod->DEN, sizeof(double)*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(PENELOPE_mod_.RDEN,d_PENELOPE_mod->RDEN, sizeof(double)*MAXMAT, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(PENELOPE_mod_.E0STEP, &d_PENELOPE_mod->E0STEP,sizeof(double), cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(PENELOPE_mod_.DESOFT,&d_PENELOPE_mod->DESOFT, sizeof(double), cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy( PENELOPE_mod_.SSOFT,&d_PENELOPE_mod->SSOFT,  sizeof(double), cudaMemcpyDeviceToHost));
+    gpuErrchk(cudaMemcpy(PENELOPE_mod_.NMS,&d_PENELOPE_mod->NMS,   sizeof(int), cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(PENELOPE_mod_.NEGP,&d_PENELOPE_mod->NEGP,   sizeof(int), cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy( PENELOPE_mod_.NMAT,&d_PENELOPE_mod->NMAT,  sizeof(int), cudaMemcpyDeviceToHost));
+
 }
 
 void memoryFreeGPU(){
@@ -28382,6 +28431,7 @@ void memoryFreeGPU(){
 	gpuErrchk(cudaFree(d_CPINAC));
 	gpuErrchk(cudaFree(d_CENANG));
 	gpuErrchk(cudaFree(d_CENDET));
+	gpuErrchk(cudaFree(d_PENELOPE_mod));
 
 }
 
