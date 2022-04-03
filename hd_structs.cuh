@@ -79,7 +79,13 @@ typedef struct {
 	double* E, * X, * Y, * Z, * U, * V, * W, * WGHT, * SP1, * SP2, * SP3, * PAGE;
 	int* KPAR, * IBODY, * MAT, * ILB, * IPOL;
 	bool* LAGE;
-}TRACK_MOD;
+} TRACK_MOD;
+
+typedef struct {
+	double E, X, Y, Z, U, V, W, WGHT, SP1, SP2, SP3, PAGE;
+	int KPAR, IBODY, MAT, ILB[5], IPOL;
+	bool LAGE;
+} hd_TRACK_MOD;
 
 typedef struct {
 	double(*EABS)[3], * C1, * C2, * WCC, * WCR, * DEN, * RDEN, * E0STEP, * DESOFT, * SSOFT;
@@ -106,10 +112,13 @@ typedef struct {
 	bool LVERB;
 } hd_PENGEOM_MOD;
 
-
 typedef struct {
 	int(*KBODY)[NB], * KBOMO;
 } QBODY;
+
+typedef struct {
+	int KBODY[NXG][NB], KBOMO[NB];
+} hd_QBODY;
 
 typedef struct {
 	double* ECUTR;
@@ -781,10 +790,19 @@ typedef struct {
 } CDOSE1;
 
 typedef struct {
+	double DOSE[NDZM][NDYM][NDXM], DOSE2[NDZM][NDYM][NDXM], DOSEP[NDZM][NDYM][NDXM];
+	int LDOSE[NDZM][NDYM][NDXM], KDOSE;
+} hd_CDOSE1;
+
+typedef struct {
 	double* DDOSE, * DDOSE2, * DDOSEP;
 	int* LDDOSE;
-
 }CDOSE2;
+
+typedef struct {
+	double DDOSE[NDZM], DDOSE2[NDZM], DDOSEP[NDZM];
+	int LDDOSE[NDZM];
+} hd_CDOSE2;
 
 typedef struct {
 	double* DXL, * DXU, * BDOSE, * RBDOSE;
@@ -792,9 +810,17 @@ typedef struct {
 }CDOSE3;
 
 typedef struct {
-	double(*VMASS)[NDYM][NDXM];
+	double DXL[3], DXU[3], BDOSE[3], RBDOSE[3];
+	int NDB[3];
+} hd_CDOSE3;
 
+typedef struct {
+	double(*VMASS)[NDYM][NDXM];
 }CDOSE4;
+
+typedef struct {
+	double VMASS[NDZM][NDYM][NDXM];
+} hd_CDOSE4;
 
 
 typedef struct {
@@ -931,8 +957,8 @@ hd_CEELDB *d_CEELDB;
 __device__ hd_SECST dg_SECST_;
 hd_SECST *d_SECST;
 
-__device__ hd_PENGEOM_MOD dg_PENGEOM_MOD_;
-hd_PENGEOM_MOD * d_PENGEOM_MOD;
+__device__ hd_PENGEOM_MOD dg_PENGEOM_mod_;
+hd_PENGEOM_MOD * d_PENGEOM_mod;
 
 __device__ hd_CGCONE dg_CGCONE_;
 hd_CGCONE * d_CGCONE;
@@ -1038,6 +1064,47 @@ hd_CENDET* d_CENDET;
 
 __device__ hd_PENELOPE_MOD dg_PENELOPE_mod_;
 hd_PENELOPE_MOD* d_PENELOPE_mod;
+
+
+__device__ hd_TRACK_MOD dg_TRACK_mod_;
+hd_TRACK_MOD* d_TRACK_mod;
+
+__device__ hd_QBODY dg_QBODY_;
+hd_QBODY* d_QBODY;
+
+__device__ hd_CDOSE1 dg_CDOSE1_;
+hd_CDOSE1* d_CDOSE1;
+
+__device__ hd_CDOSE2 dg_CDOSE2_;
+hd_CDOSE2* d_CDOSE2;
+
+__device__ hd_CDOSE3 dg_CDOSE3_;
+hd_CDOSE3* d_CDOSE3;
+
+__device__ hd_CDOSE4 dg_CDOSE4_;
+hd_CDOSE4* d_CDOSE4;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+__device__ double d_S[NS2M];
+__device__ int d_IS[NS2M];
+
 
 
 

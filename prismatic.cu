@@ -13,8 +13,8 @@
 #include "device_launch_parameters.h"
 using namespace std;
 #include "hd_structs.cuh"
-#include "cpp_functions.h"
 #include "cuda_common.cuh"
+#include "cpp_functions.h"
 #include "cuda_functions.cuh"
 
 int main() {
