@@ -713,8 +713,8 @@ typedef struct {
 	double(*PDA)[NBTHM][3], (*PDA2)[NBTHM][3], (*PDAP)[NBTHM][3];
 	int(*LPDE)[2][3];
 	int(*LPDA)[NBTHM][3];
-	int* NE, * NTH, * NPH;
-	bool* LLE, * LLTH;
+	int* NE, * NTH, * NPH, *LLE;
+	bool * LLTH;
 }CENANG;
 
 
@@ -724,8 +724,8 @@ typedef struct {
 	double PDA[NBPHM][NBTHM][3], PDA2[NBPHM][NBTHM][3], PDAP[NBPHM][NBTHM][3];
 	int LPDE[NBEM][2][3];
 	int LPDA[NBPHM][NBTHM][3];
-	int NE, NTH, NPH;
-	bool LLE, LLTH;
+	int NE, NTH, NPH, LLE;
+	bool LLTH;
 } hd_CENANG;
 
 
@@ -744,8 +744,8 @@ typedef struct {
 	int(*LFLT)[NIDM];
 	int(*LFLP)[NBEM2][NIDM];
 	int(*LAGEA)[NIDM];
-	int* IDCUT, * NE;
-	bool* LLE, * LLAGE;
+	int* IDCUT, * NE, *LLE;
+	bool * LLAGE;
 	int* NAGE, * NID;
 }CIMDET;
 
@@ -764,8 +764,8 @@ typedef struct {
 	int LFLT[NBEM2][NIDM];
 	int LFLP[3][NBEM2][NIDM];
 	int LAGEA[NBEM2][NIDM];
-	int IDCUT[NIDM], NE[NIDM];
-	bool LLE[NIDM], LLAGE[NIDM];
+	int IDCUT[NIDM], NE[NIDM], LLE[NIDM];
+	bool LLAGE[NIDM];
 	int NAGE[NIDM], NID;
 } hd_CIMDET;
 
@@ -774,14 +774,14 @@ typedef struct {
 typedef struct {
 	double* EL, * EU, * BSE, * RBSE, * EDEP, * EDEP2, (*DET)[NIDM];
 	int* NE, * NID;
-	bool* LLE;
+	int* LLE;
 }CENDET;
 
 
 typedef struct {
 	double  EL[NIDM], EU[NIDM], BSE[NIDM], RBSE[NIDM], EDEP[NIDM], EDEP2[NIDM], DET[NBEM2][NIDM];
 	int NE[NIDM], NID[NIDM];
-	bool LLE;
+	int LLE[NIDM];
 } hd_CENDET;
 
 typedef struct {
@@ -1065,7 +1065,6 @@ hd_CENDET* d_CENDET;
 __device__ hd_PENELOPE_MOD dg_PENELOPE_mod_;
 hd_PENELOPE_MOD* d_PENELOPE_mod;
 
-
 __device__ hd_TRACK_MOD dg_TRACK_mod_;
 hd_TRACK_MOD* d_TRACK_mod;
 
@@ -1084,26 +1083,9 @@ hd_CDOSE3* d_CDOSE3;
 __device__ hd_CDOSE4 dg_CDOSE4_;
 hd_CDOSE4* d_CDOSE4;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 __device__ double d_S[NS2M];
 __device__ int d_IS[NS2M];
+__device__ int d_wIPOLI = 0;
 
 
 

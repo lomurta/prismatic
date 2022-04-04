@@ -180,7 +180,7 @@ extern "C" {
 		double(*PDA)[NBTHM][3], double(*PDA2)[NBTHM][3], double(*PDAP)[NBTHM][3],
 		int(*LPDE)[2][3], int(*LPDA)[NBTHM][3],
 		int* NE, int* NTH, int* NPH,
-		bool* LLE, bool* LLTH);
+		int* LLE, bool* LLTH);
 
 
 	void transfcimdet_(double* EL, double* EU, double* BSE, double* RBSE,
@@ -193,11 +193,11 @@ extern "C" {
 		double(*AGE2)[NIDM], double(*AGEP)[NIDM],
 		int* LEDEP, int(*LDIT)[NIDM], int(*LDIP)[NBEM2][NIDM], int(*LFLT)[NIDM], int(*LFLP)[NBEM2][NIDM], int(*LAGEA)[NIDM],
 		int* IDCUT, int* NE,
-		bool* LLE, bool* LLAGE,
+		int* LLE, bool* LLAGE,
 		int* NAGE, int* NID);
 
 	void transfcendet_(double* EL, double* EU, double* BSE, double* RBSE, double* EDEP, double* EDEP2, double(*DET)[NIDM],
-		int* NE, int* NID, bool* LLE);
+		int* NE, int* NID, int* LLE);
 
 	void transfcdose1_(double(*DOSE)[NDYM][NDXM], double(*DOSE2)[NDYM][NDXM], double(*DOSEP)[NDYM][NDXM], int(*LDOSE)[NDYM][NDXM], int* KDOSE);
 
@@ -1566,7 +1566,7 @@ void transfcenang_(double* EL, double* EU, double* THL, double* THU, double* BSE
 	double(*PDA)[NBTHM][3], double(*PDA2)[NBTHM][3], double(*PDAP)[NBTHM][3],
 	int(*LPDE)[2][3], int(*LPDA)[NBTHM][3],
 	int* NE, int* NTH, int* NPH,
-	bool* LLE, bool* LLTH) {
+	int* LLE, bool* LLTH) {
 
 	CENANG_.EL = EL;
 	CENANG_.EU = EU;
@@ -1605,7 +1605,7 @@ void transfcimdet_(double* EL, double* EU, double* BSE, double* RBSE,
 	double(*AGE2)[NIDM], double(*AGEP)[NIDM],
 	int* LEDEP, int(*LDIT)[NIDM], int(*LDIP)[NBEM2][NIDM], int(*LFLT)[NIDM], int(*LFLP)[NBEM2][NIDM], int(*LAGEA)[NIDM],
 	int* IDCUT, int* NE,
-	bool* LLE, bool* LLAGE,
+	int* LLE, bool* LLAGE,
 	int* NAGE, int* NID) {
 
 	CIMDET_.EL = EL;
@@ -1651,7 +1651,7 @@ void transfcimdet_(double* EL, double* EU, double* BSE, double* RBSE,
 }
 
 void transfcendet_(double* EL, double* EU, double* BSE, double* RBSE, double* EDEP, double* EDEP2, double(*DET)[NIDM],
-	int* NE, int* NID, bool* LLE) {
+	int* NE, int* NID, int* LLE) {
 	CENDET_.EL = EL;
 	CENDET_.EU = EU;
 	CENDET_.BSE = BSE;
@@ -25186,7 +25186,7 @@ void inicializarStructs() {
 	CENANG_.NE = (int*)malloc(sizeof(int));
 	CENANG_.NTH = (int*)malloc(sizeof(int));
 	CENANG_.NPH = (int*)malloc(sizeof(int));
-	CENANG_.LLE = (bool*)malloc(sizeof(bool));
+	CENANG_.LLE = (int*)malloc(sizeof(int));
 	CENANG_.LLTH = (bool*)malloc(sizeof(bool));
 
 	//CIMDET_
@@ -25225,7 +25225,7 @@ void inicializarStructs() {
 	CIMDET_.LAGEA = (int(*)[NIDM])malloc(NBEM2 * NIDM * sizeof(int));
 	CIMDET_.IDCUT = (int*)malloc(NIDM * sizeof(int));
 	CIMDET_.NE = (int*)malloc(NIDM * sizeof(int));
-	CIMDET_.LLE = (bool*)malloc(NIDM * sizeof(bool));
+	CIMDET_.LLE = (int*)malloc(NIDM * sizeof(int));
 	CIMDET_.LLAGE = (bool*)malloc(NIDM * sizeof(bool));
 	CIMDET_.NAGE = (int*)malloc(NIDM * sizeof(int));
 	CIMDET_.NID = (int*)malloc(sizeof(int));
@@ -25240,7 +25240,7 @@ void inicializarStructs() {
 	CENDET_.DET = (double(*)[NIDM])malloc(NBEM2 * NIDM * sizeof(double));
 	CENDET_.NE = (int*)malloc(NIDM * sizeof(int));
 	CENDET_.NID = (int*)malloc(sizeof(int));
-	CENDET_.LLE = (bool*)malloc(NIDM * sizeof(bool));
+	CENDET_.LLE = (int*)malloc(NIDM * sizeof(int));
 
 	//CDOSE1_
 	CDOSE1_.DOSE = (double(*)[NDYM][NDXM])malloc(NDZM * NDYM * NDXM * sizeof(double));
@@ -26229,7 +26229,7 @@ void transfCPU_to_GPU(){
     gpuErrchk(cudaMemcpy(d_CIMDET->LAGEA, CIMDET_.LAGEA, sizeof(int)*NIDM*NBEM2, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_CIMDET->IDCUT, CIMDET_.IDCUT, sizeof(int)*NIDM, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_CIMDET->NE, CIMDET_.NE, sizeof(int)*NIDM, cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpy(d_CIMDET->LLE, CIMDET_.LLE, sizeof(bool)*NIDM, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(d_CIMDET->LLE, CIMDET_.LLE, sizeof(int)*NIDM, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_CIMDET->LLAGE, CIMDET_.LLAGE, sizeof(bool)*NIDM, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_CIMDET->NAGE, CIMDET_.NAGE, sizeof(int)*NIDM, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(&d_CIMDET->NID, CIMDET_.NID, sizeof(int), cudaMemcpyHostToDevice));
@@ -26538,7 +26538,7 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpy(&d_CENANG->NE,CENANG_.NE, sizeof(int), cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(&d_CENANG->NTH,CENANG_.NTH, sizeof(int), cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(&d_CENANG->NPH,CENANG_.NPH, sizeof(int), cudaMemcpyHostToDevice));
-	gpuErrchk(cudaMemcpy(&d_CENANG->LLE,CENANG_.LLE, sizeof(bool), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(&d_CENANG->LLE,CENANG_.LLE, sizeof(int), cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(&d_CENANG->LLTH,CENANG_.LLTH, sizeof(bool), cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(dg_CENANG_, d_CENANG, sizeof(hd_CENANG)));
 
@@ -26553,7 +26553,7 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpy(d_CENDET->DET,CENDET_.DET, sizeof(double)*NIDM*NBEM2, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CENDET->NE,CENDET_.NE, sizeof(int)*NIDM, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CENDET->NID,CENDET_.NID, sizeof(int)*NIDM, cudaMemcpyHostToDevice));
-	gpuErrchk(cudaMemcpy(&d_CENDET->LLE,CENDET_.LLE, sizeof(bool), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(&d_CENDET->LLE,CENDET_.LLE, sizeof(int)*NIDM, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(dg_CENDET_, d_CENDET, sizeof(hd_CENDET)));
 
 	//PENELOPE_MOD
@@ -26771,7 +26771,7 @@ void transfGPU_to_CPU(){
     gpuErrchk(cudaMemcpy(CIMDET_.LAGEA,d_CIMDET->LAGEA,  sizeof(int)*NIDM*NBEM2, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(CIMDET_.IDCUT,d_CIMDET->IDCUT,  sizeof(int)*NIDM, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(CIMDET_.NE,d_CIMDET->NE,  sizeof(int)*NIDM, cudaMemcpyDeviceToHost));
-    gpuErrchk(cudaMemcpy( CIMDET_.LLE,d_CIMDET->LLE, sizeof(bool)*NIDM, cudaMemcpyDeviceToHost));
+    gpuErrchk(cudaMemcpy( CIMDET_.LLE,d_CIMDET->LLE, sizeof(int)*NIDM, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy( CIMDET_.LLAGE, d_CIMDET->LLAGE,sizeof(bool)*NIDM, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(CIMDET_.NAGE,d_CIMDET->NAGE,  sizeof(int)*NIDM, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(CIMDET_.NID,&d_CIMDET->NID,  sizeof(int), cudaMemcpyDeviceToHost));
@@ -27051,7 +27051,7 @@ void transfGPU_to_CPU(){
 	gpuErrchk(cudaMemcpy(CENANG_.NE,&d_CENANG->NE, sizeof(int), cudaMemcpyDeviceToHost));
 	gpuErrchk(cudaMemcpy(CENANG_.NTH,&d_CENANG->NTH, sizeof(int), cudaMemcpyDeviceToHost));
 	gpuErrchk(cudaMemcpy(CENANG_.NPH,&d_CENANG->NPH, sizeof(int), cudaMemcpyDeviceToHost));
-	gpuErrchk(cudaMemcpy(CENANG_.LLE,&d_CENANG->LLE, sizeof(bool), cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CENANG_.LLE,&d_CENANG->LLE, sizeof(int), cudaMemcpyDeviceToHost));
 	gpuErrchk(cudaMemcpy(CENANG_.LLTH,&d_CENANG->LLTH, sizeof(bool), cudaMemcpyDeviceToHost));
 
 	//CENDET
@@ -27065,7 +27065,7 @@ void transfGPU_to_CPU(){
 	gpuErrchk(cudaMemcpy(CENDET_.DET,d_CENDET->DET, sizeof(double)*NIDM*NBEM2, cudaMemcpyDeviceToHost));
 	gpuErrchk(cudaMemcpy(CENDET_.NE,d_CENDET->NE, sizeof(int)*NIDM, cudaMemcpyDeviceToHost));
 	gpuErrchk(cudaMemcpy(CENDET_.NID,d_CENDET->NID, sizeof(int)*NIDM, cudaMemcpyDeviceToHost));
-	gpuErrchk(cudaMemcpy(CENDET_.LLE,&d_CENDET->LLE, sizeof(bool), cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CENDET_.LLE,&d_CENDET->LLE, sizeof(int)*NIDM, cudaMemcpyDeviceToHost));
 
 	//PENELOPE_MOD
 	gpuErrchk(cudaMemcpyFromSymbol(d_PENELOPE_mod, dg_PENELOPE_mod_, sizeof(hd_PENELOPE_MOD)));
