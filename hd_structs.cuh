@@ -579,8 +579,11 @@ typedef struct {
 
 typedef struct {
 	double* DSMAX, (*EABSB)[3];
-
 }CSPGEO;
+
+typedef struct {
+	double DSMAX[NB], EABSB[NB][3];
+} hd_CSPGEO;
 
 //Forçando interação, janelas de peso.
 typedef struct {
@@ -594,6 +597,11 @@ typedef struct {
 	int* IXRSPL, * ILBA;
 	bool* LXRSPL;
 }CXRSPL;
+
+typedef struct {
+	int IXRSPL[NBV], ILBA[5];
+	bool LXRSPL[NBV];
+} hd_CXRSPL;
 
 //Definição de origem.
 // Particulas primarias
@@ -648,6 +656,14 @@ typedef struct {
 	double* AVE, * AVE2, * DAVE; // Energia final
 }CNT0;
 
+typedef struct {
+	double PRIM[3], PRIM2[3], DPRIM[3]; //Numero de particulas IEXIT;
+	double SEC[3][3], SEC2[3][3], DSEC[3][3]; // Geradores de particulas secundarias.
+	double AVW[2], AVW2[2], DAVW[2]; //Cosseno final do diretor polar.
+	double AVA[2], AVA2[2], DAVA[2]; // Angulo final polar
+	double AVE[2], AVE2[2], DAVE[2]; // Energia final
+} hd_CNT0;
+
 
 // Energias depositadas em vários corpos.
 
@@ -655,6 +671,10 @@ typedef struct {
 	double* TDEBO, * TDEBO2, * DEBO;
 
 }CNT1;
+
+typedef struct {
+	double TDEBO[NB], TDEBO2[NB], DEBO[NB];
+} hd_CNT1;
 
 //Distribuições contínuas.
 //Espectro de energia da fonte.
@@ -667,15 +687,24 @@ typedef struct {
 typedef struct {
 	double(*SEDS)[3], (*SEDS2)[3], * DSDE, * RDSDE;
 	int* NSDE;
-
 }CNT3;
+
+typedef struct {
+	double SEDS[NSEM][3],  SEDS2[NSEM][3], DSDE, RDSDE;
+	int NSDE;
+} hd_CNT3;
+
 
 //Detectores (até diferentes detectores NIDM).
 typedef struct {
 	double* RLAST, * RWRITE;
 	int* IDCUT, (*KKDI)[NIDM], * IPSF, * NID, * NPSFO, * IPSFO;
-
 }CNT4;
+
+typedef struct {
+	double RLAST, RWRITE;
+	int IDCUT[NIDM], KKDI[3][NIDM], IPSF[NIDM], NID, NPSFO, IPSFO;
+} hd_CNT4;
 
 typedef struct {
 	double* DEDE;
@@ -683,9 +712,17 @@ typedef struct {
 }CNT5;
 
 typedef struct {
-	bool* LDOSEM;
+	double DEDE[NIDM];
+	int KBDE[NB], NED;
+} hd_CNT5;
 
+typedef struct {
+	bool* LDOSEM;
 }CNT6;
+
+typedef struct {
+	bool LDOSEM;
+} hd_CNT6;
 
 // Detalhes do trabalho
 
@@ -700,8 +737,12 @@ typedef struct {
 typedef struct {
 	double* TSIM, * TSEC, * TSECA, * TSECAD, * CPUT0, * DUMPP, * DSHN, * SHN;
 	int* N;
-
 }CNTRL;
+
+typedef struct {
+	double TSIM, TSEC, TSECA, TSECAD, CPUT0, DUMPP, DSHN, SHN;
+	int N;
+} hd_CNTRL;
 
 typedef struct {
 	double* CPCT, * CPST, * SPCT, * SPST, * SPHI, * CPHI, * STHE, * CTHE, * CAPER;
@@ -954,6 +995,20 @@ SECST SECST_;
 CJUMP0 CJUMP0_;
 CHIST CHIST_;
 
+hd_TRACK_MOD *PRITRACK; 
+hd_TRACK_MOD *SECTRACK_G; 
+hd_TRACK_MOD *SECTRACK_E;
+hd_TRACK_MOD *SECTRACK_P; 
+
+int nPRITRACK = 0;
+int nSECTRACK_G = 0;
+int nSECTRACK_E = 0;
+int nSECTRACK_P = 0;
+
+static const int pilhaPart = 10240;
+
+
+
 //DECLARACOES PARA COPIA NA GPU
 __device__ hd_CEELDB dg_CEELDB_;
 hd_CEELDB *d_CEELDB;
@@ -1089,6 +1144,52 @@ hd_CDOSE4* d_CDOSE4;
 
 __device__ hd_CRNDG3 dg_CRNDG3_;
 hd_CRNDG3* d_CRNDG3;
+
+__device__ hd_CNT0 dg_CNT0_;
+hd_CNT0* d_CNT0;
+
+__device__ hd_CNT1 dg_CNT1_;
+hd_CNT1* d_CNT1;
+
+__device__ hd_CNT3 dg_CNT3_;
+hd_CNT3* d_CNT3;
+
+__device__ hd_CNT4 dg_CNT4_;
+hd_CNT4* d_CNT4;
+
+__device__ hd_CNT5 dg_CNT5_;
+hd_CNT5* d_CNT5;
+
+__device__ hd_CNT6 dg_CNT6_;
+hd_CNT6* d_CNT6;
+
+__device__ hd_CNTRL dg_CNTRL_;
+hd_CNTRL* d_CNTRL;
+
+__device__ hd_CXRSPL dg_CXRSPL_;
+hd_CXRSPL* d_CXRSPL;
+
+__device__ hd_CSPGEO dg_CSPGEO_;
+hd_CSPGEO* d_CSPGEO;
+
+__device__ hd_TRACK_MOD dg_SECTRACK_G_[pilhaPart];
+hd_TRACK_MOD* d_SECTRACK_G;
+
+__device__ hd_TRACK_MOD dg_SECTRACK_E_[pilhaPart];
+hd_TRACK_MOD* d_SECTRACK_E;
+
+__device__ hd_TRACK_MOD dg_SECTRACK_P_[pilhaPart];
+hd_TRACK_MOD* d_SECTRACK_P;
+
+
+
+
+
+
+
+
+
+
 
 
 __device__ double d_S[NS2M];
