@@ -206,12 +206,16 @@ typedef struct {
 } CRITAA;
 
 typedef struct {
-
 	double* X, * A, * B;
 	double* F;
 	int* KA, * NPM1;
-
 } CRNDG3;
+
+
+typedef struct {
+	double X[NR], A[NR], B[NR], F[NR];
+	int KA[NR], NPM1;
+} hd_CRNDG3;
 
 
 typedef struct {
@@ -1082,6 +1086,10 @@ hd_CDOSE3* d_CDOSE3;
 
 __device__ hd_CDOSE4 dg_CDOSE4_;
 hd_CDOSE4* d_CDOSE4;
+
+__device__ hd_CRNDG3 dg_CRNDG3_;
+hd_CRNDG3* d_CRNDG3;
+
 
 __device__ double d_S[NS2M];
 __device__ int d_IS[NS2M];

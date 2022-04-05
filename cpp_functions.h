@@ -26632,6 +26632,19 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpy(d_CDOSE4->VMASS,CDOSE4_.VMASS, sizeof(double)*NDZM*NDYM*NDXM, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(dg_CDOSE4_, d_CDOSE4, sizeof(hd_CDOSE4)));
 
+	//CRNDG3
+	gpuErrchk(cudaMalloc((void **)&d_CRNDG3, sizeof(hd_CRNDG3)));
+	gpuErrchk(cudaMemcpy(d_CRNDG3->X,CRNDG3_.X, sizeof(double)*NR, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CRNDG3->A,CRNDG3_.A, sizeof(double)*NR, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CRNDG3->B,CRNDG3_.B, sizeof(double)*NR, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CRNDG3->F,CRNDG3_.F, sizeof(double)*NR, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CRNDG3->KA,CRNDG3_.KA, sizeof(int)*NR, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(&d_CRNDG3->NPM1,CRNDG3_.NPM1, sizeof(int), cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpyToSymbol(dg_CRNDG3_, d_CRNDG3, sizeof(hd_CRNDG3)));
+
+
+
+
 
 
 
@@ -27135,6 +27148,20 @@ void transfGPU_to_CPU(){
 	gpuErrchk(cudaMemcpyFromSymbol(d_CDOSE4, dg_CDOSE4_, sizeof(hd_CDOSE4)));
 	gpuErrchk(cudaMemcpy(CDOSE4_.VMASS,d_CDOSE4->VMASS, sizeof(double)*NDZM*NDYM*NDXM, cudaMemcpyDeviceToHost));
 
+	//CRNFG3
+	gpuErrchk(cudaMemcpyFromSymbol(d_CRNDG3, dg_CRNDG3_, sizeof(hd_CRNDG3)));
+	gpuErrchk(cudaMemcpy(CRNDG3_.X,d_CRNDG3->X, sizeof(double)*NR, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CRNDG3_.A,d_CRNDG3->A, sizeof(double)*NR, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CRNDG3_.B,d_CRNDG3->B, sizeof(double)*NR, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CRNDG3_.F,d_CRNDG3->F, sizeof(double)*NR, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CRNDG3_.KA,d_CRNDG3->KA, sizeof(int)*NR, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CRNDG3_.NPM1,&d_CRNDG3->NPM1, sizeof(int), cudaMemcpyDeviceToHost));
+
+
+
+
+
+
 
 
 
@@ -27186,6 +27213,7 @@ void memoryFreeGPU(){
 	gpuErrchk(cudaFree(d_CDOSE2));
 	gpuErrchk(cudaFree(d_CDOSE3));
 	gpuErrchk(cudaFree(d_CDOSE4));
+	gpuErrchk(cudaFree(d_CRNDG3));
 
 }
 
