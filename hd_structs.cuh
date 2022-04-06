@@ -42,6 +42,8 @@ static const int NDXM = 201;
 static const int NDYM = 201;
 static const int NDZM = 201;
 
+static const int pilhaPart = 10240;
+
 char LINHA[200];
 char APOIO[200];
 char SPCDIO[NIDM][20];
@@ -72,7 +74,7 @@ typedef struct {
 } QTREE;
 
 typedef struct {
-	int NBODYS, KMOTH[NB], KDGHT[NXG][NB], KSURF[NXG][NB], KFLAG[NXG][NB], KSP[NS], NWARN;
+	int NBODYS, KMOTH[NB], KDGHT[NXG][NB], KSURF[NXG][NB], KFLAG[NXG][NB], KSP[pilhaPart][NS], NWARN[pilhaPart];
 } hd_QTREE;
 
 typedef struct {
@@ -93,7 +95,7 @@ typedef struct {
 }PENELOPE_MOD;
 
 typedef struct {
-	double EABS[MAXMAT][3], C1[MAXMAT], C2[MAXMAT], WCC[MAXMAT], WCR[MAXMAT], DEN[MAXMAT], RDEN[MAXMAT], E0STEP, DESOFT, SSOFT;
+	double EABS[MAXMAT][3], C1[MAXMAT], C2[MAXMAT], WCC[MAXMAT], WCR[MAXMAT], DEN[MAXMAT], RDEN[MAXMAT], E0STEP[pilhaPart], DESOFT[pilhaPart], SSOFT[pilhaPart];
 	int NMS, NEGP, NMAT;
 }  hd_PENELOPE_MOD;
 
@@ -107,8 +109,8 @@ typedef struct {
 
 typedef struct {
 	char BALIAS[NB][5];
-	double DSTOT;
-	int MATER[NB], KDET[NB], KSLAST, NBODY;
+	double DSTOT[pilhaPart];
+	int MATER[NB], KDET[NB], KSLAST[pilhaPart], NBODY;
 	bool LVERB;
 } hd_PENGEOM_MOD;
 
@@ -146,8 +148,8 @@ typedef struct {
 } CEGRID; //Rede de energia e constantes de interpolacao para a energia atual.
 
 typedef struct {
-	double EMIN, EL, EU, ET[NEGP], DLEMP[NEGP], DLEMP1, DLFC, XEL, XE, XEK;
-	int KE;
+	double EMIN, EL, EU, ET[NEGP], DLEMP[NEGP], DLEMP1, DLFC, XEL[pilhaPart], XE[pilhaPart], XEK[pilhaPart];
+	int KE[pilhaPart];
 } hd_CEGRID;
 
 
@@ -904,6 +906,10 @@ typedef struct {
 	int ILBA[5];
 } hd_CHIST;
 
+typedef struct{
+	int nPRITRACK, nSECTRACK_E, nSECTRACK_G, nSECTRACK_P;
+} hd_nTRACKS;
+
 PENELOPE_MOD PENELOPE_mod_;
 PENGEOM_MOD PENGEOM_mod_;
 TRACK_MOD TRACK_mod_;
@@ -994,18 +1000,15 @@ CJUMP1 CJUMP1_;
 SECST SECST_;
 CJUMP0 CJUMP0_;
 CHIST CHIST_;
+hd_nTRACKS nTRACKS_;
 
 hd_TRACK_MOD *PRITRACK; 
 hd_TRACK_MOD *SECTRACK_G; 
 hd_TRACK_MOD *SECTRACK_E;
 hd_TRACK_MOD *SECTRACK_P; 
 
-int nPRITRACK = 0;
-int nSECTRACK_G = 0;
-int nSECTRACK_E = 0;
-int nSECTRACK_P = 0;
 
-static const int pilhaPart = 10240;
+
 
 
 
@@ -1124,7 +1127,10 @@ hd_CENDET* d_CENDET;
 __device__ hd_PENELOPE_MOD dg_PENELOPE_mod_;
 hd_PENELOPE_MOD* d_PENELOPE_mod;
 
-__device__ hd_TRACK_MOD dg_TRACK_mod_;
+/*__device__ hd_TRACK_MOD dg_TRACK_mod_;
+hd_TRACK_MOD* d_TRACK_mod;*/
+
+__device__ hd_TRACK_MOD dg_TRACK_mod_[pilhaPart];
 hd_TRACK_MOD* d_TRACK_mod;
 
 __device__ hd_QBODY dg_QBODY_;
@@ -1172,6 +1178,9 @@ hd_CXRSPL* d_CXRSPL;
 __device__ hd_CSPGEO dg_CSPGEO_;
 hd_CSPGEO* d_CSPGEO;
 
+__device__ hd_TRACK_MOD dg_PRITRACK_[pilhaPart];
+hd_TRACK_MOD* d_PRITRACK;
+
 __device__ hd_TRACK_MOD dg_SECTRACK_G_[pilhaPart];
 hd_TRACK_MOD* d_SECTRACK_G;
 
@@ -1181,20 +1190,16 @@ hd_TRACK_MOD* d_SECTRACK_E;
 __device__ hd_TRACK_MOD dg_SECTRACK_P_[pilhaPart];
 hd_TRACK_MOD* d_SECTRACK_P;
 
+__device__ hd_nTRACKS dg_nTRACKS_;
+hd_nTRACKS* d_nTRACKS;
 
+__device__ int size;
+int * d_size;
 
-
-
-
-
-
-
-
-
-
-__device__ double d_S[NS2M];
-__device__ int d_IS[NS2M];
+//__device__ double d_S[NS2M];
+//__device__ int d_IS[NS2M];
 __device__ int d_wIPOLI = 0;
+
 
 
 

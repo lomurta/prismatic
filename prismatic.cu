@@ -21,6 +21,10 @@ using namespace std;
 
 int main() {
 
+	int sizeTrack = 0;
+	int block_size = 128;
+
+
 	int simGPU = 1;
 
     //Alocando memoria para atributos das structs
@@ -35,7 +39,7 @@ int main() {
 		if (*CSOUR0_.JOBEND != 0)
 			goto L103;
 		//Resete da GPU
-		cudaDeviceReset();
+		gpuErrchk(cudaDeviceReset());
 
 		//aloca vetores das particulas primarias e secundarias
 
@@ -44,7 +48,7 @@ int main() {
 		SECTRACK_G = (hd_TRACK_MOD*)malloc(pilhaPart * sizeof(hd_TRACK_MOD)); //vetor de particulas secundarias de fotons
 		SECTRACK_E = (hd_TRACK_MOD*)malloc(pilhaPart * sizeof(hd_TRACK_MOD)); //vetor de particulas secudarias de eletrons
 		SECTRACK_P = (hd_TRACK_MOD*)malloc(pilhaPart * sizeof(hd_TRACK_MOD)); //vetor de particulas secundarias de protons
-
+		gpuErrchk(cudaMalloc((void **)&d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaPart));
 
 		//transferindo os structs da CPU para GPU
 		transfCPU_to_GPU();
@@ -53,14 +57,35 @@ int main() {
 
 			//criar vetor de particulas primarias
 			iniPRITRACK(); 
+
+			//seta o tamanho da pilha a ser simulada
+			sizeTrack = pilhaPart;
+
 			//transfere a pilha de particulas secundarias para GPU
 			transfSecTracksCPU_to_GPU();
+
+			//transfere as particulas a serem simuladas para a GPU
+    		gpuErrchk(cudaMemcpy(d_TRACK_mod, PRITRACK, sizeof(hd_TRACK_MOD)*pilhaPart, cudaMemcpyHostToDevice));
+    		gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaPart));
+			
+			//Quantidade de blocos no grid e de threads nos blocos
+			dim3 block(block_size);
+			dim3 grid((sizeTrack / block.x));
+
+			printf("%lf\n", PRITRACK[0].E);
+			printf("%lf\n", PRITRACK[1].E);
+
 			//chamada do kernel para simulacao das particulas primarias
-		//	showers<<<1,1>>>();
+			showers<<<grid,block>>>(sizeTrack);
+
 			//Aguarda o termino da simulação das particulas primarias enviadas
-			cudaDeviceSynchronize();
+			gpuErrchk(cudaDeviceSynchronize());
+
 			//resgata o pacote de particulas primarias da gpu
 			transfSecTracksGPU_to_CPU();
+			printf("\nquantidade de parricula secundaria photon %d\n\n", nTRACKS_.nSECTRACK_G);
+			printf("\nquantidade de parricula secundaria eletron %d\n\n", nTRACKS_.nSECTRACK_E);
+			printf("\nquantidade de parricula secundaria positron %d\n\n", nTRACKS_.nSECTRACK_P);
 			//while para realizar simulação das particulas secundarias
 			//verifica se o pacote de particulas secundarias esta grande o suficinete para uma simulacao
 			//Se for grande o suficiente, ondena o vetor de particulas secundarias
@@ -81,8 +106,12 @@ int main() {
 				}
 			}
 		}
-	
+
+
+		//retorna os dados da GPU para imprimir o DUMP
+		transfGPU_to_CPU();
 		memoryFreeGPU();
+		gpuErrchk(cudaFree(d_TRACK_mod));
 		free(PRITRACK);
 		free(SECTRACK_G);
 		free(SECTRACK_E);
@@ -125,15 +154,9 @@ L103:;//Imprimir resultados Finais
 		pmwrt2_(1);
 		printf("  Number of simulated showers = %.6E\n", *CNTRL_.SHN);
 		plotdose2_();
-		transfCPU_to_GPU();
-		cudaDeviceSynchronize();
-		transfGPU_to_CPU();
-		memoryFreeGPU();
-		cudaDeviceSynchronize();
 		memoryFree();
 		printf("  *** END ***\n");
 		return 0;
 	
-
 }
 
