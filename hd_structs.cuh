@@ -42,7 +42,7 @@ static const int NDXM = 201;
 static const int NDYM = 201;
 static const int NDZM = 201;
 
-static const int pilhaPart = 10240;
+static const int pilhaPart = 4096; //64*64
 
 char LINHA[200];
 char APOIO[200];
@@ -675,7 +675,7 @@ typedef struct {
 }CNT1;
 
 typedef struct {
-	double TDEBO[NB], TDEBO2[NB], DEBO[NB];
+	double TDEBO[NB], TDEBO2[NB], DEBO[pilhaPart][NB];
 } hd_CNT1;
 
 //Distribuições contínuas.
@@ -1043,7 +1043,8 @@ hd_CERSEC* d_CERSEC;
 __device__ hd_CEGRID dg_CEGRID_;
 hd_CEGRID* d_CEGRID;
 
-__device__ hd_CJUMP1 dg_CJUMP1_;
+//__device__ hd_CJUMP1 dg_CJUMP1_;
+__device__ hd_CJUMP1 dg_CJUMP1_[pilhaPart];
 hd_CJUMP1* d_CJUMP1;
 
 __device__ hd_CEIMFP dg_CEIMFP_;
@@ -1052,7 +1053,8 @@ hd_CEIMFP* d_CEIMFP;
 __device__ hd_CPIMFP dg_CPIMFP_;
 hd_CPIMFP* d_CPIMFP;
 
-__device__ hd_CJUMP0 dg_CJUMP0_;
+//__device__ hd_CJUMP0 dg_CJUMP0_;
+__device__ hd_CJUMP0 dg_CJUMP0_[pilhaPart];
 hd_CJUMP0* d_CJUMP0;
 
 __device__ hd_CGIMFP dg_CGIMFP_;

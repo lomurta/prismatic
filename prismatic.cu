@@ -22,7 +22,7 @@ using namespace std;
 int main() {
 
 	int sizeTrack = 0;
-	int block_size = 128;
+	int block_size = 64;
 
 
 	int simGPU = 1;
@@ -40,6 +40,9 @@ int main() {
 			goto L103;
 		//Resete da GPU
 		gpuErrchk(cudaDeviceReset());
+		//gpuErrchk(cudaSetDevice(0));
+		//gpuErrchk(cudaDeviceSynchronize());
+		//gpuErrchk(cudaThreadSynchronize());
 
 		//aloca vetores das particulas primarias e secundarias
 
@@ -50,19 +53,28 @@ int main() {
 		SECTRACK_P = (hd_TRACK_MOD*)malloc(pilhaPart * sizeof(hd_TRACK_MOD)); //vetor de particulas secundarias de protons
 		gpuErrchk(cudaMalloc((void **)&d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaPart));
 
-		//transferindo os structs da CPU para GPU
-		transfCPU_to_GPU();
+		bool btransfCPU_to_GPU = false;
+		
+		
 
 		while ((*CNTRL_.TSEC < *CNTRL_.TSECA) && (*CNTRL_.SHN < *CNTRL_.DSHN)){
 
-			//criar vetor de particulas primarias
+			
+			//criar vetor de particulas primarias inicial
 			iniPRITRACK(); 
 
+			//transferindo os structs da CPU para GPU
+			if (!btransfCPU_to_GPU){
+				transfCPU_to_GPU();
+				btransfCPU_to_GPU = true;
+			}
 			//seta o tamanho da pilha a ser simulada
 			sizeTrack = pilhaPart;
 
 			//transfere a pilha de particulas secundarias para GPU
 			transfSecTracksCPU_to_GPU();
+
+			printf("aqui\n");
 
 			//transfere as particulas a serem simuladas para a GPU
     		gpuErrchk(cudaMemcpy(d_TRACK_mod, PRITRACK, sizeof(hd_TRACK_MOD)*pilhaPart, cudaMemcpyHostToDevice));
@@ -83,6 +95,8 @@ int main() {
 
 			//resgata o pacote de particulas primarias da gpu
 			transfSecTracksGPU_to_CPU();
+
+		
 			printf("\nquantidade de parricula secundaria photon %d\n\n", nTRACKS_.nSECTRACK_G);
 			printf("\nquantidade de parricula secundaria eletron %d\n\n", nTRACKS_.nSECTRACK_E);
 			printf("\nquantidade de parricula secundaria positron %d\n\n", nTRACKS_.nSECTRACK_P);
@@ -92,11 +106,17 @@ int main() {
 			//chama a simulacao das particulas secundarias se for grande o suficiente	
 			//	showers<<<1,1>>>();
 
+			if (*CSOUR0_.JOBEND != 0)
+				goto L202;
+
+			timer2_(*CNTRL_.TSEC);
+
 			//verifica tempo do DUMP
 			if (*CDUMP_.LDUMP) {
 				if (*CNTRL_.TSEC - *CNTRL_.TSECAD > *CNTRL_.DUMPP) {
 					//retorna os dados da GPU para imprimir o DUMP
 					transfGPU_to_CPU();
+					memoryFreeGPU();
 					cudaDeviceSynchronize();
 					*CNTRL_.TSIM = *CNTRL_.TSIM + cputim2_() - *CNTRL_.CPUT0;
 					pmwrt2_(-1);
@@ -107,15 +127,18 @@ int main() {
 			}
 		}
 
+L202:;
+		*CNTRL_.TSIM = *CNTRL_.TSIM + cputim2_() - *CNTRL_.CPUT0;
 
 		//retorna os dados da GPU para imprimir o DUMP
 		transfGPU_to_CPU();
 		memoryFreeGPU();
 		gpuErrchk(cudaFree(d_TRACK_mod));
-		free(PRITRACK);
-		free(SECTRACK_G);
-		free(SECTRACK_E);
-		free(SECTRACK_P);
+					free(PRITRACK);
+			free(SECTRACK_G);
+			free(SECTRACK_E);
+			free(SECTRACK_P);
+		
 
 
 	}else{ //Simulação na CPU
