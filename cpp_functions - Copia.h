@@ -518,15 +518,13 @@ extern "C" {
 
 	double cputim2_();
 
-	void memoryAllocCPU();
+	void inicializarStructs();
 
-	void memoryFreeCPU();
+	void memoryFree();
 
 	void transfCPU_to_GPU();
 
     void transfGPU_to_CPU();
-
-	void memoryAllocGPU();
 
     void memoryFreeGPU();
 
@@ -539,8 +537,6 @@ extern "C" {
 	void transfSecTracksCPU_to_GPU();
 
 	void transfSecTracksGPU_to_CPU();
-
-	void prepVetorTracksSec(hd_TRACK_MOD *vTrack, int &N);
 
 
 
@@ -24379,7 +24375,7 @@ double cputim2_() {
 	return (double)(clock() - start) / CLOCKS_PER_SEC;
 }
 
-void memoryAllocCPU() {
+void inicializarStructs() {
 
 
 	/*se o seu compilador suporta arrays de comprimento variável ou se colsé uma constante de tempo de compilação,
@@ -25314,7 +25310,7 @@ void memoryAllocCPU() {
 
 }
 
-void memoryFreeCPU() {
+void memoryFree() {
 
 	printf("  Liberando a Memoria alocada\n");
 
@@ -26110,6 +26106,7 @@ void transfCPU_to_GPU(){
      */
 
     //CEELDB
+    gpuErrchk(cudaMalloc((void **)&d_CEELDB, sizeof(hd_CEELDB)));
     gpuErrchk(cudaMemcpy(d_CEELDB->XSE, CEELDB_.XSE, sizeof(double)*MAXMAT*NEGP*NP, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_CEELDB->PSE, CEELDB_.PSE, sizeof(double)*MAXMAT*NEGP*NP, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_CEELDB->ASE, CEELDB_.ASE, sizeof(double)*MAXMAT*NEGP*NP, cudaMemcpyHostToDevice));
@@ -26119,6 +26116,7 @@ void transfCPU_to_GPU(){
     gpuErrchk(cudaMemcpyToSymbol(dg_CEELDB_, d_CEELDB, sizeof(hd_CEELDB)));
 
     //SECST
+    gpuErrchk(cudaMalloc((void **)&d_SECST, sizeof(hd_SECST)));
     gpuErrchk(cudaMemcpy(d_SECST->ES, SECST_.ES, sizeof(double)*NMS, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_SECST->XS, SECST_.XS, sizeof(double)*NMS, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_SECST->YS, SECST_.YS, sizeof(double)*NMS, cudaMemcpyHostToDevice));
@@ -26140,6 +26138,7 @@ void transfCPU_to_GPU(){
     gpuErrchk(cudaMemcpyToSymbol(dg_SECST_, d_SECST, sizeof(hd_SECST)));
 
     //PENGEOM_MOD
+    gpuErrchk(cudaMalloc((void **)&d_PENGEOM_mod, sizeof(hd_PENGEOM_MOD)));
     gpuErrchk(cudaMemcpy(d_PENGEOM_mod->BALIAS, PENGEOM_mod_.BALIAS, sizeof(char)*NB*5, cudaMemcpyHostToDevice));
     //gpuErrchk(cudaMemcpy(&d_PENGEOM_mod->DSTOT, PENGEOM_mod_.DSTOT, sizeof(double), cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_PENGEOM_mod->MATER, PENGEOM_mod_.MATER, sizeof(int)*NB, cudaMemcpyHostToDevice));
@@ -26150,7 +26149,7 @@ void transfCPU_to_GPU(){
     gpuErrchk(cudaMemcpyToSymbol(dg_PENGEOM_mod_, d_PENGEOM_mod, sizeof(hd_PENGEOM_MOD)));
 
     //GCONE
-	
+    gpuErrchk(cudaMalloc((void **)&d_CGCONE, sizeof(hd_CGCONE)));
     gpuErrchk(cudaMemcpy(&d_CGCONE->CPCT, CGCONE_.CPCT, sizeof(double), cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(&d_CGCONE->CPST, CGCONE_.CPST, sizeof(double), cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(&d_CGCONE->SPCT, CGCONE_.SPCT, sizeof(double), cudaMemcpyHostToDevice));
@@ -26162,7 +26161,7 @@ void transfCPU_to_GPU(){
     gpuErrchk(cudaMemcpyToSymbol(dg_CGCONE_, d_CGCONE, sizeof(hd_CGCONE)));
 
     //QSURF
-	
+    gpuErrchk(cudaMalloc((void **)&d_QSURF, sizeof(hd_QSURF)));
     gpuErrchk(cudaMemcpy(d_QSURF->AXX, QSURF_.AXX, sizeof(double)*NS, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_QSURF->AXY, QSURF_.AXY, sizeof(double)*NS, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_QSURF->AXZ, QSURF_.AXZ, sizeof(double)*NS, cudaMemcpyHostToDevice));
@@ -26178,7 +26177,7 @@ void transfCPU_to_GPU(){
     gpuErrchk(cudaMemcpyToSymbol(dg_QSURF_, d_QSURF, sizeof(hd_QSURF)));
 
     //QTREE
-	
+    gpuErrchk(cudaMalloc((void **)&d_QTREE, sizeof(hd_QTREE)));
     gpuErrchk(cudaMemcpy(&d_QTREE->NBODYS,QTREE_.NBODYS, sizeof(int), cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_QTREE->KMOTH, QTREE_.KMOTH, sizeof(int)*NB, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_QTREE->KDGHT, QTREE_.KDGHT, sizeof(int)*NB*NXG, cudaMemcpyHostToDevice));
@@ -26189,13 +26188,13 @@ void transfCPU_to_GPU(){
     gpuErrchk(cudaMemcpyToSymbol(dg_QTREE_, d_QTREE, sizeof(hd_QTREE)));
 
     //RSEED
-	
+    gpuErrchk(cudaMalloc((void **)&d_RSEED, sizeof(hd_RSEED)));
     gpuErrchk(cudaMemcpy(&d_RSEED->ISEED1,RSEED_.ISEED1, sizeof(int), cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(&d_RSEED->ISEED2,RSEED_.ISEED2, sizeof(int), cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpyToSymbol(dg_RSEED_, d_RSEED, sizeof(hd_RSEED)));
 
     //CIMDET
-	
+    gpuErrchk(cudaMalloc((void **)&d_CIMDET, sizeof(hd_CIMDET)));
     gpuErrchk(cudaMemcpy(d_CIMDET->EL, CIMDET_.EL, sizeof(double)*NIDM, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_CIMDET->EU, CIMDET_.EU, sizeof(double)*NIDM, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_CIMDET->BSE, CIMDET_.BSE, sizeof(double)*NIDM, cudaMemcpyHostToDevice));
@@ -26238,12 +26237,12 @@ void transfCPU_to_GPU(){
     gpuErrchk(cudaMemcpyToSymbol(dg_CIMDET_, d_CIMDET, sizeof(hd_CIMDET)));
 
     //CERSEC
-	
+    gpuErrchk(cudaMalloc((void **)&d_CERSEC, sizeof(hd_CERSEC)));
     gpuErrchk(cudaMemcpy(&d_CERSEC->IERSEC,CERSEC_.IERSEC, sizeof(int), cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpyToSymbol(dg_CERSEC_, d_CERSEC, sizeof(hd_CERSEC)));
 
     //CEGRID
-	
+    gpuErrchk(cudaMalloc((void **)&d_CEGRID, sizeof(hd_CEGRID)));
     gpuErrchk(cudaMemcpy(&d_CEGRID->EMIN,CEGRID_.EMIN, sizeof(double), cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(&d_CEGRID->EL,CEGRID_.EL, sizeof(double), cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(&d_CEGRID->EU,CEGRID_.EU, sizeof(double), cudaMemcpyHostToDevice));
@@ -26268,12 +26267,12 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CJUMP1_, d_CJUMP1, sizeof(hd_CJUMP1)));*/
 
 	//CJUMP1
-	
+	gpuErrchk(cudaMalloc((void **)&d_CJUMP1, sizeof(hd_CJUMP1)*pilhaPart));
    // gpuErrchk(cudaMemcpy(d_CJUMP1, CJUMP1_, sizeof(hd_CJUMP1)*pilhaPart, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpyToSymbol(dg_CJUMP1_, d_CJUMP1, sizeof(hd_CJUMP1)*pilhaPart));
 
 	//CEIMFP
-	
+	gpuErrchk(cudaMalloc((void **)&d_CEIMFP, sizeof(hd_CEIMFP)));
     gpuErrchk(cudaMemcpy(d_CEIMFP->SEHEL,CEIMFP_.SEHEL, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CEIMFP->SEHIN,CEIMFP_.SEHIN, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CEIMFP->SEISI,CEIMFP_.SEISI, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
@@ -26295,7 +26294,7 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CEIMFP_, d_CEIMFP, sizeof(hd_CEIMFP)));
 
 	//CPIMFP
-	
+	gpuErrchk(cudaMalloc((void **)&d_CPIMFP, sizeof(hd_CPIMFP)));
     gpuErrchk(cudaMemcpy(d_CPIMFP->SPHEL,CPIMFP_.SPHEL, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CPIMFP->SPHIN,CPIMFP_.SPHIN, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CPIMFP->SPISI,CPIMFP_.SPISI, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
@@ -26329,12 +26328,12 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CJUMP0_, d_CJUMP0, sizeof(hd_CJUMP0)));*/
 
 	//CJUMP0
-	
+	gpuErrchk(cudaMalloc((void **)&d_CJUMP0, sizeof(hd_CJUMP0)*pilhaPart));
    // gpuErrchk(cudaMemcpy(d_CJUMP1, CJUMP1_, sizeof(hd_CJUMP1)*pilhaPart, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpyToSymbol(dg_CJUMP0_, d_CJUMP0, sizeof(hd_CJUMP0)*pilhaPart));
 
 	//CGIMFP
-	
+	gpuErrchk(cudaMalloc((void **)&d_CGIMFP, sizeof(hd_CGIMFP)));
     gpuErrchk(cudaMemcpy(d_CGIMFP->SGRA,CGIMFP_.SGRA, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CGIMFP->SGCO,CGIMFP_.SGCO, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CGIMFP->SGPH,CGIMFP_.SGPH, sizeof(double)*NEGP*MAXMAT, cudaMemcpyHostToDevice));
@@ -26343,12 +26342,12 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CGIMFP_, d_CGIMFP, sizeof(hd_CGIMFP)));
 
 	//CHIST
-	
+	gpuErrchk(cudaMalloc((void **)&d_CHIST, sizeof(hd_CHIST)));
 	gpuErrchk(cudaMemcpy(d_CHIST->ILBA,CHIST_.ILBA, sizeof(int)*5, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(dg_CHIST_, d_CHIST, sizeof(hd_CHIST)));
 
 	//COMPOS
-	
+	gpuErrchk(cudaMalloc((void **)&d_COMPOS, sizeof(hd_COMPOS)));
 	gpuErrchk(cudaMemcpy(d_COMPOS->STF,COMPOS_.STF, sizeof(double)*30*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_COMPOS->ZT,COMPOS_.ZT, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_COMPOS->AT,COMPOS_.AT, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
@@ -26359,7 +26358,7 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_COMPOS_, d_COMPOS, sizeof(hd_COMPOS)));
 
 	//CADATA
-	
+	gpuErrchk(cudaMalloc((void **)&d_CADATA, sizeof(hd_CADATA)));
 	gpuErrchk(cudaMemcpy(d_CADATA->ATW,CADATA_.ATW, sizeof(double)*99, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CADATA->EPX,CADATA_.EPX, sizeof(double)*99, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CADATA->RSCR,CADATA_.RSCR, sizeof(double)*99, cudaMemcpyHostToDevice));
@@ -26374,7 +26373,7 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CADATA_, d_CADATA, sizeof(hd_CADATA)));
 
 	//CEIN
-	
+	gpuErrchk(cudaMalloc((void **)&d_CEIN, sizeof(hd_CEIN)));
 	gpuErrchk(cudaMemcpy(d_CEIN->EXPOT,CEIN_.EXPOT, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CEIN->OP2,CEIN_.OP2, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CEIN->F,CEIN_.F, sizeof(double)*MAXMAT*NO, cudaMemcpyHostToDevice));
@@ -26386,7 +26385,7 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CEIN_, d_CEIN, sizeof(hd_CEIN)));
 
 	//CGCO
-	
+	gpuErrchk(cudaMalloc((void **)&d_CGCO, sizeof(hd_CGCO)));
 	gpuErrchk(cudaMemcpy(d_CGCO->FCO,CGCO_.FCO, sizeof(double)*MAXMAT*NOCO, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CGCO->UICO,CGCO_.UICO, sizeof(double)*MAXMAT*NOCO, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CGCO->FJ0,CGCO_.FJ0, sizeof(double)*MAXMAT*NOCO, cudaMemcpyHostToDevice));
@@ -26397,7 +26396,7 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CGCO_, d_CGCO, sizeof(hd_CGCO)));
 
 	//CEBR
-	
+	gpuErrchk(cudaMalloc((void **)&d_CEBR, sizeof(hd_CEBR)));
 	gpuErrchk(cudaMemcpy(d_CEBR->WB,CEBR_.WB, sizeof(double)*NBW, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CEBR->PBCUT,CEBR_.PBCUT, sizeof(double)*MAXMAT*NEGP, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CEBR->WBCUT,CEBR_.WBCUT, sizeof(double)*MAXMAT*NEGP, cudaMemcpyHostToDevice));
@@ -26408,7 +26407,7 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CEBR_, d_CEBR, sizeof(hd_CEBR)));
 
 	//CELSEP
-	
+	gpuErrchk(cudaMalloc((void **)&d_CELSEP, sizeof(hd_CELSEP)));
 	gpuErrchk(cudaMemcpy(d_CELSEP->EELMAX,CELSEP_.EELMAX, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CELSEP->PELMAX,CELSEP_.PELMAX, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CELSEP->RNDCED,CELSEP_.RNDCED, sizeof(double)*MAXMAT*NEGP, cudaMemcpyHostToDevice));
@@ -26416,26 +26415,26 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CELSEP_, d_CELSEP, sizeof(hd_CELSEP)));
 
 	//CECUTR
-	
+	gpuErrchk(cudaMalloc((void **)&d_CECUTR, sizeof(hd_CECUTR)));
 	gpuErrchk(cudaMemcpy(d_CECUTR->ECUTR,CECUTR_.ECUTR, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(dg_CECUTR_, d_CECUTR, sizeof(hd_CECUTR)));
 
 	//CESIAC
-	
+	gpuErrchk(cudaMalloc((void **)&d_CESIAC, sizeof(hd_CESIAC)));
 	gpuErrchk(cudaMemcpy(d_CESIAC->ESIAC,CESIAC_.ESIAC, sizeof(double)*MAXMAT*NEGP*NO, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CESIAC->IESI,CESIAC_.IESI, sizeof(int)*MAXMAT*NO, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CESIAC->NESI,CESIAC_.NESI, sizeof(int)*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(dg_CESIAC_, d_CESIAC, sizeof(hd_CESIAC)));
 
 	//CEINAC
-	
+	gpuErrchk(cudaMalloc((void **)&d_CEINAC, sizeof(hd_CEINAC)));
 	gpuErrchk(cudaMemcpy(d_CEINAC->EINAC,CEINAC_.EINAC, sizeof(double)*MAXMAT*NEGP*NO, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CEINAC->IEIN,CEINAC_.IEIN, sizeof(int)*MAXMAT*NO, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CEINAC->NEIN,CEINAC_.NEIN, sizeof(int)*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(dg_CEINAC_, d_CEINAC, sizeof(hd_CEINAC)));
 
 	//CBRANG
-	
+	gpuErrchk(cudaMalloc((void **)&d_CBRANG, sizeof(hd_CBRANG)));
 	gpuErrchk(cudaMemcpy(d_CBRANG->BET,CBRANG_.BET, sizeof(double)*6, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CBRANG->BK,CBRANG_.BK, sizeof(double)*21, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CBRANG->BP1,CBRANG_.BP1, sizeof(double)*4*21*6*MAXMAT, cudaMemcpyHostToDevice));
@@ -26444,7 +26443,7 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CBRANG_, d_CBRANG, sizeof(hd_CBRANG)));
 
 	//CRELAX
-	
+	gpuErrchk(cudaMalloc((void **)&d_CRELAX, sizeof(hd_CRELAX)));
 	gpuErrchk(cudaMemcpy(d_CRELAX->P,CRELAX_.P, sizeof(double)*NRX, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CRELAX->ET,CRELAX_.ET, sizeof(double)*NRX, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CRELAX->F,CRELAX_.F, sizeof(double)*NRX, cudaMemcpyHostToDevice));
@@ -26459,7 +26458,7 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CRELAX_, d_CRELAX, sizeof(hd_CRELAX)));
 
 	//CGRA01
-	
+	gpuErrchk(cudaMalloc((void **)&d_CGRA01, sizeof(hd_CGRA01)));
 	gpuErrchk(cudaMemcpy(d_CGRA01->FF,CGRA01_.FF, sizeof(double)*NQ*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CGRA01->ERA,CGRA01_.ERA, sizeof(double)*NEX, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CGRA01->XSRA,CGRA01_.XSRA, sizeof(double)*NEX*MAXMAT, cudaMemcpyHostToDevice));
@@ -26469,7 +26468,7 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CGRA01_, d_CGRA01, sizeof(hd_CGRA01)));
 
 	//CGRA03
-	
+	gpuErrchk(cudaMalloc((void **)&d_CGRA03, sizeof(hd_CGRA03)));
 	gpuErrchk(cudaMemcpy(d_CGRA03->QRA,CGRA03_.QRA, sizeof(double)*NP2*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CGRA03->PRA,CGRA03_.PRA, sizeof(double)*NP2*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CGRA03->DPRA,CGRA03_.DPRA, sizeof(double)*NP2*MAXMAT, cudaMemcpyHostToDevice));
@@ -26481,7 +26480,7 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CGRA03_, d_CGRA03, sizeof(hd_CGRA03)));
 
 	//CGPH00
-	
+	gpuErrchk(cudaMalloc((void **)&d_CGPH00, sizeof(hd_CGPH00)));
 	gpuErrchk(cudaMemcpy(d_CGPH00->EPH,CGPH00_.EPH, sizeof(double)*NTP, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CGPH00->XPH,CGPH00_.XPH, sizeof(double)*NTP*17, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CGPH00->IPHF,CGPH00_.IPHF, sizeof(int)*99, cudaMemcpyHostToDevice));
@@ -26491,19 +26490,19 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CGPH00_, d_CGPH00, sizeof(hd_CGPH00)));
 
 	//CGPP00
-	
+	gpuErrchk(cudaMalloc((void **)&d_CGPP00, sizeof(hd_CGPP00)));
 	gpuErrchk(cudaMemcpy(d_CGPP00->ZEQPP,CGPP00_.ZEQPP, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CGPP00->F0,CGPP00_.F0, sizeof(double)*MAXMAT*2, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CGPP00->BCB,CGPP00_.BCB, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(dg_CGPP00_, d_CGPP00, sizeof(hd_CGPP00)));
 
 	//CGPP01
-	
+	gpuErrchk(cudaMalloc((void **)&d_CGPP01, sizeof(hd_CGPP01)));
 	gpuErrchk(cudaMemcpy(d_CGPP01->TRIP,CGPP01_.TRIP, sizeof(double)*MAXMAT*NEGP, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(dg_CGPP01_, d_CGPP01, sizeof(hd_CGPP01)));
 
 	//CPELDB
-	
+	gpuErrchk(cudaMalloc((void **)&d_CPELDB, sizeof(hd_CPELDB)));
 	gpuErrchk(cudaMemcpy(d_CPELDB->XSP,CPELDB_.XSP, sizeof(double)*MAXMAT*NEGP*NP, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CPELDB->PSP,CPELDB_.PSP, sizeof(double)*MAXMAT*NEGP*NP, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CPELDB->ASP,CPELDB_.ASP, sizeof(double)*MAXMAT*NEGP*NP, cudaMemcpyHostToDevice));
@@ -26513,14 +26512,14 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CPELDB_, d_CPELDB, sizeof(hd_CPELDB)));
 
 	//CPINAC
-	
+	gpuErrchk(cudaMalloc((void **)&d_CPINAC, sizeof(hd_CPINAC)));
 	gpuErrchk(cudaMemcpy(d_CPINAC->PINAC,CPINAC_.PINAC, sizeof(double)*MAXMAT*NEGP*NO, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CPINAC->IPIN,CPINAC_.IPIN, sizeof(int)*MAXMAT*NO, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CPINAC->NPIN,CPINAC_.NPIN, sizeof(int)*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(dg_CPINAC_, d_CPINAC, sizeof(hd_CPINAC)));
 
 	//CPSIAC
-	
+	gpuErrchk(cudaMalloc((void **)&d_CPSIAC, sizeof(hd_CPSIAC)));
 	gpuErrchk(cudaMemcpy(d_CPSIAC->PSIAC,CPSIAC_.PSIAC, sizeof(double)*MAXMAT*NEGP*NO, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CPSIAC->IPSI,CPSIAC_.IPSI, sizeof(int)*MAXMAT*NO, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CPSIAC->NPSI,CPSIAC_.NPSI, sizeof(int)*MAXMAT, cudaMemcpyHostToDevice));
@@ -26528,7 +26527,7 @@ void transfCPU_to_GPU(){
 
 
 	//CENANG
-	
+	gpuErrchk(cudaMalloc((void **)&d_CENANG, sizeof(hd_CENANG)));
 	gpuErrchk(cudaMemcpy(&d_CENANG->EL,CENANG_.EL, sizeof(double), cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(&d_CENANG->EU,CENANG_.EU, sizeof(double), cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(&d_CENANG->THL,CENANG_.THL, sizeof(double), cudaMemcpyHostToDevice));
@@ -26555,7 +26554,7 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CENANG_, d_CENANG, sizeof(hd_CENANG)));
 
 	//CENDET
-	
+	gpuErrchk(cudaMalloc((void **)&d_CENDET, sizeof(hd_CENDET)));
 	gpuErrchk(cudaMemcpy(d_CENDET->EL,CENDET_.EL, sizeof(double)*NIDM, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CENDET->EU,CENDET_.EU, sizeof(double)*NIDM, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CENDET->BSE,CENDET_.BSE, sizeof(double)*NIDM, cudaMemcpyHostToDevice));
@@ -26569,7 +26568,7 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CENDET_, d_CENDET, sizeof(hd_CENDET)));
 
 	//PENELOPE_MOD
-	
+	gpuErrchk(cudaMalloc((void **)&d_PENELOPE_mod, sizeof(hd_PENELOPE_MOD)));
 	gpuErrchk(cudaMemcpy(d_PENELOPE_mod->EABS,PENELOPE_mod_.EABS, sizeof(double)*3*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_PENELOPE_mod->C1,PENELOPE_mod_.C1, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_PENELOPE_mod->C2,PENELOPE_mod_.C2, sizeof(double)*MAXMAT, cudaMemcpyHostToDevice));
@@ -26607,13 +26606,13 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, d_TRACK_mod, sizeof(hd_TRACK_MOD)));*/
 
 	//QBODY
-	
+	gpuErrchk(cudaMalloc((void **)&d_QBODY, sizeof(hd_QBODY)));
 	gpuErrchk(cudaMemcpy(d_QBODY->KBODY,QBODY_.KBODY, sizeof(int)*NXG*NB, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_QBODY->KBOMO,QBODY_.KBOMO, sizeof(int)*NB, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(dg_QBODY_, d_QBODY, sizeof(hd_QBODY)));
 
 	//CDOSE1
-	
+	gpuErrchk(cudaMalloc((void **)&d_CDOSE1, sizeof(hd_CDOSE1)));
 	gpuErrchk(cudaMemcpy(d_CDOSE1->DOSE,CDOSE1_.DOSE, sizeof(double)*NDZM*NDYM*NDXM, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CDOSE1->DOSE2,CDOSE1_.DOSE2, sizeof(double)*NDZM*NDYM*NDXM, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CDOSE1->DOSEP,CDOSE1_.DOSEP, sizeof(double)*NDZM*NDYM*NDXM, cudaMemcpyHostToDevice));
@@ -26622,7 +26621,7 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CDOSE1_, d_CDOSE1, sizeof(hd_CDOSE1)));
 
 	//CDOSE2
-	
+	gpuErrchk(cudaMalloc((void **)&d_CDOSE2, sizeof(hd_CDOSE2)));
 	gpuErrchk(cudaMemcpy(d_CDOSE2->DDOSE,CDOSE2_.DDOSE, sizeof(double)*NDZM, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CDOSE2->DDOSE2,CDOSE2_.DDOSE2, sizeof(double)*NDZM, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CDOSE2->DDOSEP,CDOSE2_.DDOSEP, sizeof(double)*NDZM, cudaMemcpyHostToDevice));
@@ -26631,7 +26630,7 @@ void transfCPU_to_GPU(){
 
 
 	//CDOSE3
-	
+	gpuErrchk(cudaMalloc((void **)&d_CDOSE3, sizeof(hd_CDOSE3)));
 	gpuErrchk(cudaMemcpy(d_CDOSE3->DXL,CDOSE3_.DXL, sizeof(double)*3, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CDOSE3->DXU,CDOSE3_.DXU, sizeof(double)*3, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CDOSE3->BDOSE,CDOSE3_.BDOSE, sizeof(double)*3, cudaMemcpyHostToDevice));
@@ -26640,12 +26639,12 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CDOSE3_, d_CDOSE3, sizeof(hd_CDOSE3)));
 
 	//CDOSE4
-	
+	gpuErrchk(cudaMalloc((void **)&d_CDOSE4, sizeof(hd_CDOSE4)));
 	gpuErrchk(cudaMemcpy(d_CDOSE4->VMASS,CDOSE4_.VMASS, sizeof(double)*NDZM*NDYM*NDXM, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(dg_CDOSE4_, d_CDOSE4, sizeof(hd_CDOSE4)));
 
 	//CRNDG3
-	
+	gpuErrchk(cudaMalloc((void **)&d_CRNDG3, sizeof(hd_CRNDG3)));
 	gpuErrchk(cudaMemcpy(d_CRNDG3->X,CRNDG3_.X, sizeof(double)*NR, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CRNDG3->A,CRNDG3_.A, sizeof(double)*NR, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CRNDG3->B,CRNDG3_.B, sizeof(double)*NR, cudaMemcpyHostToDevice));
@@ -26656,33 +26655,33 @@ void transfCPU_to_GPU(){
 
 
 	//CNT0
-	
+	gpuErrchk(cudaMalloc((void **)&d_CNT0, sizeof(hd_CNT0)));
 	gpuErrchk(cudaMemcpy(d_CNT0->PRIM,CNT0_.PRIM, sizeof(double)*3, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CNT0->PRIM2,CNT0_.PRIM2, sizeof(double)*3, cudaMemcpyHostToDevice));
-	//gpuErrchk(cudaMemcpy(d_CNT0->DPRIM,CNT0_.DPRIM, sizeof(double)*3, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CNT0->DPRIM,CNT0_.DPRIM, sizeof(double)*3, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CNT0->SEC,CNT0_.SEC, sizeof(double)*3*3, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CNT0->SEC2,CNT0_.SEC2, sizeof(double)*3*3, cudaMemcpyHostToDevice));
-	//gpuErrchk(cudaMemcpy(d_CNT0->DSEC,CNT0_.DSEC, sizeof(double)*3*3, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CNT0->DSEC,CNT0_.DSEC, sizeof(double)*3*3, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CNT0->AVW,CNT0_.AVW, sizeof(double)*2, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CNT0->AVW2,CNT0_.AVW2, sizeof(double)*2, cudaMemcpyHostToDevice));
-	//gpuErrchk(cudaMemcpy(d_CNT0->DAVW,CNT0_.DAVW, sizeof(double)*2, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CNT0->DAVW,CNT0_.DAVW, sizeof(double)*2, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CNT0->AVA,CNT0_.AVA, sizeof(double)*2, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CNT0->AVA2,CNT0_.AVA2, sizeof(double)*2, cudaMemcpyHostToDevice));
-	//gpuErrchk(cudaMemcpy(d_CNT0->DAVA,CNT0_.DAVA, sizeof(double)*2, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CNT0->DAVA,CNT0_.DAVA, sizeof(double)*2, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CNT0->AVE,CNT0_.AVE, sizeof(double)*2, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CNT0->AVE2,CNT0_.AVE2, sizeof(double)*2, cudaMemcpyHostToDevice));
-	//gpuErrchk(cudaMemcpy(d_CNT0->DAVE,CNT0_.DAVE, sizeof(double)*2, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_CNT0->DAVE,CNT0_.DAVE, sizeof(double)*2, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(dg_CNT0_, d_CNT0, sizeof(hd_CNT0)));
 
 	//CNT1
-	
+	gpuErrchk(cudaMalloc((void **)&d_CNT1, sizeof(hd_CNT1)));
 	gpuErrchk(cudaMemcpy(d_CNT1->TDEBO,CNT1_.TDEBO, sizeof(double)*NB, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CNT1->TDEBO2,CNT1_.TDEBO2, sizeof(double)*NB, cudaMemcpyHostToDevice));
 	//gpuErrchk(cudaMemcpy(d_CNT1->DEBO,CNT1_.DEBO, sizeof(double)*NB, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(dg_CNT1_, d_CNT1, sizeof(hd_CNT1)));
 
 	//CNT3
-	
+	gpuErrchk(cudaMalloc((void **)&d_CNT3, sizeof(hd_CNT3)));
 	gpuErrchk(cudaMemcpy(d_CNT3->SEDS,CNT3_.SEDS, sizeof(double)*3*NSEM, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CNT3->SEDS2,CNT3_.SEDS2, sizeof(double)*3*NSEM, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(&d_CNT3->DSDE,CNT3_.DSDE, sizeof(double), cudaMemcpyHostToDevice));
@@ -26691,7 +26690,7 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CNT3_, d_CNT3, sizeof(hd_CNT3)));
 
 	//CNT4
-	
+	gpuErrchk(cudaMalloc((void **)&d_CNT4, sizeof(hd_CNT4)));
 	gpuErrchk(cudaMemcpy(&d_CNT4->RLAST,CNT4_.RLAST, sizeof(double), cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(&d_CNT4->RWRITE,CNT4_.RWRITE, sizeof(double), cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CNT4->IDCUT,CNT4_.IDCUT, sizeof(int)*NIDM, cudaMemcpyHostToDevice));
@@ -26703,19 +26702,19 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CNT4_, d_CNT4, sizeof(hd_CNT4)));
 
 	//CNT5
-	
+	gpuErrchk(cudaMalloc((void **)&d_CNT5, sizeof(hd_CNT5)));
 	gpuErrchk(cudaMemcpy(d_CNT5->DEDE,CNT5_.DEDE, sizeof(double)*NIDM, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CNT5->KBDE,CNT5_.KBDE, sizeof(int)*NB, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(&d_CNT5->NED,CNT5_.NED, sizeof(int), cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(dg_CNT5_, d_CNT5, sizeof(hd_CNT5)));
 
 	//CNT6
-	
+	gpuErrchk(cudaMalloc((void **)&d_CNT6, sizeof(hd_CNT6)));
 	gpuErrchk(cudaMemcpy(&d_CNT6->LDOSEM,CNT6_.LDOSEM, sizeof(bool), cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(dg_CNT6_, d_CNT6, sizeof(hd_CNT6)));
 	
 	//CNTRL
-	
+	gpuErrchk(cudaMalloc((void **)&d_CNTRL, sizeof(hd_CNTRL)));
 	//gpuErrchk(cudaMemcpy(&d_CNTRL->TSIM,CNTRL_.TSIM, sizeof(double), cudaMemcpyHostToDevice));
 	//gpuErrchk(cudaMemcpy(&d_CNTRL->TSEC,CNTRL_.TSEC, sizeof(double), cudaMemcpyHostToDevice));
 	//gpuErrchk(cudaMemcpy(&d_CNTRL->TSECA,CNTRL_.TSECA, sizeof(double), cudaMemcpyHostToDevice));
@@ -26728,13 +26727,13 @@ void transfCPU_to_GPU(){
 	gpuErrchk(cudaMemcpyToSymbol(dg_CNTRL_, d_CNTRL, sizeof(hd_CNTRL)));
 
 	//CSPGEO
-	
+	gpuErrchk(cudaMalloc((void **)&d_CSPGEO, sizeof(hd_CSPGEO)));
 	gpuErrchk(cudaMemcpy(d_CSPGEO->DSMAX,CSPGEO_.DSMAX, sizeof(double)*NB, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CSPGEO->EABSB,CSPGEO_.EABSB, sizeof(double)*NB*3, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(dg_CSPGEO_, d_CSPGEO, sizeof(hd_CSPGEO)));
 
 	//CXRSPL
-	
+	gpuErrchk(cudaMalloc((void **)&d_CXRSPL, sizeof(hd_CXRSPL)));
 	gpuErrchk(cudaMemcpy(d_CXRSPL->IXRSPL,CXRSPL_.IXRSPL, sizeof(int)*NBV, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CXRSPL->ILBA,CXRSPL_.ILBA, sizeof(int)*5, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpy(d_CXRSPL->LXRSPL,CXRSPL_.LXRSPL, sizeof(bool)*NBV, cudaMemcpyHostToDevice));
@@ -26971,7 +26970,7 @@ void transfGPU_to_CPU(){
 
 	//CJUMP0
 	gpuErrchk(cudaMemcpyFromSymbol(d_CJUMP0, dg_CJUMP0_, sizeof(hd_CJUMP0)*pilhaPart));
-	//gpuErrchk(cudaMemcpy(CJUMP0_, d_CJUMP0,  sizeof(hd_CJUMP0)*pilhaPart, cudaMemcpyDeviceToHost));
+	//gpuErrchk(cudaMemcpy(CJUMP1_, d_CJUMP1,  sizeof(hd_CJUMP1)*pilhaPart, cudaMemcpyDeviceToHost));
 
 
 
@@ -27269,19 +27268,19 @@ void transfGPU_to_CPU(){
 	gpuErrchk(cudaMemcpyFromSymbol(d_CNT0, dg_CNT0_, sizeof(hd_CNT0)));
 	gpuErrchk(cudaMemcpy(CNT0_.PRIM,d_CNT0->PRIM, sizeof(double)*3, cudaMemcpyDeviceToHost));
 	gpuErrchk(cudaMemcpy(CNT0_.PRIM2,d_CNT0->PRIM2, sizeof(double)*3, cudaMemcpyDeviceToHost));
-	//gpuErrchk(cudaMemcpy(CNT0_.DPRIM,d_CNT0->DPRIM, sizeof(double)*3, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CNT0_.DPRIM,d_CNT0->DPRIM, sizeof(double)*3, cudaMemcpyDeviceToHost));
 	gpuErrchk(cudaMemcpy(CNT0_.SEC,d_CNT0->SEC, sizeof(double)*3*3, cudaMemcpyDeviceToHost));
 	gpuErrchk(cudaMemcpy(CNT0_.SEC2,d_CNT0->SEC2, sizeof(double)*3*3, cudaMemcpyDeviceToHost));
-	//gpuErrchk(cudaMemcpy(CNT0_.DSEC,d_CNT0->DSEC, sizeof(double)*3*3, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CNT0_.DSEC,d_CNT0->DSEC, sizeof(double)*3*3, cudaMemcpyDeviceToHost));
 	gpuErrchk(cudaMemcpy(CNT0_.AVW,d_CNT0->AVW, sizeof(double)*2, cudaMemcpyDeviceToHost));
 	gpuErrchk(cudaMemcpy(CNT0_.AVW2, d_CNT0->AVW2,sizeof(double)*2, cudaMemcpyDeviceToHost));
-	//gpuErrchk(cudaMemcpy(CNT0_.DAVW,d_CNT0->DAVW, sizeof(double)*2, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CNT0_.DAVW,d_CNT0->DAVW, sizeof(double)*2, cudaMemcpyDeviceToHost));
 	gpuErrchk(cudaMemcpy(CNT0_.AVA,d_CNT0->AVA, sizeof(double)*2, cudaMemcpyDeviceToHost));
 	gpuErrchk(cudaMemcpy(CNT0_.AVA2,d_CNT0->AVA2, sizeof(double)*2, cudaMemcpyDeviceToHost));
-	//gpuErrchk(cudaMemcpy(CNT0_.DAVA,d_CNT0->DAVA, sizeof(double)*2, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CNT0_.DAVA,d_CNT0->DAVA, sizeof(double)*2, cudaMemcpyDeviceToHost));
 	gpuErrchk(cudaMemcpy(CNT0_.AVE,d_CNT0->AVE, sizeof(double)*2, cudaMemcpyDeviceToHost));
 	gpuErrchk(cudaMemcpy(CNT0_.AVE2,d_CNT0->AVE2, sizeof(double)*2, cudaMemcpyDeviceToHost));
-	//gpuErrchk(cudaMemcpy(CNT0_.DAVE,d_CNT0->DAVE, sizeof(double)*2, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(CNT0_.DAVE,d_CNT0->DAVE, sizeof(double)*2, cudaMemcpyDeviceToHost));
 
 	//CNT1
 	gpuErrchk(cudaMemcpyFromSymbol(d_CNT1, dg_CNT1_, sizeof(hd_CNT1)));
@@ -27342,78 +27341,18 @@ void transfGPU_to_CPU(){
 	gpuErrchk(cudaMemcpy(CXRSPL_.ILBA,d_CXRSPL->ILBA, sizeof(int)*5, cudaMemcpyDeviceToHost));
 	gpuErrchk(cudaMemcpy(CXRSPL_.LXRSPL,d_CXRSPL->LXRSPL, sizeof(bool)*NBV, cudaMemcpyDeviceToHost));
 
-}
-
-void memoryAllocGPU(){
-	gpuErrchk(cudaMalloc((void **)&d_CEELDB, sizeof(hd_CEELDB)));
-    gpuErrchk(cudaMalloc((void **)&d_SECST, sizeof(hd_SECST)));
-    gpuErrchk(cudaMalloc((void **)&d_PENGEOM_mod, sizeof(hd_PENGEOM_MOD)));
-    gpuErrchk(cudaMalloc((void **)&d_CGCONE, sizeof(hd_CGCONE)));
-    gpuErrchk(cudaMalloc((void **)&d_QSURF, sizeof(hd_QSURF)));
-    gpuErrchk(cudaMalloc((void **)&d_QTREE, sizeof(hd_QTREE)));
-    gpuErrchk(cudaMalloc((void **)&d_RSEED, sizeof(hd_RSEED)));
-    gpuErrchk(cudaMalloc((void **)&d_CIMDET, sizeof(hd_CIMDET)));
-    gpuErrchk(cudaMalloc((void **)&d_CERSEC, sizeof(hd_CERSEC)));
-    gpuErrchk(cudaMalloc((void **)&d_CEGRID, sizeof(hd_CEGRID)));
-	gpuErrchk(cudaMalloc((void **)&d_CJUMP1, sizeof(hd_CJUMP1)*pilhaPart));
-	gpuErrchk(cudaMalloc((void **)&d_CEIMFP, sizeof(hd_CEIMFP)));
-	gpuErrchk(cudaMalloc((void **)&d_CPIMFP, sizeof(hd_CPIMFP)));
-	gpuErrchk(cudaMalloc((void **)&d_CJUMP0, sizeof(hd_CJUMP0)*pilhaPart));
-	gpuErrchk(cudaMalloc((void **)&d_CGIMFP, sizeof(hd_CGIMFP)));
-	gpuErrchk(cudaMalloc((void **)&d_CHIST, sizeof(hd_CHIST)));
-	gpuErrchk(cudaMalloc((void **)&d_COMPOS, sizeof(hd_COMPOS)));
-	gpuErrchk(cudaMalloc((void **)&d_CADATA, sizeof(hd_CADATA)));
-	gpuErrchk(cudaMalloc((void **)&d_CEIN, sizeof(hd_CEIN)));
-	gpuErrchk(cudaMalloc((void **)&d_CGCO, sizeof(hd_CGCO)));
-	gpuErrchk(cudaMalloc((void **)&d_CEBR, sizeof(hd_CEBR)));
-	gpuErrchk(cudaMalloc((void **)&d_CELSEP, sizeof(hd_CELSEP)));
-	gpuErrchk(cudaMalloc((void **)&d_CECUTR, sizeof(hd_CECUTR)));
-	gpuErrchk(cudaMalloc((void **)&d_CESIAC, sizeof(hd_CESIAC)));
-	gpuErrchk(cudaMalloc((void **)&d_CEINAC, sizeof(hd_CEINAC)));
-	gpuErrchk(cudaMalloc((void **)&d_CBRANG, sizeof(hd_CBRANG)));
-	gpuErrchk(cudaMalloc((void **)&d_CRELAX, sizeof(hd_CRELAX)));
-	gpuErrchk(cudaMalloc((void **)&d_CGRA01, sizeof(hd_CGRA01)));
-	gpuErrchk(cudaMalloc((void **)&d_CGRA03, sizeof(hd_CGRA03)));
-	gpuErrchk(cudaMalloc((void **)&d_CGPH00, sizeof(hd_CGPH00)));
-	gpuErrchk(cudaMalloc((void **)&d_CGPP00, sizeof(hd_CGPP00)));
-	gpuErrchk(cudaMalloc((void **)&d_CGPP01, sizeof(hd_CGPP01)));
-	gpuErrchk(cudaMalloc((void **)&d_CPELDB, sizeof(hd_CPELDB)));
-	gpuErrchk(cudaMalloc((void **)&d_CPINAC, sizeof(hd_CPINAC)));
-	gpuErrchk(cudaMalloc((void **)&d_CPSIAC, sizeof(hd_CPSIAC)));
-	gpuErrchk(cudaMalloc((void **)&d_CENANG, sizeof(hd_CENANG)));
-	gpuErrchk(cudaMalloc((void **)&d_CENDET, sizeof(hd_CENDET)));
-	gpuErrchk(cudaMalloc((void **)&d_PENELOPE_mod, sizeof(hd_PENELOPE_MOD)));
-	gpuErrchk(cudaMalloc((void **)&d_QBODY, sizeof(hd_QBODY)));
-	gpuErrchk(cudaMalloc((void **)&d_CDOSE1, sizeof(hd_CDOSE1)));
-	gpuErrchk(cudaMalloc((void **)&d_CDOSE2, sizeof(hd_CDOSE2)));
-	gpuErrchk(cudaMalloc((void **)&d_CDOSE3, sizeof(hd_CDOSE3)));
-	gpuErrchk(cudaMalloc((void **)&d_CDOSE4, sizeof(hd_CDOSE4)));
-	gpuErrchk(cudaMalloc((void **)&d_CRNDG3, sizeof(hd_CRNDG3)));
-	gpuErrchk(cudaMalloc((void **)&d_CNT0, sizeof(hd_CNT0)));
-	gpuErrchk(cudaMalloc((void **)&d_CNT1, sizeof(hd_CNT1)));
-	gpuErrchk(cudaMalloc((void **)&d_CNT3, sizeof(hd_CNT3)));
-	gpuErrchk(cudaMalloc((void **)&d_CNT4, sizeof(hd_CNT4)));
-	gpuErrchk(cudaMalloc((void **)&d_CNT5, sizeof(hd_CNT5)));
-	gpuErrchk(cudaMalloc((void **)&d_CNT6, sizeof(hd_CNT6)));
-	gpuErrchk(cudaMalloc((void **)&d_CNTRL, sizeof(hd_CNTRL)));
-	gpuErrchk(cudaMalloc((void **)&d_CSPGEO, sizeof(hd_CSPGEO)));
-	gpuErrchk(cudaMalloc((void **)&d_CXRSPL, sizeof(hd_CXRSPL)));
-
-	gpuErrchk(cudaMalloc((void **)&d_SECTRACK_G, sizeof(hd_TRACK_MOD)*pilhaSec));
-	gpuErrchk(cudaMalloc((void **)&d_SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaSec));
-	gpuErrchk(cudaMalloc((void **)&d_SECTRACK_P, sizeof(hd_TRACK_MOD)*pilhaSec));
-	gpuErrchk(cudaMalloc((void **)&d_nTRACKS, sizeof(hd_nTRACKS)));
 
 
-	PRITRACK =  (hd_TRACK_MOD*)malloc(pilhaPart * sizeof(hd_TRACK_MOD)); //vetor de particulas primarias
-	SECTRACK_G = (hd_TRACK_MOD*)malloc(pilhaSec * sizeof(hd_TRACK_MOD)); //vetor de particulas secundarias de fotons
-	SECTRACK_E = (hd_TRACK_MOD*)malloc(pilhaSec * sizeof(hd_TRACK_MOD)); //vetor de particulas secudarias de eletrons
-	SECTRACK_P = (hd_TRACK_MOD*)malloc(pilhaSec * sizeof(hd_TRACK_MOD)); //vetor de particulas secundarias de protons
-	vTrack_Simular = (hd_TRACK_MOD*)malloc(pilhaSec * sizeof(hd_TRACK_MOD));
-	//gpuErrchk(cudaMalloc((void **)&d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaPart));
+
+
+
+
+
+
 }
 
 void memoryFreeGPU(){
+
     gpuErrchk(cudaFree(d_CEELDB));
     gpuErrchk(cudaFree(d_SECST));
     gpuErrchk(cudaFree(d_PENGEOM_mod));
@@ -27452,6 +27391,7 @@ void memoryFreeGPU(){
 	gpuErrchk(cudaFree(d_CENANG));
 	gpuErrchk(cudaFree(d_CENDET));
 	gpuErrchk(cudaFree(d_PENELOPE_mod));
+	//gpuErrchk(cudaFree(d_TRACK_mod));
 	gpuErrchk(cudaFree(d_QBODY));
 	gpuErrchk(cudaFree(d_CDOSE1));
 	gpuErrchk(cudaFree(d_CDOSE2));
@@ -27468,23 +27408,12 @@ void memoryFreeGPU(){
 	gpuErrchk(cudaFree(d_CSPGEO));
 	gpuErrchk(cudaFree(d_CXRSPL));
 
-	gpuErrchk(cudaFree(d_SECTRACK_G));
-	gpuErrchk(cudaFree(d_SECTRACK_E));
-	gpuErrchk(cudaFree(d_SECTRACK_P));
-	gpuErrchk(cudaFree(d_nTRACKS));
-
-	
-//	free(PRITRACK);
-	////free(SECTRACK_G);
-//	free(SECTRACK_E);
-//	free(SECTRACK_P);
-	//printf("\n\naqui2\n\n");
-	//gpuErrchk(cudaFree(d_TRACK_mod));
-
-
-
-	
 }
+
+
+
+
+
 
 void plotdose2_() {
 
@@ -27692,7 +27621,7 @@ void iniPRITRACK() {
 
 
 
-	///cleans2GPU_(); //Limpa a pilha secundaria
+	cleans2GPU_(); //Limpa a pilha secundaria
 
 	//if (*TRACK_MOD_.LAGE)
 	//	PAGE0; //define o tempo de voo igual a 0
@@ -27825,22 +27754,22 @@ void transfSecTracksCPU_to_GPU(){
     gpuErrchk(cudaMemcpyToSymbol(dg_PRITRACK_, d_PRITRACK, sizeof(hd_TRACK_MOD)*pilhaPart));*/
 
 	//SECTRACK_G
-
-    gpuErrchk(cudaMemcpy(d_SECTRACK_G, SECTRACK_G, sizeof(hd_TRACK_MOD)*pilhaSec, cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpyToSymbol(dg_SECTRACK_G_, d_SECTRACK_G, sizeof(hd_TRACK_MOD)*pilhaSec));
+	gpuErrchk(cudaMalloc((void **)&d_SECTRACK_G, sizeof(hd_TRACK_MOD)*pilhaPart));
+    gpuErrchk(cudaMemcpy(d_SECTRACK_G, SECTRACK_G, sizeof(hd_TRACK_MOD)*pilhaPart, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpyToSymbol(dg_SECTRACK_G_, d_SECTRACK_G, sizeof(hd_TRACK_MOD)*pilhaPart));
 
 	//SECTRACK_E
-	
-    gpuErrchk(cudaMemcpy(d_SECTRACK_E, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaSec, cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpyToSymbol(dg_SECTRACK_E_, d_SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaSec));
+	gpuErrchk(cudaMalloc((void **)&d_SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart));
+    gpuErrchk(cudaMemcpy(d_SECTRACK_E, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpyToSymbol(dg_SECTRACK_E_, d_SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart));
 
 	//SECTRACK_P
-	
-    gpuErrchk(cudaMemcpy(d_SECTRACK_P, SECTRACK_P, sizeof(hd_TRACK_MOD)*pilhaSec, cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpyToSymbol(dg_SECTRACK_P_, d_SECTRACK_P, sizeof(hd_TRACK_MOD)*pilhaSec));
+	gpuErrchk(cudaMalloc((void **)&d_SECTRACK_P, sizeof(hd_TRACK_MOD)*pilhaPart));
+    gpuErrchk(cudaMemcpy(d_SECTRACK_P, SECTRACK_P, sizeof(hd_TRACK_MOD)*pilhaPart, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpyToSymbol(dg_SECTRACK_P_, d_SECTRACK_P, sizeof(hd_TRACK_MOD)*pilhaPart));
 
 	//nTRACKS
-	
+	gpuErrchk(cudaMalloc((void **)&d_nTRACKS, sizeof(hd_nTRACKS)));
     gpuErrchk(cudaMemcpy(d_nTRACKS, &nTRACKS_, sizeof(hd_nTRACKS), cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpyToSymbol(dg_nTRACKS_, d_nTRACKS, sizeof(hd_nTRACKS)));
 
@@ -27857,23 +27786,22 @@ void transfSecTracksGPU_to_CPU(){
 	gpuErrchk(cudaMemcpy(PRITRACK, d_PRITRACK,  sizeof(hd_TRACK_MOD)*pilhaPart, cudaMemcpyDeviceToHost));*/
 	
 	//SECTRACK_G
-	gpuErrchk(cudaMemcpyFromSymbol(d_SECTRACK_G, dg_SECTRACK_G_, sizeof(hd_TRACK_MOD)*pilhaSec));
-	gpuErrchk(cudaMemcpy(SECTRACK_G, d_SECTRACK_G,  sizeof(hd_TRACK_MOD)*pilhaSec, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpyFromSymbol(d_SECTRACK_G, dg_SECTRACK_G_, sizeof(hd_TRACK_MOD)*pilhaPart));
+	gpuErrchk(cudaMemcpy(SECTRACK_G, d_SECTRACK_G,  sizeof(hd_TRACK_MOD)*pilhaPart, cudaMemcpyDeviceToHost));
 
 	//SECTRACK_E
-	gpuErrchk(cudaMemcpyFromSymbol(d_SECTRACK_E, dg_SECTRACK_E_, sizeof(hd_TRACK_MOD)*pilhaSec));
-	gpuErrchk(cudaMemcpy(SECTRACK_E, d_SECTRACK_E,  sizeof(hd_TRACK_MOD)*pilhaSec, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpyFromSymbol(d_SECTRACK_E, dg_SECTRACK_E_, sizeof(hd_TRACK_MOD)*pilhaPart));
+	gpuErrchk(cudaMemcpy(SECTRACK_E, d_SECTRACK_E,  sizeof(hd_TRACK_MOD)*pilhaPart, cudaMemcpyDeviceToHost));
 
 	//SECTRACK_P
-	gpuErrchk(cudaMemcpyFromSymbol(d_SECTRACK_P, dg_SECTRACK_P_, sizeof(hd_TRACK_MOD)*pilhaSec));
-	gpuErrchk(cudaMemcpy(SECTRACK_P, d_SECTRACK_P,  sizeof(hd_TRACK_MOD)*pilhaSec, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpyFromSymbol(d_SECTRACK_P, dg_SECTRACK_P_, sizeof(hd_TRACK_MOD)*pilhaPart));
+	gpuErrchk(cudaMemcpy(SECTRACK_P, d_SECTRACK_P,  sizeof(hd_TRACK_MOD)*pilhaPart, cudaMemcpyDeviceToHost));
 
 	//nTRACKS
 	gpuErrchk(cudaMemcpyFromSymbol(d_nTRACKS, dg_nTRACKS_, sizeof(hd_nTRACKS)));
 	gpuErrchk(cudaMemcpy(&nTRACKS_, d_nTRACKS,  sizeof(hd_nTRACKS), cudaMemcpyDeviceToHost));
 
 }
-
 
 
 

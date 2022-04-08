@@ -96,11 +96,28 @@ extern "C"{
 
 	__device__ void d_cleans2_();
 
-    __global__ void showers(int size);
+	__global__ void showers_pri(int size);
+
+    __device__ void showers_step1(int size); //L302
+
+	 __device__ void showers_step2(int size); //L102
+
+	  __device__ void showers_step3(int size, int IEXIT); //L104
+
+	__global__ void showers_sec(int size);
 
 }
 
-__global__ void showers(int size){
+__global__ void showers_pri(int size){
+
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+	if (index < size){
+		showers_step1(size);
+	}
+
+}
+
+__device__ void showers_step1(int size){
 
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
 
@@ -108,20 +125,20 @@ __global__ void showers(int size){
 		printf("index %d, 	energia %lf\n", index, dg_TRACK_mod_[index].E);
 	}
 
-	bool LINTF;
+//	bool LINTF;
 
 	double REV = 5.10998928e5;
 	double TREV = 2.0e0 * REV;
-	double PI = 3.1415926535897932e0;
-	double TWOPI = 2.0e0 * PI;
+//	double PI = 3.1415926535897932e0;
+//	double TWOPI = 2.0e0 * PI;
 
-	int IEXIT, KEn, IBODYL, NCROSS, IDET, MATL, ICOL, LEFT;
-	double DSEF, DS, DEP, XL, YL, ZL, DECSD, DSEFR, XD, YD, ZD, DE, WS, US, VS, SDTS, DF;
+	int IEXIT, /*KEn,*/ IBODYL, NCROSS, IDET /*MATL, ICOL*//*, LEFT*/;
+	double DSEF, DS, DEP /*XL, YL, ZL, DECSD, DSEFR, XD, YD, ZD, DE*/ /*WS, US, VS, SDTS, DF*/;
 //Verifique se a trajetória cruza o sistema de materiais.
 	//implementacao da simulacao
 
 	//A partir daqui entra as implmentações em GPU.
-L302:;
+//L302:;
 
 	d_locate2_();
 	if (dg_TRACK_mod_[index].MAT == 0) {
@@ -138,7 +155,8 @@ L302:;
 			else {
 				IEXIT = 2; //Rotula partículas descendentes emergentes.
 			}
-			goto L104;
+			showers_step3(size, IEXIT);
+			return;
 		}
 
 		//Detetores de Impacto
@@ -158,7 +176,8 @@ L302:;
 				if (dg_CNT4_.IDCUT[IDET - 1] == 0) {
 					dg_CNT1_.DEBO[index][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[index][dg_TRACK_mod_[index].IBODY - 1] + dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
 					IEXIT = 3;
-					goto L104;
+					showers_step3(size, IEXIT);
+					return;
 				}
 			}
 		}
@@ -180,14 +199,39 @@ L302:;
 			d_sdose2_(DEP, dg_TRACK_mod_[index].X, dg_TRACK_mod_[index].Y, dg_TRACK_mod_[index].Z, dg_TRACK_mod_[index].MAT, dg_CNTRL_.N);
 		}
 		IEXIT = 3;
-		goto L104;
+		showers_step3(size, IEXIT);
+		return;
 
 	}
 
-	//Simulação da historia da particula inicia aqui.
+	showers_step2(size);
+	
+
+}
+
+__device__ void showers_step2(int size){
+
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+
+	if ((index == 0) || (index == 1)){
+		printf("index %d, 	energia %lf\n", index, dg_TRACK_mod_[index].E);
+	}
+
+	bool LINTF;
+
+	double REV = 5.10998928e5;
+	double TREV = 2.0e0 * REV;
+//	double PI = 3.1415926535897932e0;
+//	double TWOPI = 2.0e0 * PI;
+
+	int IEXIT, /*KEn,*/ IBODYL, NCROSS, IDET, MATL, ICOL/*, LEFT*/;
+	double DSEF, DS, DEP, XL, YL, ZL, DECSD, DSEFR, XD, YD, ZD, DE /*WS, US, VS, SDTS, DF*/;
+
+//Simulação da historia da particula inicia aqui.
 
 	//Divisão de particulas e roleta russa . Apenas para particulas lidas de um arquivoco Phase-Space.
 	//Essa versão não irá implementar reduções de variancia e leitura de arquivo Phase-Space.
+
 
 L102:;
 
@@ -205,7 +249,8 @@ L102:;
 			d_sdose2_(DEP, dg_TRACK_mod_[index].X, dg_TRACK_mod_[index].Y, dg_TRACK_mod_[index].Z, dg_TRACK_mod_[index].MAT, dg_CNTRL_.N);
 		}
 		IEXIT = 3; //Marca partículas absorvidas.
-		goto L104; //saida
+		showers_step3(size, IEXIT); //saida
+		return;
 	}
 
 	d_start2_(); //Inicia a simulação no meio atual.
@@ -285,7 +330,8 @@ L103:;
 			else {
 				IEXIT = 2; //Rotula partículas descendentes emergentes.
 			}
-			goto L104; //Saida
+			showers_step3(size, IEXIT); //Saida
+			return;
 		}
 
 		//Detectores de Impacto
@@ -305,7 +351,8 @@ L103:;
 				if (dg_CNT4_.IDCUT[IDET - 1] == 0) {
 					dg_CNT1_.DEBO[index][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[index][dg_TRACK_mod_[index].IBODY - 1] + dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
 					IEXIT = 3;
-					goto L104;
+					showers_step3(size, IEXIT);
+					return;
 				}
 			}
 		}
@@ -337,99 +384,60 @@ L103:;
 
 	if (dg_TRACK_mod_[index].E < dg_CSPGEO_.EABSB[dg_TRACK_mod_[index].IBODY - 1][dg_TRACK_mod_[index].KPAR - 1]) { ////A partícula foi absorvida.
 		IEXIT = 3; //Marca partículas absorvidas.
-		goto L104; //saida
+		showers_step3(size, IEXIT); //saida
+		return;
 	}
 
 	goto L103;
 
 	//A simulação da particula termina aqui.
 
-L104:;
+}
+
+__device__ void showers_step3(int size, int IEXIT){
+
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+
+	if ((index == 0) || (index == 1)){
+		printf("index %d, 	energia %lf\n", index, dg_TRACK_mod_[index].E);
+	}
+
+	//bool LINTF;
+
+	//double REV = 5.10998928e5;
+	//double TREV = 2.0e0 * REV;
+//	double PI = 3.1415926535897932e0;
+//	double TWOPI = 2.0e0 * PI;
+
+	int /*IEXIT,*/ /*KEn,*/ /*IBODYL,*/ /*NCROSS,*/ IDET /*MATL, ICOL*//*, LEFT*/;
+	//double /*DSEF, DS, DEP, XL, YL, ZL, DECSD, DSEFR, XD, YD, ZD, DE /*WS, US, VS, SDTS, DF*/;*/
+
+	__syncthreads();
+
 
 	//Incrementar contadores de partículas.
 	if (dg_TRACK_mod_[index].ILB[1 - 1] == 1) {
-		dg_CNT0_.DPRIM[IEXIT - 1] = dg_CNT0_.DPRIM[IEXIT - 1] + dg_TRACK_mod_[index].WGHT;
+		dg_CNT0_.DPRIM[index][IEXIT - 1] = dg_CNT0_.DPRIM[index][IEXIT - 1] + dg_TRACK_mod_[index].WGHT;
 		/*if (*CSOUR0_.LPSF){  não sera implementado redução de variancia como divisão de particulas ou roleta russa
 			if (NSPL1 > 1)
-				dg_CNT0_.DPRIM[IEXIT-1]=dg_CNT0_.DPRIM[IEXIT-1]+dg_TRACK_mod_[index].WGHT*(NSPL1-1);
+				dg_CNT0_.DPRIM[index][IEXIT-1]=dg_CNT0_.DPRIM[index][IEXIT-1]+dg_TRACK_mod_[index].WGHT*(NSPL1-1);
 		}
 		*/
 
 		if (IEXIT < 3) {
-			dg_CNT0_.DAVW[IEXIT - 1] = dg_CNT0_.DAVW[IEXIT - 1] + dg_TRACK_mod_[index].W * dg_TRACK_mod_[index].WGHT;
-			dg_CNT0_.DAVA[IEXIT - 1] = dg_CNT0_.DAVA[IEXIT - 1] + acos(dg_TRACK_mod_[index].W) * dg_TRACK_mod_[index].WGHT;
-			dg_CNT0_.DAVE[IEXIT - 1] = dg_CNT0_.DAVE[IEXIT - 1] + dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
+			dg_CNT0_.DAVW[index][IEXIT - 1] = dg_CNT0_.DAVW[index][IEXIT - 1] + dg_TRACK_mod_[index].W * dg_TRACK_mod_[index].WGHT;
+			dg_CNT0_.DAVA[index][IEXIT - 1] = dg_CNT0_.DAVA[index][IEXIT - 1] + acos(dg_TRACK_mod_[index].W) * dg_TRACK_mod_[index].WGHT;
+			dg_CNT0_.DAVE[index][IEXIT - 1] = dg_CNT0_.DAVE[index][IEXIT - 1] + dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
 		}
 
 	}
 	else {
-		dg_CNT0_.DSEC[IEXIT - 1][dg_TRACK_mod_[index].KPAR - 1] = dg_CNT0_.DSEC[IEXIT - 1][dg_TRACK_mod_[index].KPAR - 1] + dg_TRACK_mod_[index].WGHT;
+		dg_CNT0_.DSEC[index][IEXIT - 1][dg_TRACK_mod_[index].KPAR - 1] = dg_CNT0_.DSEC[index][IEXIT - 1][dg_TRACK_mod_[index].KPAR - 1] + dg_TRACK_mod_[index].WGHT;
 	}
 
 	if (IEXIT < 3) {
 		d_tenang2_(IEXIT, dg_CNTRL_.N);  //Energia e distribuições angulares.
 	}
-
-
-	//Particulas Secundarias
-
-L202:;
-
-
-	d_secpar2_(LEFT);
-/*	if (LEFT > 0) {
-		if (dg_TRACK_mod_[index].ILB[1 - 1] == 1) { //Fonte da particula primaria
-			KEn = int(dg_TRACK_mod_[index].E * dg_CNT3_.RDSDE + 1.0e0);
-			dg_CNT3_.SEDS[KEn - 1][dg_TRACK_mod_[index].KPAR - 1] = dg_CNT3_.SEDS[KEn - 1][dg_TRACK_mod_[index].KPAR - 1] + dg_TRACK_mod_[index].WGHT;
-			dg_CNT3_.SEDS2[KEn - 1][dg_TRACK_mod_[index].KPAR - 1] = dg_CNT3_.SEDS2[KEn - 1][dg_TRACK_mod_[index].KPAR - 1] + pow(dg_TRACK_mod_[index].WGHT, 2);
-			//if (dg_TRACK_mod_[index].LAGE) //nao irá contabilizar a idade da particula
-			//	page02_();
-			goto L302; //A energia não é removida do local.
-		}
-		if (dg_TRACK_mod_[index].E > dg_CSPGEO_.EABSB[dg_TRACK_mod_[index].IBODY - 1][dg_TRACK_mod_[index].KPAR - 1]) {
-			//Divisoes de raios X
-			if (dg_TRACK_mod_[index].KPAR == 2) {
-				if (dg_TRACK_mod_[index].ILB[4 - 1] > 0) { //caracteristica de raio X
-					if ((dg_TRACK_mod_[index].ILB[1 - 1] == 2) && (dg_TRACK_mod_[index].ILB[3 - 1] < 9)) {
-						if (dg_CXRSPL_.LXRSPL[dg_TRACK_mod_[index].IBODY - 1]) {
-							dg_TRACK_mod_[index].WGHT = dg_TRACK_mod_[index].WGHT / (dg_CXRSPL_.IXRSPL[dg_TRACK_mod_[index].IBODY - 1]);
-							dg_CXRSPL_.ILBA[1 - 1] = dg_TRACK_mod_[index].ILB[1 - 1];
-							dg_CXRSPL_.ILBA[2 - 1] = dg_TRACK_mod_[index].ILB[2 - 1];
-							dg_CXRSPL_.ILBA[3 - 1] = 9;
-							dg_CXRSPL_.ILBA[4 - 1] = dg_TRACK_mod_[index].ILB[4 - 1];
-							dg_CXRSPL_.ILBA[5 - 1] = dg_TRACK_mod_[index].ILB[5 - 1];
-							for (int I = 2; I <= dg_CXRSPL_.IXRSPL[dg_TRACK_mod_[index].IBODY - 1]; I++) {
-								WS = -1.0e0 + 2.0e0 * d_rand2_(9.0e0);
-								SDTS = sqrt(1.0e0 - WS * WS);
-								DF = TWOPI * d_rand2_(10.0e0);
-								US = cos(DF) * SDTS;
-								VS = sin(DF) * SDTS;
-								d_stores2_(dg_TRACK_mod_[index].E, dg_TRACK_mod_[index].X, dg_TRACK_mod_[index].Y, dg_TRACK_mod_[index].Z, US, VS, WS, dg_TRACK_mod_[index].WGHT, dg_TRACK_mod_[index].KPAR, dg_CXRSPL_.ILBA, d_wIPOLI);
-							}
-						}
-					}
-
-				}
-			}
-			DEP = dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
-			dg_CNT1_.DEBO[index][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[index][dg_TRACK_mod_[index].IBODY - 1] - DEP;
-			if (dg_CNT6_.LDOSEM) {
-				double wDEP = -DEP;
-				d_sdose2_(wDEP, dg_TRACK_mod_[index].X, dg_TRACK_mod_[index].Y, dg_TRACK_mod_[index].Z, dg_TRACK_mod_[index].MAT, dg_CNTRL_.N);
-			}
-		}
-		else {
-			goto L202;
-		}
-		goto L102;
-	}*/
-
-
-	/*if (*CSOUR0_.LPSF){ Não sera implementado o Phase-Space
-		if (ISEC == 1)
-			goto L201;
-
-	}*/
 
 	/*Energias depositadas em diferentes corpos e detectores.
 	Calculando os espectros dos detectores de deposição de energia.*/
@@ -461,30 +469,102 @@ L202:;
 
 	//Contadores de estado final
 	for (int I = 1; I <= 3; I++) {
-		dg_CNT0_.PRIM[I - 1] = dg_CNT0_.PRIM[I - 1] + dg_CNT0_.DPRIM[I - 1];
-		dg_CNT0_.PRIM2[I - 1] = dg_CNT0_.PRIM2[I - 1] + pow(dg_CNT0_.DPRIM[I - 1], 2);
+		dg_CNT0_.PRIM[I - 1] = dg_CNT0_.PRIM[I - 1] + dg_CNT0_.DPRIM[index][I - 1];
+		dg_CNT0_.PRIM2[I - 1] = dg_CNT0_.PRIM2[I - 1] + pow(dg_CNT0_.DPRIM[index][I - 1], 2);
 		for (int K = 1; K <= 3; K++) {
-			dg_CNT0_.SEC[I - 1][K - 1] = dg_CNT0_.SEC[I - 1][K - 1] + dg_CNT0_.DSEC[I - 1][K - 1];
-			dg_CNT0_.SEC2[I - 1][K - 1] = dg_CNT0_.SEC2[I - 1][K - 1] + pow(dg_CNT0_.DSEC[I - 1][K - 1], 2);
+			dg_CNT0_.SEC[I - 1][K - 1] = dg_CNT0_.SEC[I - 1][K - 1] + dg_CNT0_.DSEC[index][I - 1][K - 1];
+			dg_CNT0_.SEC2[I - 1][K - 1] = dg_CNT0_.SEC2[I - 1][K - 1] + pow(dg_CNT0_.DSEC[index][I - 1][K - 1], 2);
 		}
 	}
 
 	for (int I = 1; I <= 2; I++) {
-		dg_CNT0_.AVW[I - 1] = dg_CNT0_.AVW[I - 1] + dg_CNT0_.DAVW[I - 1];
-		dg_CNT0_.AVW2[I - 1] = dg_CNT0_.AVW2[I - 1] + pow(dg_CNT0_.DAVW[I - 1], 2);
-		dg_CNT0_.AVA[I - 1] = dg_CNT0_.AVA[I - 1] + dg_CNT0_.DAVA[I - 1];
-		dg_CNT0_.AVA2[I - 1] = dg_CNT0_.AVA2[I - 1] + pow(dg_CNT0_.DAVA[I - 1], 2);
-		dg_CNT0_.AVE[I - 1] = dg_CNT0_.AVE[I - 1] + dg_CNT0_.DAVE[I - 1];
-		dg_CNT0_.AVE2[I - 1] = dg_CNT0_.AVE2[I - 1] + pow(dg_CNT0_.DAVE[I - 1], 2);
+		dg_CNT0_.AVW[I - 1] = dg_CNT0_.AVW[I - 1] + dg_CNT0_.DAVW[index][I - 1];
+		dg_CNT0_.AVW2[I - 1] = dg_CNT0_.AVW2[I - 1] + pow(dg_CNT0_.DAVW[index][I - 1], 2);
+		dg_CNT0_.AVA[I - 1] = dg_CNT0_.AVA[I - 1] + dg_CNT0_.DAVA[index][I - 1];
+		dg_CNT0_.AVA2[I - 1] = dg_CNT0_.AVA2[I - 1] + pow(dg_CNT0_.DAVA[index][I - 1], 2);
+		dg_CNT0_.AVE[I - 1] = dg_CNT0_.AVE[I - 1] + dg_CNT0_.DAVE[index][I - 1];
+		dg_CNT0_.AVE2[I - 1] = dg_CNT0_.AVE2[I - 1] + pow(dg_CNT0_.DAVE[index][I - 1], 2);
 	}
 
+}
 
+__global__ void showers_sec(int size){
 
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
 
+	 if (index < size){
+	
+	double PI = 3.1415926535897932e0;
+	double TWOPI = 2.0e0 * PI;
 
+	int  KEn;
+	double DEP, WS, US, VS, SDTS, DF;
 
+	//Particulas Secundarias
 
+//L202:;
+//	d_secpar2_(LEFT);
+	//if (LEFT > 0) {
 
+		if (dg_TRACK_mod_[index].ILB[1 - 1] == 1) { //Fonte da particula primaria
+			KEn = int(dg_TRACK_mod_[index].E * dg_CNT3_.RDSDE + 1.0e0);
+			dg_CNT3_.SEDS[KEn - 1][dg_TRACK_mod_[index].KPAR - 1] = dg_CNT3_.SEDS[KEn - 1][dg_TRACK_mod_[index].KPAR - 1] + dg_TRACK_mod_[index].WGHT;
+			dg_CNT3_.SEDS2[KEn - 1][dg_TRACK_mod_[index].KPAR - 1] = dg_CNT3_.SEDS2[KEn - 1][dg_TRACK_mod_[index].KPAR - 1] + pow(dg_TRACK_mod_[index].WGHT, 2);
+			//if (dg_TRACK_mod_[index].LAGE) //nao irá contabilizar a idade da particula
+			//	page02_();
+			//goto L302; //A energia não é removida do local.
+			printf("passou aqui e chamou step11\n");
+			showers_step1(size);
+		} else{
+			/*if (dg_TRACK_mod_[index].E > dg_CSPGEO_.EABSB[dg_TRACK_mod_[index].IBODY - 1][dg_TRACK_mod_[index].KPAR - 1]) {
+				//Divisoes de raios X
+				if (dg_TRACK_mod_[index].KPAR == 2) {
+					if (dg_TRACK_mod_[index].ILB[4 - 1] > 0) { //caracteristica de raio X
+						if ((dg_TRACK_mod_[index].ILB[1 - 1] == 2) && (dg_TRACK_mod_[index].ILB[3 - 1] < 9)) {
+							if (dg_CXRSPL_.LXRSPL[dg_TRACK_mod_[index].IBODY - 1]) {
+								dg_TRACK_mod_[index].WGHT = dg_TRACK_mod_[index].WGHT / (dg_CXRSPL_.IXRSPL[dg_TRACK_mod_[index].IBODY - 1]);
+								dg_CXRSPL_.ILBA[1 - 1] = dg_TRACK_mod_[index].ILB[1 - 1];
+								dg_CXRSPL_.ILBA[2 - 1] = dg_TRACK_mod_[index].ILB[2 - 1];
+								dg_CXRSPL_.ILBA[3 - 1] = 9;
+								dg_CXRSPL_.ILBA[4 - 1] = dg_TRACK_mod_[index].ILB[4 - 1];
+								dg_CXRSPL_.ILBA[5 - 1] = dg_TRACK_mod_[index].ILB[5 - 1];
+								for (int I = 2; I <= dg_CXRSPL_.IXRSPL[dg_TRACK_mod_[index].IBODY - 1]; I++) {
+									WS = -1.0e0 + 2.0e0 * d_rand2_(9.0e0);
+									SDTS = sqrt(1.0e0 - WS * WS);
+									DF = TWOPI * d_rand2_(10.0e0);
+									US = cos(DF) * SDTS;
+									VS = sin(DF) * SDTS;
+									d_stores2_(dg_TRACK_mod_[index].E, dg_TRACK_mod_[index].X, dg_TRACK_mod_[index].Y, dg_TRACK_mod_[index].Z, US, VS, WS, dg_TRACK_mod_[index].WGHT, dg_TRACK_mod_[index].KPAR, dg_CXRSPL_.ILBA, d_wIPOLI);
+								}
+							}
+						}
+
+					}
+				}
+				DEP = dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
+				dg_CNT1_.DEBO[index][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[index][dg_TRACK_mod_[index].IBODY - 1] - DEP;
+				if (dg_CNT6_.LDOSEM) {
+					double wDEP = -DEP;
+					d_sdose2_(wDEP, dg_TRACK_mod_[index].X, dg_TRACK_mod_[index].Y, dg_TRACK_mod_[index].Z, dg_TRACK_mod_[index].MAT, dg_CNTRL_.N);
+				}*/
+
+			printf("passou step2\n");
+			showers_step2(size);
+
+		//	} //else {
+	//		goto L202;
+		}
+		//goto L102;
+	//	printf("passou aqui e chamou step2\n");
+	//	showers_step2(size);
+	//}
+
+	/*if (*CSOUR0_.LPSF){ Não sera implementado o Phase-Space
+		if (ISEC == 1)
+			goto L201;
+
+	}*/
+	}
 }
 
 __device__ void d_step2_(double& DS, double& DSEF, int& NCROSS) {
@@ -3387,155 +3467,143 @@ __device__ void d_stores2_(double& EI, double& XI, double& YI, double& ZI, doubl
 		produzido, que é assim descartado.
 	*/
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
-/*	double EME, EMG;
-	int IE, IG, IS;
+	double EM = 1.0e35;
+	int IE, IG, IP;
 
-	if (dg_SECST_.NSEC < NMS) {
-		dg_SECST_.NSEC = dg_SECST_.NSEC + 1;
-		IS = dg_SECST_.NSEC;
-	}
-	else {
-		if (dg_CERSEC_.IERSEC == 0) {
-			printf("   *** WARNING: (STORES) not enough storage for secondaries.\n EABS(KPAR,MAT) or the parameter NMS should be enlarged\n");
-			dg_CERSEC_.IERSEC = 1;
-		}
-		dg_SECST_.NSEC = NMS;
-		EME = 1.0e35;
-		EMG = 1.0e35;
-		IE = 0;
-		IG = 0;
-		for (int I = 1; I <= NMS; I++) {
-			if (dg_SECST_.KS[I - 1] == 1) {
-				if (dg_SECST_.ES[I - 1] < EME) {
-					EME = dg_SECST_.ES[I - 1];
+
+	if (KPARI == 1){
+		if (dg_nTRACKS_.nSECTRACK_E == pilhaSec){
+			for (int I = 0; I < pilhaSec; I++) {
+				if (dg_SECTRACK_E_[I].E < EM) {
+					EM = dg_SECTRACK_E_[I].E;
 					IE = I;
 				}
 			}
-			else if (dg_SECST_.KS[I - 1] == 2) {
-				if (dg_SECST_.ES[I - 1] < EMG) {
-					EMG = dg_SECST_.ES[I - 1];
+		}else{
+			IE = dg_nTRACKS_.nSECTRACK_E;
+			dg_nTRACKS_.nSECTRACK_E = dg_nTRACKS_.nSECTRACK_E + 1;
+		}
+	
+			dg_SECTRACK_E_[IE].E = EI;
+			dg_SECTRACK_E_[IE].X = XI;
+			dg_SECTRACK_E_[IE].Y = YI;
+			dg_SECTRACK_E_[IE].Z = ZI;
+			dg_SECTRACK_E_[IE].U = UI;
+			dg_SECTRACK_E_[IE].V = VI;
+			dg_SECTRACK_E_[IE].W = WI;
+			dg_SECTRACK_E_[IE].WGHT = WGHTI;
+			dg_SECTRACK_E_[IE].KPAR = KPARI;
+			dg_SECTRACK_E_[IE].IBODY = dg_TRACK_mod_[index].IBODY;
+			dg_SECTRACK_E_[IE].MAT = dg_TRACK_mod_[index].MAT;
+			dg_SECTRACK_E_[IE].ILB[1 - 1] = ILBI[1 - 1];
+			dg_SECTRACK_E_[IE].ILB[2 - 1] = ILBI[2 - 1];
+			dg_SECTRACK_E_[IE].ILB[3 - 1] = ILBI[3 - 1];
+			dg_SECTRACK_E_[IE].ILB[4 - 1] = ILBI[4 - 1];
+			dg_SECTRACK_E_[IE].ILB[5 - 1] = ILBI[5 - 1];
+
+			if (IPOLI == 1) {
+				dg_SECTRACK_E_[IE].SP1 = dg_TRACK_mod_[index].SP1;
+				dg_SECTRACK_E_[IE].SP2 = dg_TRACK_mod_[index].SP2;
+				dg_SECTRACK_E_[IE].SP3 = dg_TRACK_mod_[index].SP3;
+				dg_SECTRACK_E_[IE].IPOL = IPOLI;
+			}
+			else {
+				dg_SECTRACK_E_[IE].SP1 = 0.e0;
+				dg_SECTRACK_E_[IE].SP2 = 0.e0;
+				dg_SECTRACK_E_[IE].SP3 = 0.e0;
+				dg_SECTRACK_E_[IE].IPOL = 0;
+			}
+			dg_SECTRACK_E_[IE].PAGE = dg_TRACK_mod_[index].PAGE;
+	
+	}else if (KPARI == 2){
+		if (dg_nTRACKS_.nSECTRACK_G == pilhaSec){
+			for (int I = 0; I < pilhaSec; I++) {
+				if (dg_SECTRACK_G_[I].E < EM) {
+					EM = dg_SECTRACK_G_[I].E;
 					IG = I;
 				}
 			}
+		}else{
+			IG = dg_nTRACKS_.nSECTRACK_G;
+			dg_nTRACKS_.nSECTRACK_G = dg_nTRACKS_.nSECTRACK_G + 1;
 		}
+		
+			dg_SECTRACK_G_[IG].E = EI;
+			dg_SECTRACK_G_[IG].X = XI;
+			dg_SECTRACK_G_[IG].Y = YI;
+			dg_SECTRACK_G_[IG].Z = ZI;
+			dg_SECTRACK_G_[IG].U = UI;
+			dg_SECTRACK_G_[IG].V = VI;
+			dg_SECTRACK_G_[IG].W = WI;
+			dg_SECTRACK_G_[IG].WGHT = WGHTI;
+			dg_SECTRACK_G_[IG].KPAR = KPARI;
+			dg_SECTRACK_G_[IG].IBODY = dg_TRACK_mod_[index].IBODY;
+			dg_SECTRACK_G_[IG].MAT = dg_TRACK_mod_[index].MAT;
+			dg_SECTRACK_G_[IG].ILB[1 - 1] = ILBI[1 - 1];
+			dg_SECTRACK_G_[IG].ILB[2 - 1] = ILBI[2 - 1];
+			dg_SECTRACK_G_[IG].ILB[3 - 1] = ILBI[3 - 1];
+			dg_SECTRACK_G_[IG].ILB[4 - 1] = ILBI[4 - 1];
+			dg_SECTRACK_G_[IG].ILB[5 - 1] = ILBI[5 - 1];
 
-		if (IE > 0) {
-			IS = IE;
-		}
-		else if (IG > 0) {
-			IS = IG;
-		}
-		else {
-			printf("   *** Not enough storage for secondary positrons./n       JOB ABORTED.");
-			IS = 0;
-			return;
-			//exit(1);
-			//assert(0);
-		} 
-	}*/
-
-	
-	if (KPARI == 1){
-		dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].E = EI;
-		dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].X = XI;
-		dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].Y = YI;
-		dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].Z = ZI;
-		dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].U = UI;
-		dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].V = VI;
-		dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].W = WI;
-		dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].WGHT = WGHTI;
-		dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].KPAR = KPARI;
-		dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].IBODY = dg_TRACK_mod_[index].IBODY;
-		dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].MAT = dg_TRACK_mod_[index].MAT;
-		dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].ILB[1 - 1] = ILBI[1 - 1];
-		dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].ILB[2 - 1] = ILBI[2 - 1];
-		dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].ILB[3 - 1] = ILBI[3 - 1];
-		dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].ILB[4 - 1] = ILBI[4 - 1];
-		dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].ILB[5 - 1] = ILBI[5 - 1];
-
-		if (IPOLI == 1) {
-			dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].SP1 = dg_TRACK_mod_[index].SP1;
-			dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].SP2 = dg_TRACK_mod_[index].SP2;
-			dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].SP3 = dg_TRACK_mod_[index].SP3;
-			dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].IPOL = IPOLI;
-		}
-		else {
-			dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].SP1 = 0.e0;
-			dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].SP2 = 0.e0;
-			dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].SP3 = 0.e0;
-			dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].IPOL = 0;
-		}
-		dg_SECTRACK_E_[dg_nTRACKS_.nSECTRACK_E].PAGE = dg_TRACK_mod_[index].PAGE;
-		dg_nTRACKS_.nSECTRACK_E = dg_nTRACKS_.nSECTRACK_E + 1;
-	}else if (KPARI == 2){
-		dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].E = EI;
-		dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].X = XI;
-		dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].Y = YI;
-		dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].Z = ZI;
-		dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].U = UI;
-		dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].V = VI;
-		dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].W = WI;
-		dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].WGHT = WGHTI;
-		dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].KPAR = KPARI;
-		dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].IBODY = dg_TRACK_mod_[index].IBODY;
-		dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].MAT = dg_TRACK_mod_[index].MAT;
-		dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].ILB[1 - 1] = ILBI[1 - 1];
-		dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].ILB[2 - 1] = ILBI[2 - 1];
-		dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].ILB[3 - 1] = ILBI[3 - 1];
-		dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].ILB[4 - 1] = ILBI[4 - 1];
-		dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].ILB[5 - 1] = ILBI[5 - 1];
-
-		if (IPOLI == 1) {
-			dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].SP1 = dg_TRACK_mod_[index].SP1;
-			dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].SP2 = dg_TRACK_mod_[index].SP2;
-			dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].SP3 = dg_TRACK_mod_[index].SP3;
-			dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].IPOL = IPOLI;
-		}
-		else {
-			dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].SP1 = 0.e0;
-			dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].SP2 = 0.e0;
-			dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].SP3 = 0.e0;
-			dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].IPOL = 0;
-		}
-		dg_SECTRACK_G_[dg_nTRACKS_.nSECTRACK_G].PAGE = dg_TRACK_mod_[index].PAGE;
-		dg_nTRACKS_.nSECTRACK_G = dg_nTRACKS_.nSECTRACK_G + 1;
+			if (IPOLI == 1) {
+				dg_SECTRACK_G_[IG].SP1 = dg_TRACK_mod_[index].SP1;
+				dg_SECTRACK_G_[IG].SP2 = dg_TRACK_mod_[index].SP2;
+				dg_SECTRACK_G_[IG].SP3 = dg_TRACK_mod_[index].SP3;
+				dg_SECTRACK_G_[IG].IPOL = IPOLI;
+			}
+			else {
+				dg_SECTRACK_G_[IG].SP1 = 0.e0;
+				dg_SECTRACK_G_[IG].SP2 = 0.e0;
+				dg_SECTRACK_G_[IG].SP3 = 0.e0;
+				dg_SECTRACK_G_[IG].IPOL = 0;
+			}
+			dg_SECTRACK_G_[IG-1].PAGE = dg_TRACK_mod_[index].PAGE;
+		
 	}else if (KPARI == 3){
-		dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].E = EI;
-		dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].X = XI;
-		dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].Y = YI;
-		dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].Z = ZI;
-		dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].U = UI;
-		dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].V = VI;
-		dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].W = WI;
-		dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].WGHT = WGHTI;
-		dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].KPAR = KPARI;
-		dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].IBODY = dg_TRACK_mod_[index].IBODY;
-		dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].MAT = dg_TRACK_mod_[index].MAT;
-		dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].ILB[1 - 1] = ILBI[1 - 1];
-		dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].ILB[2 - 1] = ILBI[2 - 1];
-		dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].ILB[3 - 1] = ILBI[3 - 1];
-		dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].ILB[4 - 1] = ILBI[4 - 1];
-		dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].ILB[5 - 1] = ILBI[5 - 1];
+		if (dg_nTRACKS_.nSECTRACK_P == pilhaSec){
+			for (int I = 0; I < pilhaSec; I++) {
+				if (dg_SECTRACK_P_[I].E < EM) {
+					EM = dg_SECTRACK_P_[I].E;
+					IP = I;
+				}
+			}
+		}else{
+			IP = dg_nTRACKS_.nSECTRACK_P;
+			dg_nTRACKS_.nSECTRACK_P = dg_nTRACKS_.nSECTRACK_P + 1;
+		}
+		
+			dg_SECTRACK_P_[IP].E = EI;
+			dg_SECTRACK_P_[IP].X = XI;
+			dg_SECTRACK_P_[IP].Y = YI;
+			dg_SECTRACK_P_[IP].Z = ZI;
+			dg_SECTRACK_P_[IP].U = UI;
+			dg_SECTRACK_P_[IP].V = VI;
+			dg_SECTRACK_P_[IP].W = WI;
+			dg_SECTRACK_P_[IP].WGHT = WGHTI;
+			dg_SECTRACK_P_[IP].KPAR = KPARI;
+			dg_SECTRACK_P_[IP].IBODY = dg_TRACK_mod_[index].IBODY;
+			dg_SECTRACK_P_[IP].MAT = dg_TRACK_mod_[index].MAT;
+			dg_SECTRACK_P_[IP].ILB[1 - 1] = ILBI[1 - 1];
+			dg_SECTRACK_P_[IP].ILB[2 - 1] = ILBI[2 - 1];
+			dg_SECTRACK_P_[IP].ILB[3 - 1] = ILBI[3 - 1];
+			dg_SECTRACK_P_[IP].ILB[4 - 1] = ILBI[4 - 1];
+			dg_SECTRACK_P_[IP].ILB[5 - 1] = ILBI[5 - 1];
 
-		if (IPOLI == 1) {
-			dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].SP1 = dg_TRACK_mod_[index].SP1;
-			dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].SP2 = dg_TRACK_mod_[index].SP2;
-			dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].SP3 = dg_TRACK_mod_[index].SP3;
-			dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].IPOL = IPOLI;
-		}
-		else {
-			dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].SP1 = 0.e0;
-			dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].SP2 = 0.e0;
-			dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].SP3 = 0.e0;
-			dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].IPOL = 0;
-		}
-		dg_SECTRACK_P_[dg_nTRACKS_.nSECTRACK_P].PAGE = dg_TRACK_mod_[index].PAGE;
-		dg_nTRACKS_.nSECTRACK_P = dg_nTRACKS_.nSECTRACK_P + 1;
+			if (IPOLI == 1) {
+				dg_SECTRACK_P_[IP].SP1 = dg_TRACK_mod_[index].SP1;
+				dg_SECTRACK_P_[IP].SP2 = dg_TRACK_mod_[index].SP2;
+				dg_SECTRACK_P_[IP].SP3 = dg_TRACK_mod_[index].SP3;
+				dg_SECTRACK_P_[IP].IPOL = IPOLI;
+			}
+			else {
+				dg_SECTRACK_P_[IP].SP1 = 0.e0;
+				dg_SECTRACK_P_[IP].SP2 = 0.e0;
+				dg_SECTRACK_P_[IP].SP3 = 0.e0;
+				dg_SECTRACK_P_[IP].IPOL = 0;
+			}
+			dg_SECTRACK_P_[IP].PAGE = dg_TRACK_mod_[index].PAGE;
+		
 	}
-
-	
-
-
 }
 
 

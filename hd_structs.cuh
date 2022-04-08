@@ -43,6 +43,7 @@ static const int NDYM = 201;
 static const int NDZM = 201;
 
 static const int pilhaPart = 4096; //64*64
+static const int pilhaSec = 4096; //64*64
 
 char LINHA[200];
 char APOIO[200];
@@ -659,11 +660,11 @@ typedef struct {
 }CNT0;
 
 typedef struct {
-	double PRIM[3], PRIM2[3], DPRIM[3]; //Numero de particulas IEXIT;
-	double SEC[3][3], SEC2[3][3], DSEC[3][3]; // Geradores de particulas secundarias.
-	double AVW[2], AVW2[2], DAVW[2]; //Cosseno final do diretor polar.
-	double AVA[2], AVA2[2], DAVA[2]; // Angulo final polar
-	double AVE[2], AVE2[2], DAVE[2]; // Energia final
+	double PRIM[3], PRIM2[3], DPRIM[pilhaPart][3]; //Numero de particulas IEXIT;
+	double SEC[3][3], SEC2[3][3], DSEC[pilhaPart][3][3]; // Geradores de particulas secundarias.
+	double AVW[2], AVW2[2], DAVW[pilhaPart][2]; //Cosseno final do diretor polar.
+	double AVA[2], AVA2[2], DAVA[pilhaPart][2]; // Angulo final polar
+	double AVE[2], AVE2[2], DAVE[pilhaPart][2]; // Energia final
 } hd_CNT0;
 
 
@@ -1007,9 +1008,7 @@ hd_TRACK_MOD *SECTRACK_G;
 hd_TRACK_MOD *SECTRACK_E;
 hd_TRACK_MOD *SECTRACK_P; 
 
-
-
-
+hd_TRACK_MOD *vTrack_Simular;
 
 
 //DECLARACOES PARA COPIA NA GPU

@@ -22,17 +22,14 @@ using namespace std;
 int main() {
 
 	int sizeTrack = 0;
-	int block_size = 64;
-
-
+	int block_size = 128;
 	int simGPU = 1;
 
     //Alocando memoria para atributos das structs
-	inicializarStructs();
+	memoryAllocCPU();
     
 	//Lendo os arquivos de entrada e inicializando os pacotes de simulação.
 	pmrdr2_();
-
 
 	if (simGPU){//Simulação na GPU
 
@@ -40,25 +37,18 @@ int main() {
 			goto L103;
 		//Resete da GPU
 		gpuErrchk(cudaDeviceReset());
-		//gpuErrchk(cudaSetDevice(0));
-		//gpuErrchk(cudaDeviceSynchronize());
-		//gpuErrchk(cudaThreadSynchronize());
+
+		//alocando memooria na GPU
+		memoryAllocGPU();
 
 		//aloca vetores das particulas primarias e secundarias
-
-	
-		PRITRACK =  (hd_TRACK_MOD*)malloc(pilhaPart * sizeof(hd_TRACK_MOD)); //vetor de particulas primarias
-		SECTRACK_G = (hd_TRACK_MOD*)malloc(pilhaPart * sizeof(hd_TRACK_MOD)); //vetor de particulas secundarias de fotons
-		SECTRACK_E = (hd_TRACK_MOD*)malloc(pilhaPart * sizeof(hd_TRACK_MOD)); //vetor de particulas secudarias de eletrons
-		SECTRACK_P = (hd_TRACK_MOD*)malloc(pilhaPart * sizeof(hd_TRACK_MOD)); //vetor de particulas secundarias de protons
-		gpuErrchk(cudaMalloc((void **)&d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaPart));
-
 		bool btransfCPU_to_GPU = false;
+		//bool btransfGPU_to_CPU = false;
+		cleans2GPU_();
 		
-		
-
 		while ((*CNTRL_.TSEC < *CNTRL_.TSECA) && (*CNTRL_.SHN < *CNTRL_.DSHN)){
-
+			
+			printf("\nloop while\n");
 			
 			//criar vetor de particulas primarias inicial
 			iniPRITRACK(); 
@@ -66,6 +56,7 @@ int main() {
 			//transferindo os structs da CPU para GPU
 			if (!btransfCPU_to_GPU){
 				transfCPU_to_GPU();
+				gpuErrchk(cudaDeviceSynchronize());
 				btransfCPU_to_GPU = true;
 			}
 			//seta o tamanho da pilha a ser simulada
@@ -73,38 +64,67 @@ int main() {
 
 			//transfere a pilha de particulas secundarias para GPU
 			transfSecTracksCPU_to_GPU();
-
-			printf("aqui\n");
+			gpuErrchk(cudaDeviceSynchronize());
 
 			//transfere as particulas a serem simuladas para a GPU
+			gpuErrchk(cudaMalloc((void **)&d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaPart));
     		gpuErrchk(cudaMemcpy(d_TRACK_mod, PRITRACK, sizeof(hd_TRACK_MOD)*pilhaPart, cudaMemcpyHostToDevice));
     		gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaPart));
+			gpuErrchk(cudaDeviceSynchronize());
+			
+		
 			
 			//Quantidade de blocos no grid e de threads nos blocos
 			dim3 block(block_size);
-			dim3 grid((sizeTrack / block.x));
+			dim3 grid((sizeTrack / block.x) );
 
 			printf("%lf\n", PRITRACK[0].E);
 			printf("%lf\n", PRITRACK[1].E);
 
 			//chamada do kernel para simulacao das particulas primarias
-			showers<<<grid,block>>>(sizeTrack);
-
+			showers_pri<<<grid,block>>>(sizeTrack);
 			//Aguarda o termino da simulação das particulas primarias enviadas
 			gpuErrchk(cudaDeviceSynchronize());
+			gpuErrchk(cudaFree(d_TRACK_mod));
+
 
 			//resgata o pacote de particulas primarias da gpu
 			transfSecTracksGPU_to_CPU();
+			gpuErrchk(cudaDeviceSynchronize());
 
 		
 			printf("\nquantidade de parricula secundaria photon %d\n\n", nTRACKS_.nSECTRACK_G);
 			printf("\nquantidade de parricula secundaria eletron %d\n\n", nTRACKS_.nSECTRACK_E);
 			printf("\nquantidade de parricula secundaria positron %d\n\n", nTRACKS_.nSECTRACK_P);
-			//while para realizar simulação das particulas secundarias
-			//verifica se o pacote de particulas secundarias esta grande o suficinete para uma simulacao
-			//Se for grande o suficiente, ondena o vetor de particulas secundarias
-			//chama a simulacao das particulas secundarias se for grande o suficiente	
-			//	showers<<<1,1>>>();
+			
+				if (nTRACKS_.nSECTRACK_E == pilhaSec){
+					nTRACKS_.nSECTRACK_E = 0;
+					sizeTrack = pilhaSec;
+				//}
+				//transfere a pilha de particulas secundarias para GPU
+				transfSecTracksCPU_to_GPU();
+				gpuErrchk(cudaDeviceSynchronize());
+				
+				//transfere as particulas a serem simuladas para a GPU
+				
+				gpuErrchk(cudaMalloc((void **)&d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaSec));
+				gpuErrchk(cudaMemcpy(d_TRACK_mod, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaSec, cudaMemcpyHostToDevice));
+				gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaSec));
+				gpuErrchk(cudaDeviceSynchronize());
+
+				dim3 block(block_size);
+				dim3 grid((sizeTrack / block.x));
+				//chamada do kernel para simulacao das particulas primarias
+				showers_sec<<<grid,block>>>(sizeTrack);
+					//Aguarda o termino da simulação das particulas primarias enviadas
+				gpuErrchk(cudaDeviceSynchronize());
+					//resgata o pacote de particulas primarias da gpu
+				gpuErrchk(cudaFree(d_TRACK_mod));
+
+				transfSecTracksGPU_to_CPU();
+				gpuErrchk(cudaDeviceSynchronize());
+			
+				}
 
 			if (*CSOUR0_.JOBEND != 0)
 				goto L202;
@@ -115,9 +135,9 @@ int main() {
 			if (*CDUMP_.LDUMP) {
 				if (*CNTRL_.TSEC - *CNTRL_.TSECAD > *CNTRL_.DUMPP) {
 					//retorna os dados da GPU para imprimir o DUMP
+					
 					transfGPU_to_CPU();
-					memoryFreeGPU();
-					cudaDeviceSynchronize();
+					gpuErrchk(cudaDeviceSynchronize());
 					*CNTRL_.TSIM = *CNTRL_.TSIM + cputim2_() - *CNTRL_.CPUT0;
 					pmwrt2_(-1);
 					printf("  Number of simulated showers = %.6E\n", *CNTRL_.SHN);
@@ -128,19 +148,13 @@ int main() {
 		}
 
 L202:;
+		
 		*CNTRL_.TSIM = *CNTRL_.TSIM + cputim2_() - *CNTRL_.CPUT0;
-
 		//retorna os dados da GPU para imprimir o DUMP
 		transfGPU_to_CPU();
+		gpuErrchk(cudaDeviceSynchronize());
 		memoryFreeGPU();
-		gpuErrchk(cudaFree(d_TRACK_mod));
-					free(PRITRACK);
-			free(SECTRACK_G);
-			free(SECTRACK_E);
-			free(SECTRACK_P);
-		
-
-
+		printf("aqui\n");
 	}else{ //Simulação na CPU
 
 		if (*CSOUR0_.JOBEND != 0)
@@ -174,12 +188,12 @@ L102:;
 	}
 
 L103:;//Imprimir resultados Finais
-		pmwrt2_(1);
-		printf("  Number of simulated showers = %.6E\n", *CNTRL_.SHN);
-		plotdose2_();
-		memoryFree();
-		printf("  *** END ***\n");
-		return 0;
+	pmwrt2_(1);
+	printf("  Number of simulated showers = %.6E\n", *CNTRL_.SHN);
+	plotdose2_();
+	memoryFreeCPU();
+	printf("  *** END ***\n");
+	return 0;
 	
 }
 
