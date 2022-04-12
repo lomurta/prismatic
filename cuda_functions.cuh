@@ -446,17 +446,17 @@ __device__ void showers_step3(int size, int IEXIT){
 
 	if (dg_CNT5_.NED > 0) {
 		for (int KD = 1; KD <= dg_CNT5_.NED; KD++) {
-			dg_CNT5_.DEDE[KD - 1] = 0.0e0;
+			dg_CNT5_.DEDE[index][KD - 1] = 0.0e0;
 		}
 		for (int KB = 1; KB <= dg_PENGEOM_mod_.NBODY; KB++) {
 			IDET = dg_CNT5_.KBDE[KB - 1];
 			if (IDET != 0)
-				dg_CNT5_.DEDE[IDET - 1] = dg_CNT5_.DEDE[IDET - 1] + dg_CNT1_.DEBO[index][KB - 1];
+				dg_CNT5_.DEDE[index][IDET - 1] = dg_CNT5_.DEDE[index][IDET - 1] + dg_CNT1_.DEBO[index][KB - 1];
 
 		}
 
 		for (int IDET = 1; IDET <= dg_CNT5_.NED; IDET++) {
-			d_sendet2_(dg_CNT5_.DEDE[IDET - 1], IDET);
+			d_sendet2_(dg_CNT5_.DEDE[index][IDET - 1], IDET);
 		}
 	}
 
@@ -496,7 +496,7 @@ __global__ void showers_sec(int size){
 
 	 if (index < size){
 	
-/*	double PI = 3.1415926535897932e0;
+	double PI = 3.1415926535897932e0;
 	double TWOPI = 2.0e0 * PI;
 
 	int  KEn;
@@ -510,8 +510,8 @@ __global__ void showers_sec(int size){
 
 		if (dg_TRACK_mod_[index].ILB[1 - 1] == 1) { //Fonte da particula primaria
 			KEn = int(dg_TRACK_mod_[index].E * dg_CNT3_.RDSDE + 1.0e0);
-			dg_CNT3_.SEDS[KEn - 1][dg_TRACK_mod_[index].KPAR - 1] = dg_CNT3_.SEDS[KEn - 1][dg_TRACK_mod_[index].KPAR - 1] + dg_TRACK_mod_[index].WGHT;
-			dg_CNT3_.SEDS2[KEn - 1][dg_TRACK_mod_[index].KPAR - 1] = dg_CNT3_.SEDS2[KEn - 1][dg_TRACK_mod_[index].KPAR - 1] + pow(dg_TRACK_mod_[index].WGHT, 2);
+			dg_CNT3_.SEDS[index][KEn - 1][dg_TRACK_mod_[index].KPAR - 1] = dg_CNT3_.SEDS[index][KEn - 1][dg_TRACK_mod_[index].KPAR - 1] + dg_TRACK_mod_[index].WGHT;
+			dg_CNT3_.SEDS2[index][KEn - 1][dg_TRACK_mod_[index].KPAR - 1] = dg_CNT3_.SEDS2[index][KEn - 1][dg_TRACK_mod_[index].KPAR - 1] + pow(dg_TRACK_mod_[index].WGHT, 2);
 			//if (dg_TRACK_mod_[index].LAGE) //nao irá contabilizar a idade da particula
 			//	page02_();
 			//goto L302; //A energia não é removida do local.
@@ -526,18 +526,18 @@ __global__ void showers_sec(int size){
 						if ((dg_TRACK_mod_[index].ILB[1 - 1] == 2) && (dg_TRACK_mod_[index].ILB[3 - 1] < 9)) {
 							if (dg_CXRSPL_.LXRSPL[dg_TRACK_mod_[index].IBODY - 1]) {
 								dg_TRACK_mod_[index].WGHT = dg_TRACK_mod_[index].WGHT / (dg_CXRSPL_.IXRSPL[dg_TRACK_mod_[index].IBODY - 1]);
-								dg_CXRSPL_.ILBA[1 - 1] = dg_TRACK_mod_[index].ILB[1 - 1];
-								dg_CXRSPL_.ILBA[2 - 1] = dg_TRACK_mod_[index].ILB[2 - 1];
-								dg_CXRSPL_.ILBA[3 - 1] = 9;
-								dg_CXRSPL_.ILBA[4 - 1] = dg_TRACK_mod_[index].ILB[4 - 1];
-								dg_CXRSPL_.ILBA[5 - 1] = dg_TRACK_mod_[index].ILB[5 - 1];
+								dg_CXRSPL_.ILBA[index][1 - 1] = dg_TRACK_mod_[index].ILB[1 - 1];
+								dg_CXRSPL_.ILBA[index][2 - 1] = dg_TRACK_mod_[index].ILB[2 - 1];
+								dg_CXRSPL_.ILBA[index][3 - 1] = 9;
+								dg_CXRSPL_.ILBA[index][4 - 1] = dg_TRACK_mod_[index].ILB[4 - 1];
+								dg_CXRSPL_.ILBA[index][5 - 1] = dg_TRACK_mod_[index].ILB[5 - 1];
 								for (int I = 2; I <= dg_CXRSPL_.IXRSPL[dg_TRACK_mod_[index].IBODY - 1]; I++) {
 									WS = -1.0e0 + 2.0e0 * d_rand2_(9.0e0);
 									SDTS = sqrt(1.0e0 - WS * WS);
 									DF = TWOPI * d_rand2_(10.0e0);
 									US = cos(DF) * SDTS;
 									VS = sin(DF) * SDTS;
-									d_stores2_(dg_TRACK_mod_[index].E, dg_TRACK_mod_[index].X, dg_TRACK_mod_[index].Y, dg_TRACK_mod_[index].Z, US, VS, WS, dg_TRACK_mod_[index].WGHT, dg_TRACK_mod_[index].KPAR, dg_CXRSPL_.ILBA, d_wIPOLI);
+									d_stores2_(dg_TRACK_mod_[index].E, dg_TRACK_mod_[index].X, dg_TRACK_mod_[index].Y, dg_TRACK_mod_[index].Z, US, VS, WS, dg_TRACK_mod_[index].WGHT, dg_TRACK_mod_[index].KPAR, dg_CXRSPL_.ILBA[index], d_wIPOLI);
 								}
 							}
 						}
@@ -566,7 +566,7 @@ __global__ void showers_sec(int size){
 
 	}*/
 
-	showers_step2(size);
+	
 	}
 }
 
@@ -633,8 +633,8 @@ __device__ void d_step2_(double& DS, double& DSEF, int& NCROSS) {
 	//gpuErrchk(cudaMalloc(&d_S, sizeof(double)*NS2M));
 	//gpuErrchk(cudaMalloc(&d_IS, sizeof(int)*NS2M));
 
-	double *d_S = (double *)malloc(dg_QSURF_.NSURF*sizeof(double));
-	int *d_IS = (int *)malloc(dg_QSURF_.NSURF*sizeof(int));
+	double *d_S = (double *)malloc(dg_QSURF_.NSURF*2*sizeof(double));
+	int *d_IS = (int *)malloc(dg_QSURF_.NSURF*2*sizeof(int));
 
 
 /*	if (index == 0){
@@ -3359,14 +3359,14 @@ L1:;
 		K1 = int(RN);
 		TST = RN - K1;
 		if (TST > dg_CRELAX_.F[KF + K1 - 1]) {
-			dg_CRELAX_.KS = dg_CRELAX_.IS0[KF + K1 - 1];
+			dg_CRELAX_.KS[index] = dg_CRELAX_.IS0[KF + K1 - 1];
 		}
 		else {
-			dg_CRELAX_.KS = KF + K1;
+			dg_CRELAX_.KS[index] = KF + K1;
 		}
 	}
 	else {
-		dg_CRELAX_.KS = KF;
+		dg_CRELAX_.KS[index] = KF;
 	}
 
 	/*
@@ -3392,8 +3392,8 @@ L1:;
 
 	//radiação fluorescente
 
-	IS1K = dg_CRELAX_.IS1[dg_CRELAX_.KS - 1];
-	IS2K = dg_CRELAX_.IS2[dg_CRELAX_.KS - 1];
+	IS1K = dg_CRELAX_.IS1[dg_CRELAX_.KS[index] - 1];
+	IS2K = dg_CRELAX_.IS2[dg_CRELAX_.KS[index] - 1];
 	if (IS2K == 0) {
 		KPARS = 2;
 		if (IS1K < 17) {
@@ -3427,7 +3427,7 @@ L1:;
 	sua energia ET(K) é maior que EABS.
 	*/
 
-	if (dg_CRELAX_.ET[dg_CRELAX_.KS - 1] > dg_PENELOPE_mod_.EABS[dg_TRACK_mod_[index].MAT - 1][KPARS - 1]) {
+	if (dg_CRELAX_.ET[dg_CRELAX_.KS[index] - 1] > dg_PENELOPE_mod_.EABS[dg_TRACK_mod_[index].MAT - 1][KPARS - 1]) {
 		//Direção inicial (isotrópica).
 		WS = -1.0e0 + 2.0e0 * d_rand2_(2.0e0);
 		SDTS = sqrt(1.0e0 - WS * WS);
@@ -3438,7 +3438,7 @@ L1:;
 		dg_CHIST_.ILBA[index][2 - 1] = dg_TRACK_mod_[index].KPAR;
 		dg_CHIST_.ILBA[index][4 - 1] = IZ * 1000000 + ISP * 10000 + IS1K * 100 + IS2K;
 		dg_CHIST_.ILBA[index][5 - 1] = dg_TRACK_mod_[index].ILB[5 - 1];
-		d_stores2_(dg_CRELAX_.ET[dg_CRELAX_.KS - 1], dg_TRACK_mod_[index].X, dg_TRACK_mod_[index].Y, dg_TRACK_mod_[index].Z, US, VS, WS, dg_TRACK_mod_[index].WGHT, KPARS, dg_CHIST_.ILBA[index], d_wIPOLI);
+		d_stores2_(dg_CRELAX_.ET[dg_CRELAX_.KS[index] - 1], dg_TRACK_mod_[index].X, dg_TRACK_mod_[index].Y, dg_TRACK_mod_[index].Z, US, VS, WS, dg_TRACK_mod_[index].WGHT, KPARS, dg_CHIST_.ILBA[index], d_wIPOLI);
 	}
 
 	//Existem vagas não preenchidas nas conchas internas?
@@ -3511,9 +3511,9 @@ __device__ void d_stores2_(double& EI, double& XI, double& YI, double& ZI, doubl
 				dg_SECTRACK_E_[IE].IPOL = IPOLI;
 			}
 			else {
-				dg_SECTRACK_E_[IE].SP1 = 0.e0;
-				dg_SECTRACK_E_[IE].SP2 = 0.e0;
-				dg_SECTRACK_E_[IE].SP3 = 0.e0;
+				dg_SECTRACK_E_[IE].SP1 = 0.0e0;
+				dg_SECTRACK_E_[IE].SP2 = 0.0e0;
+				dg_SECTRACK_E_[IE].SP3 = 0.0e0;
 				dg_SECTRACK_E_[IE].IPOL = 0;
 			}
 			dg_SECTRACK_E_[IE].PAGE = dg_TRACK_mod_[index].PAGE;
@@ -3555,12 +3555,12 @@ __device__ void d_stores2_(double& EI, double& XI, double& YI, double& ZI, doubl
 				dg_SECTRACK_G_[IG].IPOL = IPOLI;
 			}
 			else {
-				dg_SECTRACK_G_[IG].SP1 = 0.e0;
-				dg_SECTRACK_G_[IG].SP2 = 0.e0;
-				dg_SECTRACK_G_[IG].SP3 = 0.e0;
+				dg_SECTRACK_G_[IG].SP1 = 0.0e0;
+				dg_SECTRACK_G_[IG].SP2 = 0.0e0;
+				dg_SECTRACK_G_[IG].SP3 = 0.0e0;
 				dg_SECTRACK_G_[IG].IPOL = 0;
 			}
-			dg_SECTRACK_G_[IG-1].PAGE = dg_TRACK_mod_[index].PAGE;
+			dg_SECTRACK_G_[IG].PAGE = dg_TRACK_mod_[index].PAGE;
 		
 	}else if (KPARI == 3){
 		if (dg_nTRACKS_.nSECTRACK_P == pilhaSec){
@@ -5992,13 +5992,6 @@ __device__ void d_sdose2_(double& DEP, double& XD, double& YD, double& ZD, int& 
 			}
 		}
 	}
-
-	/*		if (imprimiu==0){
-			printf("\n\nsdose2\n\n");
-			imprimiu++;
-		}*/
-
-
 }
 
 __device__ void d_cleans2_() {
@@ -6010,12 +6003,6 @@ __device__ void d_cleans2_() {
 	dg_nTRACKS_.nSECTRACK_E = 0;
 	dg_nTRACKS_.nSECTRACK_G = 0;
 	dg_nTRACKS_.nSECTRACK_P = 0;
-
-	/*	if (imprimiu==0){
-			printf("\n\ncleans2\n\n");
-			imprimiu++;
-		}*/
-
 }
 
 

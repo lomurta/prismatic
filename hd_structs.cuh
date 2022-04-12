@@ -196,7 +196,7 @@ typedef struct {
 
 typedef struct {
 	double P[NRX], ET[NRX], F[NRX];
-	int IS0[NRX], IS1[NRX], IS2[NRX], IFIRST[16][99], ILAST[16][99], NCUR, KS, MODER;
+	int IS0[NRX], IS1[NRX], IS2[NRX], IFIRST[16][99], ILAST[16][99], NCUR, KS[pilhaPart], MODER;
 } hd_CRELAX;
 
 
@@ -602,7 +602,7 @@ typedef struct {
 }CXRSPL;
 
 typedef struct {
-	int IXRSPL[NBV], ILBA[5];
+	int IXRSPL[NBV], ILBA[pilhaPart][5];
 	bool LXRSPL[NBV];
 } hd_CXRSPL;
 
@@ -693,7 +693,7 @@ typedef struct {
 }CNT3;
 
 typedef struct {
-	double SEDS[NSEM][3],  SEDS2[NSEM][3], DSDE, RDSDE;
+	double SEDS[pilhaPart][NSEM][3],  SEDS2[pilhaPart][NSEM][3], DSDE, RDSDE;
 	int NSDE;
 } hd_CNT3;
 
@@ -715,7 +715,7 @@ typedef struct {
 }CNT5;
 
 typedef struct {
-	double DEDE[NIDM];
+	double DEDE[pilhaPart][NIDM];
 	int KBDE[NB], NED;
 } hd_CNT5;
 

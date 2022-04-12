@@ -90,43 +90,47 @@ int main() {
 			printf("\nquantidade de parricula secundaria eletron %d\n\n", nTRACKS_.nSECTRACK_E);
 			printf("\nquantidade de parricula secundaria positron %d\n\n", nTRACKS_.nSECTRACK_P);
 			
-			/*if (nTRACKS_.nSECTRACK_E == pilhaSec){
-				nTRACKS_.nSECTRACK_E = 0;
-				sizeTrack = pilhaSec;
+			if (nTRACKS_.nSECTRACK_E == pilhaSec){
+				while (nTRACKS_.nSECTRACK_E > 1024){
+					nTRACKS_.nSECTRACK_E = 0;
+					sizeTrack = pilhaSec;
+
+					//transfere a pilha de particulas secundarias para GPU
+					transfSecTracksCPU_to_GPU();
+					
+					
+					//transfere as particulas a serem simuladas para a GPU
+					gpuErrchk(cudaMalloc(&d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaSec));
+					//PRITRACK = SECTRACK_E;
+					//gpuErrchk(cudaMemcpy(d_TRACK_mod, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaSec, cudaMemcpyHostToDevice));
+					//gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaSec));
+
+					//memcpy(vTrack_Simular, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart);
+
+					gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart,0));
+
+					
 				
-				
-				//transfere as particulas a serem simuladas para a GPU
-				gpuErrchk(cudaMalloc(&d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaSec));
-				//PRITRACK = SECTRACK_E;
-				//gpuErrchk(cudaMemcpy(d_TRACK_mod, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaSec, cudaMemcpyHostToDevice));
-				//gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaSec));
 
-				memcpy(vTrack_Simular, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart);
+					dim3 blockSec(block_size);
+					dim3 gridSec((sizeTrack / block.x));
 
-				gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, vTrack_Simular, sizeof(hd_TRACK_MOD)*pilhaPart,0));
+					printf("[0]: %lf\n", SECTRACK_E[0].E);
+					printf("[1]: %lf\n", SECTRACK_E[1].E);
+					printf("[256]: %lf\n", SECTRACK_E[256].E);
+					printf("[4095]: %lf\n", SECTRACK_E[4095].E);
+					printf("[4096]: %lf\n", SECTRACK_E[4096].E);
 
-				//transfere a pilha de particulas secundarias para GPU
-				transfSecTracksCPU_to_GPU();
-			
+					//chamada do kernel para simulacao das particulas primarias
+					showers_sec<<<gridSec,blockSec>>>(sizeTrack);
+						//Aguarda o termino da simulação das particulas primarias enviadas
+					gpuErrchk(cudaDeviceSynchronize());
+						//resgata o pacote de particulas primarias da gpu
+					gpuErrchk(cudaFree(d_TRACK_mod));
 
-				dim3 blockSec(block_size);
-				dim3 gridSec((sizeTrack / block.x));
-
-				printf("[0]: %lf\n", SECTRACK_E[0].E);
-				printf("[1]: %lf\n", SECTRACK_E[1].E);
-				printf("[256]: %lf\n", SECTRACK_E[256].E);
-				printf("[4095]: %lf\n", SECTRACK_E[4095].E);
-				printf("[4096]: %lf\n", SECTRACK_E[4096].E);
-
-				//chamada do kernel para simulacao das particulas primarias
-				showers_sec<<<gridSec,blockSec>>>(sizeTrack);
-					//Aguarda o termino da simulação das particulas primarias enviadas
-				gpuErrchk(cudaDeviceSynchronize());
-					//resgata o pacote de particulas primarias da gpu
-				gpuErrchk(cudaFree(d_TRACK_mod));
-
-				transfSecTracksGPU_to_CPU();
-			}*/
+					transfSecTracksGPU_to_CPU();
+				}
+			}
 
 			if (*CSOUR0_.JOBEND != 0)
 				goto L202;
