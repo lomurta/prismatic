@@ -26344,7 +26344,7 @@ void transfCPU_to_GPU(){
 
 	//CHIST
 	
-	gpuErrchk(cudaMemcpy(d_CHIST->ILBA,CHIST_.ILBA, sizeof(int)*5, cudaMemcpyHostToDevice));
+	//gpuErrchk(cudaMemcpy(d_CHIST->ILBA,CHIST_.ILBA, sizeof(int)*5, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(dg_CHIST_, d_CHIST, sizeof(hd_CHIST)));
 
 	//COMPOS
@@ -26987,7 +26987,7 @@ void transfGPU_to_CPU(){
 
 	//CHIST
 	gpuErrchk(cudaMemcpyFromSymbol(d_CHIST, dg_CHIST_, sizeof(hd_CHIST)));
-	gpuErrchk(cudaMemcpy(CHIST_.ILBA,d_CHIST->ILBA, sizeof(int)*5, cudaMemcpyDeviceToHost));
+	//gpuErrchk(cudaMemcpy(CHIST_.ILBA,d_CHIST->ILBA, sizeof(int)*5, cudaMemcpyDeviceToHost));
 
 	//COMPOS
 	gpuErrchk(cudaMemcpyFromSymbol(d_COMPOS, dg_COMPOS_, sizeof(hd_COMPOS)));
@@ -27673,7 +27673,7 @@ void iniPRITRACK() {
 	//Contadores de particulas primarias
 
 //L101:;
-	for (int I = 1; I <= 3; I++) {
+/*	for (int I = 1; I <= 3; I++) {
 		CNT0_.DPRIM[I - 1] = 0.0e0;
 		for (int K = 1; K <= 3; K++) {
 			CNT0_.DSEC[I - 1][K - 1] = 0.0e0;
@@ -27688,7 +27688,7 @@ void iniPRITRACK() {
 
 	for (int KB = 1; KB <= *PENGEOM_mod_.NBODY; KB++) {
 		CNT1_.DEBO[KB - 1] = 0.0e0; //Energias depositadas nos diversos corpos KB
-	}
+	}*/
 
 
 
@@ -27701,7 +27701,7 @@ void iniPRITRACK() {
 
 	//Definindo o estado inicial da partícula primária.
 
-//L201:;
+//L201:;f
 
 	if (*CSOUR0_.KPARP == 0) { //não será implementado o tratamento para eletrons como particula primaria nesta versão do programas.
 		printf("Nao sera implementado simulação com particula primaria sendo eletron, apenas fotons\n");
@@ -27709,7 +27709,7 @@ void iniPRITRACK() {
 	}
 	else {
 
-		for (int I = 0; I <= pilhaPart; I++){
+		for (int I = 0; I < pilhaPart; I++){
 			//Fonte Externa
 			*CNTRL_.SHN = *CNTRL_.SHN + 1.0e0;
 			*CNTRL_.N = *CNTRL_.N + 1;

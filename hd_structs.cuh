@@ -904,7 +904,7 @@ typedef struct {
 }CHIST;
 
 typedef struct {
-	int ILBA[5];
+	int ILBA[pilhaPart][5];
 } hd_CHIST;
 
 typedef struct{
@@ -1132,6 +1132,7 @@ hd_PENELOPE_MOD* d_PENELOPE_mod;
 hd_TRACK_MOD* d_TRACK_mod;*/
 
 __device__ hd_TRACK_MOD dg_TRACK_mod_[pilhaPart];
+//__device__ hd_TRACK_MOD *dg_TRACK_mod_;
 hd_TRACK_MOD* d_TRACK_mod;
 
 __device__ hd_QBODY dg_QBODY_;
