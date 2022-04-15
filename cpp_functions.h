@@ -542,6 +542,12 @@ extern "C" {
 
 	void prepVetorTracksSec(hd_TRACK_MOD *vTrack, int &N);
 
+	void simSecTrack_E();
+	
+	void simSecTrack_G();
+
+	void simSecTrack_P();
+
 
 
 
@@ -17524,14 +17530,19 @@ void rand02_(int N) {
 	IS1[1000] = 1275774316; IS2[1000] = 515177342;
 	IS1[1001] = 731077242; IS2[1001] = 2126489340;
 
-	if ((N > 0) && (N < 1002)) {
+	for (int I = 1; I <= 1000; I++){
+		h_RSEED2_[I-1].ISEED1 = IS1[I];
+		h_RSEED2_[I-1].ISEED2 = IS2[I];
+	}
+
+/*	if ((N > 0) && (N < 1002)) {
 		*RSEED_.ISEED1 = IS1[N];
 		*RSEED_.ISEED2 = IS2[N];
 	}
 	else {
 		*RSEED_.ISEED1 = 1;
 		*RSEED_.ISEED2 = 1;
-	}
+	}*/
 }
 
 void enangr2_(ifstream& IRD, FILE* IWDUMP) {
@@ -26190,9 +26201,11 @@ void transfCPU_to_GPU(){
 
     //RSEED
 	
-    gpuErrchk(cudaMemcpy(&d_RSEED->ISEED1,RSEED_.ISEED1, sizeof(int), cudaMemcpyHostToDevice));
+    /*gpuErrchk(cudaMemcpy(&d_RSEED->ISEED1,RSEED_.ISEED1, sizeof(int), cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(&d_RSEED->ISEED2,RSEED_.ISEED2, sizeof(int), cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpyToSymbol(dg_RSEED_, d_RSEED, sizeof(hd_RSEED)));
+    gpuErrchk(cudaMemcpyToSymbol(dg_RSEED_, d_RSEED, sizeof(hd_RSEED)));*/
+	rand02_(1);
+	gpuErrchk(cudaMemcpyToSymbol(dg_RSEED2_, h_RSEED2_, sizeof(hd_RSEED)*1000));
 
     //CIMDET
 	
@@ -26724,8 +26737,8 @@ void transfCPU_to_GPU(){
 	//gpuErrchk(cudaMemcpy(&d_CNTRL->DUMPP,CNTRL_.DUMPP, sizeof(double), cudaMemcpyHostToDevice));
 	//gpuErrchk(cudaMemcpy(&d_CNTRL->DSHN,CNTRL_.DSHN, sizeof(double), cudaMemcpyHostToDevice));
 	//gpuErrchk(cudaMemcpy(&d_CNTRL->SHN,CNTRL_.SHN, sizeof(double), cudaMemcpyHostToDevice));
-	gpuErrchk(cudaMemcpy(&d_CNTRL->N,CNTRL_.N, sizeof(int), cudaMemcpyHostToDevice));
-	gpuErrchk(cudaMemcpyToSymbol(dg_CNTRL_, d_CNTRL, sizeof(hd_CNTRL)));
+	//gpuErrchk(cudaMemcpy(d_CNTRL->N,h_vetN, sizeof(int)*pilhaPart, cudaMemcpyHostToDevice));
+	//gpuErrchk(cudaMemcpyToSymbol(dg_CNTRL_, d_CNTRL, sizeof(hd_CNTRL)));
 
 	//CSPGEO
 	
@@ -26838,9 +26851,9 @@ void transfGPU_to_CPU(){
     //gpuErrchk(cudaMemcpy(QTREE_.NWARN, &d_QTREE->NWARN,  sizeof(int), cudaMemcpyDeviceToHost));
 
     //RSEED
-    gpuErrchk(cudaMemcpyFromSymbol(d_RSEED, dg_RSEED_, sizeof(hd_RSEED)));
+   /* gpuErrchk(cudaMemcpyFromSymbol(d_RSEED, dg_RSEED_, sizeof(hd_RSEED)));
     gpuErrchk(cudaMemcpy(RSEED_.ISEED1,&d_RSEED->ISEED1, sizeof(int), cudaMemcpyDeviceToHost));
-    gpuErrchk(cudaMemcpy(RSEED_.ISEED2,&d_RSEED->ISEED2, sizeof(int), cudaMemcpyDeviceToHost));
+    gpuErrchk(cudaMemcpy(RSEED_.ISEED2,&d_RSEED->ISEED2, sizeof(int), cudaMemcpyDeviceToHost));*/
 
 
      //CIMDET
@@ -27242,7 +27255,7 @@ void transfGPU_to_CPU(){
 	gpuErrchk(cudaMemcpy(CDOSE2_.DDOSE,d_CDOSE2->DDOSE, sizeof(double)*NDZM, cudaMemcpyDeviceToHost));
 	gpuErrchk(cudaMemcpy(CDOSE2_.DDOSE2,d_CDOSE2->DDOSE2, sizeof(double)*NDZM, cudaMemcpyDeviceToHost));
 	gpuErrchk(cudaMemcpy(CDOSE2_.DDOSEP,d_CDOSE2->DDOSEP, sizeof(double)*NDZM, cudaMemcpyDeviceToHost));
-	gpuErrchk(cudaMemcpy(CDOSE2_.LDDOSE,d_CDOSE2->LDDOSE, sizeof(int)*NDZM, cudaMemcpyDeviceToHost));
+    gpuErrchk(cudaMemcpy(CDOSE2_.LDDOSE,d_CDOSE2->LDDOSE, sizeof(int)*NDZM, cudaMemcpyDeviceToHost));
 
 	//CDOSE3
 	gpuErrchk(cudaMemcpyFromSymbol(d_CDOSE3, dg_CDOSE3_, sizeof(hd_CDOSE3)));
@@ -27320,7 +27333,7 @@ void transfGPU_to_CPU(){
 	gpuErrchk(cudaMemcpy(CNT6_.LDOSEM, &d_CNT6->LDOSEM,sizeof(bool), cudaMemcpyDeviceToHost));
 
 	//CNTRL
-	gpuErrchk(cudaMemcpyFromSymbol(d_CNTRL, dg_CNTRL_, sizeof(hd_CNTRL)));
+	//gpuErrchk(cudaMemcpyFromSymbol(d_CNTRL, dg_CNTRL_, sizeof(hd_CNTRL)));
 	//gpuErrchk(cudaMemcpy(CNTRL_.TSIM,&d_CNTRL->TSIM, sizeof(double), cudaMemcpyDeviceToHost));
 	//gpuErrchk(cudaMemcpy(CNTRL_.TSEC,&d_CNTRL->TSEC, sizeof(double), cudaMemcpyDeviceToHost));
 	//gpuErrchk(cudaMemcpy(CNTRL_.TSECA,&d_CNTRL->TSECA, sizeof(double), cudaMemcpyDeviceToHost));
@@ -27329,7 +27342,7 @@ void transfGPU_to_CPU(){
 	//gpuErrchk(cudaMemcpy(CNTRL_.DUMPP,&d_CNTRL->DUMPP, sizeof(double), cudaMemcpyDeviceToHost));
 	//gpuErrchk(cudaMemcpy(CNTRL_.DSHN,&d_CNTRL->DSHN, sizeof(double), cudaMemcpyDeviceToHost));
 	//gpuErrchk(cudaMemcpy(CNTRL_.SHN,&d_CNTRL->SHN, sizeof(double), cudaMemcpyDeviceToHost));
-	gpuErrchk(cudaMemcpy(CNTRL_.N,&d_CNTRL->N, sizeof(int), cudaMemcpyDeviceToHost));
+	//gpuErrchk(cudaMemcpy(CNTRL_.N,&d_CNTRL->N, sizeof(int), cudaMemcpyDeviceToHost));
 
 	//CSPGEO
 	gpuErrchk(cudaMemcpyFromSymbol(d_CSPGEO, dg_CSPGEO_, sizeof(hd_CSPGEO)));
@@ -27705,17 +27718,22 @@ void iniPRITRACK() {
 
 	if (*CSOUR0_.KPARP == 0) { //não será implementado o tratamento para eletrons como particula primaria nesta versão do programas.
 		printf("Nao sera implementado simulação com particula primaria sendo eletron, apenas fotons\n");
-
 	}
 	else {
 
-		for (int I = 0; I < pilhaPart; I++){
+		for (int I = 0; I < pilhaPart/16; I++){
 			//Fonte Externa
 			*CNTRL_.SHN = *CNTRL_.SHN + 1.0e0;
 			*CNTRL_.N = *CNTRL_.N + 1;
+			h_N++;
 
-			if (*CNTRL_.N > 2000000000)
-				*CNTRL_.N = *CNTRL_.N - 2000000000;
+			h_vetN[I] = h_N;
+
+
+			/*if (*CNTRL_.N > 2000000000)
+				*CNTRL_.N = *CNTRL_.N - 2000000000;*/
+			if (h_N > 2000000000)
+				h_N = h_N - 2000000000;
 
 			PRITRACK[I].KPAR = *CSOUR0_.KPARP;
 			PRITRACK[I].WGHT = 1.0e0;
@@ -27848,6 +27866,10 @@ void transfSecTracksCPU_to_GPU(){
      gpuErrchk(cudaMemcpy(d2_CEELDB, &h_CEELDB, sizeof(hd_CEELDB), cudaMemcpyHostToDevice));
      gpuErrchk(cudaMemcpyToSymbol(dg2_CEELDB, d2_CEELDB, sizeof(hd_CEELDB)));*/
 
+	//CNTRL
+	gpuErrchk(cudaMemcpy(d_CNTRL->N,h_vetN, sizeof(int)*pilhaPart, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpyToSymbol(dg_CNTRL_, d_CNTRL, sizeof(hd_CNTRL)));
+
 }
 
 void transfSecTracksGPU_to_CPU(){
@@ -27871,6 +27893,131 @@ void transfSecTracksGPU_to_CPU(){
 	//nTRACKS
 	gpuErrchk(cudaMemcpyFromSymbol(d_nTRACKS, dg_nTRACKS_, sizeof(hd_nTRACKS)));
 	gpuErrchk(cudaMemcpy(&nTRACKS_, d_nTRACKS,  sizeof(hd_nTRACKS), cudaMemcpyDeviceToHost));
+
+}
+
+void simSecTrack_E(){
+
+	int sizeTrack = 0;
+//	while (nTRACKS_.nSECTRACK_E > 0){
+		sizeTrack = nTRACKS_.nSECTRACK_E;
+		nTRACKS_.nSECTRACK_E = 0;
+
+		// transfere a pilha de particulas secundarias para GPU
+		transfSecTracksCPU_to_GPU();
+
+		// transfere as particulas a serem simuladas para a GPU
+		//gpuErrchk(cudaMalloc(&d_TRACK_mod, sizeof(hd_TRACK_MOD) * pilhaSec));
+		// PRITRACK = SECTRACK_E;
+		// gpuErrchk(cudaMemcpy(d_TRACK_mod, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaSec, cudaMemcpyHostToDevice));
+		// gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaSec));
+
+		// memcpy(vTrack_Simular, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart);
+
+		gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, SECTRACK_E, sizeof(hd_TRACK_MOD) * pilhaPart, 0));
+
+		dim3 blockSec(blockSize);
+		dim3 gridSec(ceil(sizeTrack / blockSec.x));
+
+		/*printf("[0]: %lf\n", SECTRACK_E[0].E);
+		printf("[1]: %lf\n", SECTRACK_E[1].E);
+		printf("[256]: %lf\n", SECTRACK_E[256].E);
+		printf("[4095]: %lf\n", SECTRACK_E[4095].E);
+		printf("[4096]: %lf\n", SECTRACK_E[4096].E);*/
+
+		// chamada do kernel para simulacao das particulas primarias
+		showers_sec<<<gridSec, blockSec>>>(sizeTrack);
+		// Aguarda o termino da simulação das particulas primarias enviadas
+		gpuErrchk(cudaDeviceSynchronize());
+		// resgata o pacote de particulas primarias da gpu
+		//gpuErrchk(cudaFree(d_TRACK_mod));
+
+		transfSecTracksGPU_to_CPU();
+//	}
+}
+
+void simSecTrack_G(){
+
+	int sizeTrack = 0;
+//	while (nTRACKS_.nSECTRACK_G > 0){
+		sizeTrack = nTRACKS_.nSECTRACK_G;
+		nTRACKS_.nSECTRACK_G = 0;
+
+		// transfere a pilha de particulas secundarias para GPU
+		transfSecTracksCPU_to_GPU();
+
+		// transfere as particulas a serem simuladas para a GPU
+		//gpuErrchk(cudaMalloc(&d_TRACK_mod, sizeof(hd_TRACK_MOD) * pilhaSec));
+		// PRITRACK = SECTRACK_E;
+		// gpuErrchk(cudaMemcpy(d_TRACK_mod, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaSec, cudaMemcpyHostToDevice));
+		// gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaSec));
+
+		// memcpy(vTrack_Simular, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart);
+
+	//	printf("tipo de particula[0]: ILB %d\n tipo de particula[1]: ILB %d\n", SECTRACK_G[0].ILB[0],  SECTRACK_G[1].ILB[0]);
+
+		gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, SECTRACK_G, sizeof(hd_TRACK_MOD) * pilhaPart, 0));
+
+		dim3 blockSec(blockSize);
+		dim3 gridSec(ceil(sizeTrack / blockSec.x));
+
+		/*printf("[0]: %lf\n", SECTRACK_E[0].E);
+		printf("[1]: %lf\n", SECTRACK_E[1].E);
+		printf("[256]: %lf\n", SECTRACK_E[256].E);
+		printf("[4095]: %lf\n", SECTRACK_E[4095].E);
+		printf("[4096]: %lf\n", SECTRACK_E[4096].E);*/
+
+		// chamada do kernel para simulacao das particulas primarias
+		showers_sec<<<gridSec, blockSec>>>(sizeTrack);
+		// Aguarda o termino da simulação das particulas primarias enviadas
+		gpuErrchk(cudaDeviceSynchronize());
+		// resgata o pacote de particulas primarias da gpu
+		//gpuErrchk(cudaFree(d_TRACK_mod));
+
+		transfSecTracksGPU_to_CPU();
+//	}
+
+}
+
+void simSecTrack_P(){
+
+	int sizeTrack = 0;
+//	while (nTRACKS_.nSECTRACK_P > 0){
+		sizeTrack = nTRACKS_.nSECTRACK_P;
+		nTRACKS_.nSECTRACK_P = 0;
+
+		// transfere a pilha de particulas secundarias para GPU
+		transfSecTracksCPU_to_GPU();
+
+		// transfere as particulas a serem simuladas para a GPU
+		//gpuErrchk(cudaMalloc(&d_TRACK_mod, sizeof(hd_TRACK_MOD) * pilhaSec));
+		// PRITRACK = SECTRACK_E;
+		// gpuErrchk(cudaMemcpy(d_TRACK_mod, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaSec, cudaMemcpyHostToDevice));
+		// gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaSec));
+
+		// memcpy(vTrack_Simular, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart);
+
+		gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, SECTRACK_P, sizeof(hd_TRACK_MOD) * pilhaPart, 0));
+
+		dim3 blockSec(blockSize);
+		dim3 gridSec(ceil(sizeTrack / blockSec.x));
+
+		/*printf("[0]: %lf\n", SECTRACK_E[0].E);
+		printf("[1]: %lf\n", SECTRACK_E[1].E);
+		printf("[256]: %lf\n", SECTRACK_E[256].E);
+		printf("[4095]: %lf\n", SECTRACK_E[4095].E);
+		printf("[4096]: %lf\n", SECTRACK_E[4096].E);*/
+
+		// chamada do kernel para simulacao das particulas primarias
+		showers_sec<<<gridSec, blockSec>>>(sizeTrack);
+		// Aguarda o termino da simulação das particulas primarias enviadas
+		gpuErrchk(cudaDeviceSynchronize());
+		// resgata o pacote de particulas primarias da gpu
+		//gpuErrchk(cudaFree(d_TRACK_mod));
+
+		transfSecTracksGPU_to_CPU();
+//	}
+
 
 }
 

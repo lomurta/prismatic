@@ -14,15 +14,15 @@
 using namespace std;
 #include "hd_structs.cuh"
 #include "cuda_common.cuh"
-#include "cpp_functions.h"
 #include "cuda_functions.cuh"
+#include "cpp_functions.h"
+
 
 
 
 int main() {
 
 	int sizeTrack = 0;
-	int block_size = 128;
 	int simGPU = 1;
 
     //Alocando memoria para atributos das structs
@@ -36,7 +36,7 @@ int main() {
 		if (*CSOUR0_.JOBEND != 0)
 			goto L103;
 		//Resete da GPUFF
-		//gpuErrchk(cudaDeviceReset());
+		gpuErrchk(cudaDeviceReset());
 
 		//alocando memooria na GPU
 		memoryAllocGPU();
@@ -57,80 +57,74 @@ int main() {
 				btransfCPU_to_GPU = true;
 			}
 			//seta o tamanho da pilha a ser simulada
-			sizeTrack = pilhaPart;
+			sizeTrack = pilhaPart/16;
 
 			//transfere a pilha de particulas secundarias para GPU
 			transfSecTracksCPU_to_GPU();
 
 			//transfere as particulas a serem simuladas para a GPU
-			gpuErrchk(cudaMalloc(&d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaPart));
+			//gpuErrchk(cudaMalloc(&d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaPart));
     		//gpuErrchk(cudaMemcpy(d_TRACK_mod, PRITRACK, sizeof(hd_TRACK_MOD)*pilhaPart, cudaMemcpyHostToDevice));
     		//gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, d_TRACK_mod, sizeof(hd_TRACK_MOD*)*pilhaPart));
-			gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, PRITRACK, sizeof(hd_TRACK_MOD)*pilhaPart,0));
+			gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, PRITRACK, sizeof(hd_TRACK_MOD)*pilhaPart/16,0));
 			
 			//Quantidade de blocos no grid e de threads nos blocos
-			dim3 block(block_size);
+			dim3 block(blockSize);
 			dim3 grid((sizeTrack / block.x));
 
-			printf("[0]: %lf\n", PRITRACK[0].E);
+			/*printf("[0]: %lf\n", PRITRACK[0].E);
 			printf("[1]: %lf\n", PRITRACK[1].E);
 			printf("[256]: %lf\n", PRITRACK[256].E);
-			printf("[4095]: %lf\n", PRITRACK[4095].E);
+			printf("[4095]: %lf\n", PRITRACK[4095].E);*/
 			//printf("[256]: %lf\n", PRITRACK[4096].E);
 			//chamada do kernel para simulacao das particulas primarias
 			showers_pri<<<grid,block>>>(sizeTrack);
 			//Aguarda o termino da simulação das particulas primarias enviadas
 			gpuErrchk(cudaDeviceSynchronize());
-			gpuErrchk(cudaFree(d_TRACK_mod));
+			//gpuErrchk(cudaFree(d_TRACK_mod));
 
 			//resgata o pacote de particulas primarias da gpu
 			transfSecTracksGPU_to_CPU();
 		
-			printf("\nquantidade de parricula secundaria photon %d\n\n", nTRACKS_.nSECTRACK_G);
-			printf("\nquantidade de parricula secundaria eletron %d\n\n", nTRACKS_.nSECTRACK_E);
-			printf("\nquantidade de parricula secundaria positron %d\n\n", nTRACKS_.nSECTRACK_P);
+			//printf("\nquantidade de parricula secundaria photon %d\n\n", nTRACKS_.nSECTRACK_G);
+			//printf("\nquantidade de parricula secundaria eletron %d\n\n", nTRACKS_.nSECTRACK_E);
+			//printf("\nquantidade de parricula secundaria positron %d\n\n", nTRACKS_.nSECTRACK_P);
 			
-			if (nTRACKS_.nSECTRACK_E == pilhaSec){
-				while (nTRACKS_.nSECTRACK_E > 1024){
-					nTRACKS_.nSECTRACK_E = 0;
-					sizeTrack = pilhaSec;
-
-					//transfere a pilha de particulas secundarias para GPU
-					transfSecTracksCPU_to_GPU();
-					
-					
-					//transfere as particulas a serem simuladas para a GPU
-					gpuErrchk(cudaMalloc(&d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaSec));
-					//PRITRACK = SECTRACK_E;
-					//gpuErrchk(cudaMemcpy(d_TRACK_mod, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaSec, cudaMemcpyHostToDevice));
-					//gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaSec));
-
-					//memcpy(vTrack_Simular, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart);
-
-					gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart,0));
-
-					
-				
-
-					dim3 blockSec(block_size);
-					dim3 gridSec((sizeTrack / block.x));
-
-					printf("[0]: %lf\n", SECTRACK_E[0].E);
-					printf("[1]: %lf\n", SECTRACK_E[1].E);
-					printf("[256]: %lf\n", SECTRACK_E[256].E);
-					printf("[4095]: %lf\n", SECTRACK_E[4095].E);
-					printf("[4096]: %lf\n", SECTRACK_E[4096].E);
-
-					//chamada do kernel para simulacao das particulas primarias
-					showers_sec<<<gridSec,blockSec>>>(sizeTrack);
-						//Aguarda o termino da simulação das particulas primarias enviadas
-					gpuErrchk(cudaDeviceSynchronize());
-						//resgata o pacote de particulas primarias da gpu
-					gpuErrchk(cudaFree(d_TRACK_mod));
-
-					transfSecTracksGPU_to_CPU();
+			if ((nTRACKS_.nSECTRACK_E >= pilhaSec/4) || (nTRACKS_.nSECTRACK_G >= pilhaSec/4) || (nTRACKS_.nSECTRACK_P >= pilhaSec/4)){
+				while ((nTRACKS_.nSECTRACK_E > 0) || (nTRACKS_.nSECTRACK_G > 0) || (nTRACKS_.nSECTRACK_P > 0 )){
+					printf("Antes da simulacao\n");
+					printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
+					printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
+					printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
+					if (nTRACKS_.nSECTRACK_E > 0){
+						simSecTrack_E();
+					printf("Apos simular Eletrons\n");
+					printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
+					printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
+					printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
+					}
+					if (nTRACKS_.nSECTRACK_G > 0)	{
+						simSecTrack_G();
+					printf("Apos simular Fotons\n");
+					printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
+					printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
+					printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
+					}
+					if (nTRACKS_.nSECTRACK_P > 0){
+						simSecTrack_P();
+					printf("Apos simular Positrons\n");
+					printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
+					printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
+					printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
+					}
+					/*printf("Depois da simulacao\n");
+					printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
+					printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
+					printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);*/
 				}
 			}
+
+			
 
 			if (*CSOUR0_.JOBEND != 0)
 				goto L202;
@@ -160,7 +154,6 @@ L202:;
 		transfGPU_to_CPU();
 		gpuErrchk(cudaDeviceSynchronize());
 		memoryFreeGPU();
-		printf("aqui\n");
 	}else{ //Simulação na CPU
 
 		if (*CSOUR0_.JOBEND != 0)

@@ -55,6 +55,10 @@ double S[NS2M];
 int IS[NS2M];
 int imprimiu = 0;
 int wIPOLI = 0;
+int h_N = 0; //mesma funcionalidade do CNTRL_.N
+int h_vetN[pilhaPart];
+
+int blockSize = 128;
 
 clock_t start, end;
 
@@ -570,6 +574,9 @@ typedef struct {
 	int ISEED1, ISEED2;
 } hd_RSEED;
 
+
+
+
 typedef struct {
 	char* TITLE, * TITLE2;
 
@@ -744,7 +751,7 @@ typedef struct {
 
 typedef struct {
 	double TSIM, TSEC, TSECA, TSECAD, CPUT0, DUMPP, DSHN, SHN;
-	int N;
+	int N[pilhaPart];
 } hd_CNTRL;
 
 typedef struct {
@@ -1032,6 +1039,10 @@ hd_QTREE* d_QTREE;
 
 __device__ hd_RSEED dg_RSEED_;
 hd_RSEED* d_RSEED;
+
+__device__ hd_RSEED dg_RSEED2_[1000];
+hd_RSEED* d_RSEED2;
+hd_RSEED h_RSEED2_[1000];
 
 __device__ hd_CIMDET dg_CIMDET_;
 hd_CIMDET* d_CIMDET;
