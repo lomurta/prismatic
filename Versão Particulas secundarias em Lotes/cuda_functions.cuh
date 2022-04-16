@@ -469,10 +469,10 @@ __device__ void showers_step3(int size, int IEXIT){
 
 	//if (index == 0){
 	for (int KB = 1; KB <= dg_PENGEOM_mod_.NBODY; KB++) {
-		//dg_CNT1_.TDEBO[KB - 1] = dg_CNT1_.TDEBO[KB - 1] + dg_CNT1_.DEBO[index][KB - 1];
-		//dg_CNT1_.TDEBO2[KB - 1] = dg_CNT1_.TDEBO2[KB - 1] + pow(dg_CNT1_.DEBO[index][KB - 1], 2);
-		atomicAdd(&dg_CNT1_.TDEBO[KB - 1], dg_CNT1_.DEBO[index][KB - 1]);
-		atomicAdd(&dg_CNT1_.TDEBO2[KB - 1], pow(dg_CNT1_.DEBO[index][KB - 1], 2));
+		dg_CNT1_.TDEBO[KB - 1] = dg_CNT1_.TDEBO[KB - 1] + dg_CNT1_.DEBO[index][KB - 1];
+		dg_CNT1_.TDEBO2[KB - 1] = dg_CNT1_.TDEBO2[KB - 1] + pow(dg_CNT1_.DEBO[index][KB - 1], 2);
+		//atomicAdd(&dg_CNT1_.TDEBO[KB - 1], dg_CNT1_.DEBO[index][KB - 1]);
+		//atomicAdd(&dg_CNT1_.TDEBO2[KB - 1], pow(dg_CNT1_.DEBO[index][KB - 1], 2));
 		//	printf("TDBEBO: %f\n", dg_CNT1_.TDEBO[KB-1]);
 		//	printf("TDBEBO2: %f\n\n", dg_CNT1_.TDEBO2[KB-1]);
 
@@ -481,31 +481,31 @@ __device__ void showers_step3(int size, int IEXIT){
 
 	//Contadores de estado final
 	for (int I = 1; I <= 3; I++) {
-		atomicAdd(&dg_CNT0_.PRIM[I - 1], dg_CNT0_.DPRIM[index][I - 1]);
-		atomicAdd(&dg_CNT0_.PRIM2[I - 1] , pow(dg_CNT0_.DPRIM[index][I - 1], 2));
-		//dg_CNT0_.PRIM[I - 1] = dg_CNT0_.PRIM[I - 1] + dg_CNT0_.DPRIM[index][I - 1];
-		//dg_CNT0_.PRIM2[I - 1] = dg_CNT0_.PRIM2[I - 1] + pow(dg_CNT0_.DPRIM[index][I - 1], 2);
+		//atomicAdd(&dg_CNT0_.PRIM[I - 1], dg_CNT0_.DPRIM[index][I - 1]);
+		//atomicAdd(&dg_CNT0_.PRIM2[I - 1] , pow(dg_CNT0_.DPRIM[index][I - 1], 2));
+		dg_CNT0_.PRIM[I - 1] = dg_CNT0_.PRIM[I - 1] + dg_CNT0_.DPRIM[index][I - 1];
+		dg_CNT0_.PRIM2[I - 1] = dg_CNT0_.PRIM2[I - 1] + pow(dg_CNT0_.DPRIM[index][I - 1], 2);
 		for (int K = 1; K <= 3; K++) {
-			atomicAdd(&dg_CNT0_.SEC[I - 1][K - 1], dg_CNT0_.DSEC[index][I - 1][K - 1]);
-			atomicAdd(&dg_CNT0_.SEC2[I - 1][K - 1] , pow(dg_CNT0_.DSEC[index][I - 1][K - 1], 2));
-			//dg_CNT0_.SEC[I - 1][K - 1] = dg_CNT0_.SEC[I - 1][K - 1] + dg_CNT0_.DSEC[index][I - 1][K - 1];
-			//dg_CNT0_.SEC2[I - 1][K - 1] = dg_CNT0_.SEC2[I - 1][K - 1] + pow(dg_CNT0_.DSEC[index][I - 1][K - 1], 2);
+			//atomicAdd(&dg_CNT0_.SEC[I - 1][K - 1], dg_CNT0_.DSEC[index][I - 1][K - 1]);
+			//atomicAdd(&dg_CNT0_.SEC2[I - 1][K - 1] , pow(dg_CNT0_.DSEC[index][I - 1][K - 1], 2));
+			dg_CNT0_.SEC[I - 1][K - 1] = dg_CNT0_.SEC[I - 1][K - 1] + dg_CNT0_.DSEC[index][I - 1][K - 1];
+			dg_CNT0_.SEC2[I - 1][K - 1] = dg_CNT0_.SEC2[I - 1][K - 1] + pow(dg_CNT0_.DSEC[index][I - 1][K - 1], 2);
 		}
 	}
 
 	for (int I = 1; I <= 2; I++) {
-		atomicAdd(&dg_CNT0_.AVW[I - 1], dg_CNT0_.DAVW[index][I - 1]);
-		atomicAdd(&dg_CNT0_.AVW2[I - 1] , pow(dg_CNT0_.DAVW[index][I - 1], 2));
-		//dg_CNT0_.AVW[I - 1] = dg_CNT0_.AVW[I - 1] + dg_CNT0_.DAVW[index][I - 1];
-		//dg_CNT0_.AVW2[I - 1] = dg_CNT0_.AVW2[I - 1] + pow(dg_CNT0_.DAVW[index][I - 1], 2);
-		atomicAdd(&dg_CNT0_.AVA[I - 1], dg_CNT0_.DAVA[index][I - 1]);
-		atomicAdd(&dg_CNT0_.AVA2[I - 1] , pow(dg_CNT0_.DAVA[index][I - 1], 2));
-		//dg_CNT0_.AVA[I - 1] = dg_CNT0_.AVA[I - 1] + dg_CNT0_.DAVA[index][I - 1];
-		//dg_CNT0_.AVA2[I - 1] = dg_CNT0_.AVA2[I - 1] + pow(dg_CNT0_.DAVA[index][I - 1], 2);
-		atomicAdd(&dg_CNT0_.AVE[I - 1], dg_CNT0_.DAVE[index][I - 1]);
-		atomicAdd(&dg_CNT0_.AVE2[I - 1] , pow(dg_CNT0_.DAVE[index][I - 1], 2));
-		//dg_CNT0_.AVE[I - 1] = dg_CNT0_.AVE[I - 1] + dg_CNT0_.DAVE[index][I - 1];
-		//dg_CNT0_.AVE2[I - 1] = dg_CNT0_.AVE2[I - 1] + pow(dg_CNT0_.DAVE[index][I - 1], 2);
+		//atomicAdd(&dg_CNT0_.AVW[I - 1], dg_CNT0_.DAVW[index][I - 1]);
+		//atomicAdd(&dg_CNT0_.AVW2[I - 1] , pow(dg_CNT0_.DAVW[index][I - 1], 2));
+		dg_CNT0_.AVW[I - 1] = dg_CNT0_.AVW[I - 1] + dg_CNT0_.DAVW[index][I - 1];
+		dg_CNT0_.AVW2[I - 1] = dg_CNT0_.AVW2[I - 1] + pow(dg_CNT0_.DAVW[index][I - 1], 2);
+		//atomicAdd(&dg_CNT0_.AVA[I - 1], dg_CNT0_.DAVA[index][I - 1]);
+		//atomicAdd(&dg_CNT0_.AVA2[I - 1] , pow(dg_CNT0_.DAVA[index][I - 1], 2));
+		dg_CNT0_.AVA[I - 1] = dg_CNT0_.AVA[I - 1] + dg_CNT0_.DAVA[index][I - 1];
+		dg_CNT0_.AVA2[I - 1] = dg_CNT0_.AVA2[I - 1] + pow(dg_CNT0_.DAVA[index][I - 1], 2);
+		//atomicAdd(&dg_CNT0_.AVE[I - 1], dg_CNT0_.DAVE[index][I - 1]);
+		//atomicAdd(&dg_CNT0_.AVE2[I - 1] , pow(dg_CNT0_.DAVE[index][I - 1], 2));
+		dg_CNT0_.AVE[I - 1] = dg_CNT0_.AVE[I - 1] + dg_CNT0_.DAVE[index][I - 1];
+		dg_CNT0_.AVE2[I - 1] = dg_CNT0_.AVE2[I - 1] + pow(dg_CNT0_.DAVE[index][I - 1], 2);
 	}
 
 }
@@ -5991,32 +5991,32 @@ __device__ void d_sdose2_(double& DEP, double& XD, double& YD, double& ZD, int& 
 		if ((ZD > dg_CDOSE3_.DXL[3 - 1]) && (ZD < dg_CDOSE3_.DXU[3 - 1])) {
 			I3 = (int)(1.0e0 + (ZD - dg_CDOSE3_.DXL[3 - 1]) * dg_CDOSE3_.RBDOSE[3 - 1]);
 			if (N != dg_CDOSE2_.LDDOSE[I3 - 1]) {
-				atomicAdd(&dg_CDOSE2_.DDOSE[I3 - 1], dg_CDOSE2_.DDOSEP[I3 - 1]);
-				atomicAdd(&dg_CDOSE2_.DDOSE2[I3 - 1], pow(dg_CDOSE2_.DDOSEP[I3 - 1], 2));
-				//dg_CDOSE2_.DDOSE[I3 - 1] = dg_CDOSE2_.DDOSE[I3 - 1] + dg_CDOSE2_.DDOSEP[I3 - 1];
-				//dg_CDOSE2_.DDOSE2[I3 - 1] = dg_CDOSE2_.DDOSE2[I3 - 1] + pow(dg_CDOSE2_.DDOSEP[I3 - 1], 2);
+				//atomicAdd(&dg_CDOSE2_.DDOSE[I3 - 1], dg_CDOSE2_.DDOSEP[I3 - 1]);
+				//atomicAdd(&dg_CDOSE2_.DDOSE2[I3 - 1], pow(dg_CDOSE2_.DDOSEP[I3 - 1], 2));
+				dg_CDOSE2_.DDOSE[I3 - 1] = dg_CDOSE2_.DDOSE[I3 - 1] + dg_CDOSE2_.DDOSEP[I3 - 1];
+				dg_CDOSE2_.DDOSE2[I3 - 1] = dg_CDOSE2_.DDOSE2[I3 - 1] + pow(dg_CDOSE2_.DDOSEP[I3 - 1], 2);
 				dg_CDOSE2_.DDOSEP[I3 - 1] = DEP * dg_PENELOPE_mod_.RDEN[MATC - 1];
 				dg_CDOSE2_.LDDOSE[I3 - 1] = N;
 			}
 			else {
-				atomicAdd(&dg_CDOSE2_.DDOSEP[I3 - 1], DEP * dg_PENELOPE_mod_.RDEN[MATC - 1]);
-				//dg_CDOSE2_.DDOSEP[I3 - 1] = dg_CDOSE2_.DDOSEP[I3 - 1] + DEP * dg_PENELOPE_mod_.RDEN[MATC - 1];
+				//atomicAdd(&dg_CDOSE2_.DDOSEP[I3 - 1], DEP * dg_PENELOPE_mod_.RDEN[MATC - 1]);
+				dg_CDOSE2_.DDOSEP[I3 - 1] = dg_CDOSE2_.DDOSEP[I3 - 1] + DEP * dg_PENELOPE_mod_.RDEN[MATC - 1];
 			}
 
 			if (((XD > dg_CDOSE3_.DXL[1 - 1]) && (XD < dg_CDOSE3_.DXU[1 - 1])) && ((YD > dg_CDOSE3_.DXL[2 - 1]) && (YD < dg_CDOSE3_.DXU[2 - 1]))) {
 				I1 = (int)(1.0e0 + (XD - dg_CDOSE3_.DXL[1 - 1]) * dg_CDOSE3_.RBDOSE[1 - 1]);
 				I2 = (int)(1.0e0 + (YD - dg_CDOSE3_.DXL[2 - 1]) * dg_CDOSE3_.RBDOSE[2 - 1]);
 				if (N != dg_CDOSE1_.LDOSE[I3 - 1][I2 - 1][I1 - 1]) {
-					atomicAdd(&dg_CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1], dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1]);
-					atomicAdd(&dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1], pow(dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1], 2));
-					//dg_CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1] + dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1];
-					//dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] + pow(dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1], 2);
+					//atomicAdd(&dg_CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1], dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1]);
+					//atomicAdd(&dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1], pow(dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1], 2));
+					dg_CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1] + dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1];
+					dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] + pow(dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1], 2);
 					dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1] = DEP;
 					dg_CDOSE1_.LDOSE[I3 - 1][I2 - 1][I1 - 1] = N;
 				}
 				else {
-					atomicAdd(&dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1], DEP);
-					//dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1] + DEP;
+					//atomicAdd(&dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1], DEP);
+					dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1] + DEP;
 				}
 			}
 		}
