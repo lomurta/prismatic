@@ -37,13 +37,10 @@ int main() {
 			goto L103;
 		//Resete da GPUFF
 
-	//	printf("resentando gpu\n");
+		printf("resentando gpu\n");
 		gpuErrchk(cudaDeviceReset());
-		//gpuErrchk(cudaDeviceSetLimit(cudaLimitStackSize, 4096));
 
-	
-
-		//printf("allocando memoria na gpu\n");
+		printf("allocando memoria na gpu\n");
 
 		//alocando memooria na GPU
 		memoryAllocGPU();
@@ -55,7 +52,7 @@ int main() {
 		
 		while ((*CNTRL_.TSEC < *CNTRL_.TSECA) && (*CNTRL_.SHN < *CNTRL_.DSHN)){
 			
-		//	printf("criando pacote de particulas ssecundadiras\n");
+			printf("criando pacote de particulas ssecundadiras\n");
 			//criar vetor de particulas primarias inicial
 			iniPRITRACK(); 
 

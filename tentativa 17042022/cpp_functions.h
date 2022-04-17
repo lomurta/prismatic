@@ -26144,7 +26144,7 @@ void transfCPU_to_GPU(){
     gpuErrchk(cudaMemcpyToSymbol(dg_CEELDB_, d_CEELDB, sizeof(hd_CEELDB)));
 
     //SECST
-  /*  gpuErrchk(cudaMemcpy(d_SECST->ES, SECST_.ES, sizeof(double)*NMS, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(d_SECST->ES, SECST_.ES, sizeof(double)*NMS, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_SECST->XS, SECST_.XS, sizeof(double)*NMS, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_SECST->YS, SECST_.YS, sizeof(double)*NMS, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_SECST->ZS, SECST_.ZS, sizeof(double)*NMS, cudaMemcpyHostToDevice));
@@ -26162,7 +26162,7 @@ void transfCPU_to_GPU(){
     gpuErrchk(cudaMemcpy(d_SECST->ILBS, SECST_.ILBS, sizeof(int)*NMS, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_SECST->IPOLS, SECST_.IPOLS, sizeof(int)*NMS, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(&d_SECST->NSEC, SECST_.NSEC, sizeof(int), cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpyToSymbol(dg_SECST_, d_SECST, sizeof(hd_SECST)));*/
+    gpuErrchk(cudaMemcpyToSymbol(dg_SECST_, d_SECST, sizeof(hd_SECST)));
 
     //PENGEOM_MOD
     gpuErrchk(cudaMemcpy(d_PENGEOM_mod->BALIAS, PENGEOM_mod_.BALIAS, sizeof(char)*NB*5, cudaMemcpyHostToDevice));
@@ -26813,7 +26813,7 @@ void transfGPU_to_CPU(){
     gpuErrchk(cudaMemcpy(CEELDB_.ITUE, d_CEELDB->ITUE, sizeof(int)*MAXMAT*NEGP*NP, cudaMemcpyDeviceToHost));
 
     //SECST
-  /*  gpuErrchk(cudaMemcpyFromSymbol(d_SECST, dg_SECST_, sizeof(hd_SECST)));
+    gpuErrchk(cudaMemcpyFromSymbol(d_SECST, dg_SECST_, sizeof(hd_SECST)));
     gpuErrchk(cudaMemcpy(SECST_.ES,d_SECST->ES,  sizeof(double)*NMS, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(SECST_.XS,d_SECST->XS,  sizeof(double)*NMS, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(SECST_.YS,d_SECST->YS,  sizeof(double)*NMS, cudaMemcpyDeviceToHost));
@@ -26831,7 +26831,7 @@ void transfGPU_to_CPU(){
     gpuErrchk(cudaMemcpy(SECST_.MS,d_SECST->MS,  sizeof(int)*NMS, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(SECST_.ILBS,d_SECST->ILBS, sizeof(int)*NMS, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(SECST_.IPOLS, d_SECST->IPOLS, sizeof(int)*NMS, cudaMemcpyDeviceToHost));
-    gpuErrchk(cudaMemcpy(SECST_.NSEC, &d_SECST->NSEC,  sizeof(int), cudaMemcpyDeviceToHost));*/
+    gpuErrchk(cudaMemcpy(SECST_.NSEC, &d_SECST->NSEC,  sizeof(int), cudaMemcpyDeviceToHost));
 
     //PENGEOM_MOD
     gpuErrchk(cudaMemcpyFromSymbol(d_PENGEOM_mod, dg_PENGEOM_mod_, sizeof(hd_PENGEOM_MOD)));

@@ -42,8 +42,8 @@ static const int NDXM = 201;
 static const int NDYM = 201;
 static const int NDZM = 201;
 
-static const int pilhaPart = 4096; //64*64
-static const int pilhaSec = 4096; //64*64
+static const int pilhaPart = 1024; //64*64
+static const int pilhaSec = 1024; //64*64
 
 char LINHA[200];
 char APOIO[200];
