@@ -42,6 +42,13 @@ static const int NDXM = 201;
 static const int NDYM = 201;
 static const int NDZM = 201;
 
+__constant__  double d_PI = 3.1415926535897932e0;
+__constant__  double d_REV = 5.10998928e5;
+__constant__  double d_TREV = 2.0e0 * 5.10998928e5;
+__constant__  double d_RREV = 1.0e0 / 5.10998928e5;
+__constant__  double d_TWOPI = 2.0e0 * 3.1415926535897932e0;
+__constant__  double d_RTREV = 1.0e0 / (2.0e0 * 5.10998928e5);
+
 static const int pilhaPart = 4096; //64*64
 static const int pilhaSec = 4096; //64*64
 
@@ -58,7 +65,7 @@ int wIPOLI = 0;
 int h_N = 0; //mesma funcionalidade do CNTRL_.N
 int h_vetN[pilhaPart];
 
-int blockSize = 64;
+int blockSize = 128;
 
 clock_t start, end;
 
@@ -90,7 +97,7 @@ typedef struct {
 
 typedef struct {
 	double E, X, Y, Z, U, V, W, WGHT, SP1, SP2, SP3, PAGE;
-	int KPAR, IBODY, MAT, ILB[5], IPOL, N;
+	int KPAR, IBODY, MAT, ILB[5], IPOL, INDEX, N, IEXIT;
 	bool LAGE;
 } hd_TRACK_MOD;
 
@@ -915,8 +922,18 @@ typedef struct {
 } hd_CHIST;
 
 typedef struct{
-	int nPRITRACK, nSECTRACK_E, nSECTRACK_G, nSECTRACK_P;
+	int nFINISH, nPRITRACK, nSECTRACK_E, nSECTRACK_G, nSECTRACK_P;
 } hd_nTRACKS;
+
+
+typedef struct{
+	int IEXIT, KEn, IBODYL, NCROSS, IDET, MATL, ICOL, LEFT;
+	double DSEF, DS, DSMAX, DEP, XL, YL, ZL, DECSD, DSEFR, XD, YD, ZD, DE, WS, US, VS, SDTS, DF;
+	bool LINTF, CROSS;
+} hd_wSHOWERS;
+
+
+
 
 PENELOPE_MOD PENELOPE_mod_;
 PENGEOM_MOD PENGEOM_mod_;
@@ -1017,12 +1034,14 @@ hd_TRACK_MOD *SECTRACK_P;
 
 hd_TRACK_MOD *vTrack_Simular;
 
+__device__ hd_wSHOWERS dg_wSHOWERS_[pilhaPart];
+
 
 //DECLARACOES PARA COPIA NA GPU
 __device__ hd_CEELDB dg_CEELDB_;
 hd_CEELDB *d_CEELDB;
 
-__device__ hd_SECST dg_SECST_[pilhaPart];
+__device__ hd_SECST dg_SECST_;
 hd_SECST *d_SECST;
 
 __device__ hd_PENGEOM_MOD dg_PENGEOM_mod_;
@@ -1200,7 +1219,7 @@ hd_TRACK_MOD* d_PRITRACK;
 __device__ hd_TRACK_MOD dg_SECTRACK_G_[pilhaPart];
 hd_TRACK_MOD* d_SECTRACK_G;
 
-__device__ hd_TRACK_MOD dg_SECTRACK_E_[pilhaPart*10];
+__device__ hd_TRACK_MOD dg_SECTRACK_E_[pilhaPart*100];
 hd_TRACK_MOD* d_SECTRACK_E;
 
 __device__ hd_TRACK_MOD dg_SECTRACK_P_[pilhaPart];

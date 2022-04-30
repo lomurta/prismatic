@@ -548,6 +548,8 @@ extern "C" {
 
 	void simSecTrack_P();
 
+	void simPriTrack_G();
+
 	void cpyTracks_simular(int tipo, int tamPilha);
 
 	void transfCNT0_CPU_to_GPU();
@@ -561,6 +563,18 @@ extern "C" {
 	void transfCNTRL_CPU_to_GPU();
 
 	void transfCNTRL_GPU_to_CPU();
+
+	void transfnTRACKSCPU_to_GPU();
+
+	void transfnTRACKSGPU_to_CPU();
+
+
+
+	void quickSort(hd_TRACK_MOD arr[], int start, int end);
+
+	int partition(hd_TRACK_MOD arr[], int start, int end);
+
+	
 
 
 
@@ -26144,7 +26158,7 @@ void transfCPU_to_GPU(){
     gpuErrchk(cudaMemcpyToSymbol(dg_CEELDB_, d_CEELDB, sizeof(hd_CEELDB)));
 
     //SECST
-  /*  gpuErrchk(cudaMemcpy(d_SECST->ES, SECST_.ES, sizeof(double)*NMS, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(d_SECST->ES, SECST_.ES, sizeof(double)*NMS, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_SECST->XS, SECST_.XS, sizeof(double)*NMS, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_SECST->YS, SECST_.YS, sizeof(double)*NMS, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_SECST->ZS, SECST_.ZS, sizeof(double)*NMS, cudaMemcpyHostToDevice));
@@ -26162,7 +26176,7 @@ void transfCPU_to_GPU(){
     gpuErrchk(cudaMemcpy(d_SECST->ILBS, SECST_.ILBS, sizeof(int)*NMS, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_SECST->IPOLS, SECST_.IPOLS, sizeof(int)*NMS, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(&d_SECST->NSEC, SECST_.NSEC, sizeof(int), cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpyToSymbol(dg_SECST_, d_SECST, sizeof(hd_SECST)));*/
+    gpuErrchk(cudaMemcpyToSymbol(dg_SECST_, d_SECST, sizeof(hd_SECST)));
 
     //PENGEOM_MOD
     gpuErrchk(cudaMemcpy(d_PENGEOM_mod->BALIAS, PENGEOM_mod_.BALIAS, sizeof(char)*NB*5, cudaMemcpyHostToDevice));
@@ -26813,7 +26827,7 @@ void transfGPU_to_CPU(){
     gpuErrchk(cudaMemcpy(CEELDB_.ITUE, d_CEELDB->ITUE, sizeof(int)*MAXMAT*NEGP*NP, cudaMemcpyDeviceToHost));
 
     //SECST
-  /*  gpuErrchk(cudaMemcpyFromSymbol(d_SECST, dg_SECST_, sizeof(hd_SECST)));
+    gpuErrchk(cudaMemcpyFromSymbol(d_SECST, dg_SECST_, sizeof(hd_SECST)));
     gpuErrchk(cudaMemcpy(SECST_.ES,d_SECST->ES,  sizeof(double)*NMS, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(SECST_.XS,d_SECST->XS,  sizeof(double)*NMS, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(SECST_.YS,d_SECST->YS,  sizeof(double)*NMS, cudaMemcpyDeviceToHost));
@@ -26831,7 +26845,7 @@ void transfGPU_to_CPU(){
     gpuErrchk(cudaMemcpy(SECST_.MS,d_SECST->MS,  sizeof(int)*NMS, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(SECST_.ILBS,d_SECST->ILBS, sizeof(int)*NMS, cudaMemcpyDeviceToHost));
     gpuErrchk(cudaMemcpy(SECST_.IPOLS, d_SECST->IPOLS, sizeof(int)*NMS, cudaMemcpyDeviceToHost));
-    gpuErrchk(cudaMemcpy(SECST_.NSEC, &d_SECST->NSEC,  sizeof(int), cudaMemcpyDeviceToHost));*/
+    gpuErrchk(cudaMemcpy(SECST_.NSEC, &d_SECST->NSEC,  sizeof(int), cudaMemcpyDeviceToHost));
 
     //PENGEOM_MOD
     gpuErrchk(cudaMemcpyFromSymbol(d_PENGEOM_mod, dg_PENGEOM_mod_, sizeof(hd_PENGEOM_MOD)));
@@ -26955,7 +26969,7 @@ void transfGPU_to_CPU(){
 	gpuErrchk(cudaMemcpy(CJUMP1_.KDELTA,&d_CJUMP1->KDELTA, sizeof(int), cudaMemcpyDeviceToHost));*/
 
 	//CJUMP1
-	gpuErrchk(cudaMemcpyFromSymbol(d_CJUMP1, dg_CJUMP1_, sizeof(hd_CJUMP1)*pilhaPart));
+	//gpuErrchk(cudaMemcpyFromSymbol(d_CJUMP1, dg_CJUMP1_, sizeof(hd_CJUMP1)*pilhaPart));
 	//gpuErrchk(cudaMemcpy(CJUMP1_, d_CJUMP1,  sizeof(hd_CJUMP1)*pilhaPart, cudaMemcpyDeviceToHost));
 
 	//CEIMFP
@@ -27012,7 +27026,7 @@ void transfGPU_to_CPU(){
 	gpuErrchk(cudaMemcpy(CJUMP0_.T2,&d_CJUMP0->T2, sizeof(double), cudaMemcpyDeviceToHost));*/
 
 	//CJUMP0
-	gpuErrchk(cudaMemcpyFromSymbol(d_CJUMP0, dg_CJUMP0_, sizeof(hd_CJUMP0)*pilhaPart));
+	//gpuErrchk(cudaMemcpyFromSymbol(d_CJUMP0, dg_CJUMP0_, sizeof(hd_CJUMP0)*pilhaPart));
 	//gpuErrchk(cudaMemcpy(CJUMP0_, d_CJUMP0,  sizeof(hd_CJUMP0)*pilhaPart, cudaMemcpyDeviceToHost));
 
 
@@ -27444,14 +27458,14 @@ void memoryAllocGPU(){
 	gpuErrchk(cudaMalloc((void **)&d_CXRSPL, sizeof(hd_CXRSPL)));
 
 	gpuErrchk(cudaMalloc((void **)&d_SECTRACK_G, sizeof(hd_TRACK_MOD)*pilhaSec));
-	gpuErrchk(cudaMalloc((void **)&d_SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart*10));
+	gpuErrchk(cudaMalloc((void **)&d_SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart*100));
 	gpuErrchk(cudaMalloc((void **)&d_SECTRACK_P, sizeof(hd_TRACK_MOD)*pilhaSec));
 	gpuErrchk(cudaMalloc((void **)&d_nTRACKS, sizeof(hd_nTRACKS)));
 
 
 	PRITRACK =  (hd_TRACK_MOD*)malloc(pilhaPart * sizeof(hd_TRACK_MOD)); //vetor de particulas primarias
 	SECTRACK_G = (hd_TRACK_MOD*)malloc(pilhaPart * sizeof(hd_TRACK_MOD)); //vetor de particulas secundarias de fotons
-	SECTRACK_E = (hd_TRACK_MOD*)malloc(10 * pilhaPart * sizeof(hd_TRACK_MOD)); //vetor de particulas secudarias de eletrons
+	SECTRACK_E = (hd_TRACK_MOD*)malloc(100 * pilhaPart * sizeof(hd_TRACK_MOD)); //vetor de particulas secudarias de eletrons
 	SECTRACK_P = (hd_TRACK_MOD*)malloc(pilhaPart * sizeof(hd_TRACK_MOD)); //vetor de particulas secundarias de protons
 	vTrack_Simular = (hd_TRACK_MOD*)malloc(pilhaPart * sizeof(hd_TRACK_MOD));
 
@@ -27725,12 +27739,8 @@ void iniPRITRACK() {
 
 	//A simulação da particula começa aqui.
 
-	//Contadores de particulas primarias
-	//transfCNT0_GPU_to_CPU();
-	//transfCNT1_GPU_to_CPU();
-
 //L101:;
-/*	for (int J = 0; J < pilhaPart; J++){
+	for (int J = 0; J < pilhaPart; J++){
 		for (int I = 1; I <= 3; I++) {
 			h_CNT0_.DPRIM[J][I - 1] = 0.0e0;
 			for (int K = 1; K <= 3; K++) {
@@ -27751,18 +27761,14 @@ void iniPRITRACK() {
 		for (int KB = 1; KB <= *PENGEOM_mod_.NBODY; KB++) {
 			h_CNT1_.DEBO[J][KB - 1] = 0.0e0; //Energias depositadas nos diversos corpos KB
 		}
-	}*/
+	}
 
-	//h_CNT1_.DEBO[0][0] = 100.00;
-	//h_CNT1_.DEBO[0][1] = 200.00;
+	
+	//transferindo contadores zerados para GPU
+	transfCNT0_CPU_to_GPU();
+	transfCNT1_CPU_to_GPU();
 
-
-
-
-	//transfCNT0_CPU_to_GPU();
-	//transfCNT1_CPU_to_GPU();
-
-
+	
 
 	///cleans2GPU_(); //Limpa a pilha secundaria
 
@@ -27784,15 +27790,16 @@ void iniPRITRACK() {
 			//Fonte Externa
 			*CNTRL_.SHN = *CNTRL_.SHN + 1.0e0;
 			*CNTRL_.N = *CNTRL_.N + 1;
-			h_N++;
+			//h_N++;
+			PRITRACK[I].N = *CNTRL_.N;
 
-			h_vetN[I] = h_N;
+			//h_vetN[I] = h_N;
 
 
-			/*if (*CNTRL_.N > 2000000000)
-				*CNTRL_.N = *CNTRL_.N - 2000000000;*/
-			if (h_N > 2000000000)
-				h_N = h_N - 2000000000;
+			if (*CNTRL_.N > 2000000000)
+				*CNTRL_.N = *CNTRL_.N - 2000000000;
+			/*if (h_N > 2000000000)
+				h_N = h_N - 2000000000;*/
 
 			PRITRACK[I].KPAR = *CSOUR0_.KPARP;
 			PRITRACK[I].WGHT = 1.0e0;
@@ -27909,8 +27916,8 @@ void transfSecTracksCPU_to_GPU(){
 
 	//SECTRACK_E
 	
-    gpuErrchk(cudaMemcpy(d_SECTRACK_E, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart*10, cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpyToSymbol(dg_SECTRACK_E_, d_SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart*10));
+    gpuErrchk(cudaMemcpy(d_SECTRACK_E, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart*100, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpyToSymbol(dg_SECTRACK_E_, d_SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart*100));
 
 	//SECTRACK_P
 	
@@ -27918,19 +27925,26 @@ void transfSecTracksCPU_to_GPU(){
     gpuErrchk(cudaMemcpyToSymbol(dg_SECTRACK_P_, d_SECTRACK_P, sizeof(hd_TRACK_MOD)*pilhaSec));
 
 	//nTRACKS
-	
-    gpuErrchk(cudaMemcpy(d_nTRACKS, &nTRACKS_, sizeof(hd_nTRACKS), cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpyToSymbol(dg_nTRACKS_, d_nTRACKS, sizeof(hd_nTRACKS)));
-
+    transfnTRACKSCPU_to_GPU();
  /*gpuErrchk(cudaMalloc((void **)&d2_CEELDB, sizeof(hd_CEELDB)));
      gpuErrchk(cudaMemcpy(d2_CEELDB, &h_CEELDB, sizeof(hd_CEELDB), cudaMemcpyHostToDevice));
      gpuErrchk(cudaMemcpyToSymbol(dg2_CEELDB, d2_CEELDB, sizeof(hd_CEELDB)));*/
 
 	//CNTRL
-	gpuErrchk(cudaMemcpy(d_CNTRL->N,h_vetN, sizeof(int)*pilhaPart, cudaMemcpyHostToDevice));
-	gpuErrchk(cudaMemcpyToSymbol(dg_CNTRL_, d_CNTRL, sizeof(hd_CNTRL)));
+	transfCNTRL_CPU_to_GPU();
+	/*gpuErrchk(cudaMemcpy(d_CNTRL->N,h_vetN, sizeof(int)*pilhaPart, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpyToSymbol(dg_CNTRL_, d_CNTRL, sizeof(hd_CNTRL)));*/
 
 }
+
+void transfnTRACKSCPU_to_GPU(){
+	//nTRACKS
+	
+    gpuErrchk(cudaMemcpy(d_nTRACKS, &nTRACKS_, sizeof(hd_nTRACKS), cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpyToSymbol(dg_nTRACKS_, d_nTRACKS, sizeof(hd_nTRACKS)));
+}
+
+
 
 void transfSecTracksGPU_to_CPU(){
 
@@ -27943,18 +27957,109 @@ void transfSecTracksGPU_to_CPU(){
 	gpuErrchk(cudaMemcpy(SECTRACK_G, d_SECTRACK_G,  sizeof(hd_TRACK_MOD)*pilhaPart, cudaMemcpyDeviceToHost));
 
 	//SECTRACK_E
-	gpuErrchk(cudaMemcpyFromSymbol(d_SECTRACK_E, dg_SECTRACK_E_, sizeof(hd_TRACK_MOD)*pilhaPart*10));
-	gpuErrchk(cudaMemcpy(SECTRACK_E, d_SECTRACK_E,  sizeof(hd_TRACK_MOD)*pilhaPart*10, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpyFromSymbol(d_SECTRACK_E, dg_SECTRACK_E_, sizeof(hd_TRACK_MOD)*pilhaPart*100));
+	gpuErrchk(cudaMemcpy(SECTRACK_E, d_SECTRACK_E,  sizeof(hd_TRACK_MOD)*pilhaPart*100, cudaMemcpyDeviceToHost));
 
 	//SECTRACK_P
 	gpuErrchk(cudaMemcpyFromSymbol(d_SECTRACK_P, dg_SECTRACK_P_, sizeof(hd_TRACK_MOD)*pilhaSec));
 	gpuErrchk(cudaMemcpy(SECTRACK_P, d_SECTRACK_P,  sizeof(hd_TRACK_MOD)*pilhaPart, cudaMemcpyDeviceToHost));
 
 	//nTRACKS
+	transfnTRACKSGPU_to_CPU();
+
+}
+
+void transfnTRACKSGPU_to_CPU(){
+
+	//nTRACKS
 	gpuErrchk(cudaMemcpyFromSymbol(d_nTRACKS, dg_nTRACKS_, sizeof(hd_nTRACKS)));
 	gpuErrchk(cudaMemcpy(&nTRACKS_, d_nTRACKS,  sizeof(hd_nTRACKS), cudaMemcpyDeviceToHost));
 
 }
+
+
+
+void simPriTrack_G(){
+
+	int sizeTrack;
+
+	// criar vetor de particulas primarias inicial
+	iniPRITRACK();
+	//Ordeba o vetor de particulas primarias
+	quickSort(PRITRACK, 0, pilhaPart - 1);
+
+	// seta o tamanho da pilha a ser simulada
+	sizeTrack = pilhaPart;
+
+	//seta o valor da quantidade de particulas primarias a simular
+	nTRACKS_.nFINISH = pilhaPart;
+
+	// transfere a pilha de particulas secundarias para GPU
+	transfSecTracksCPU_to_GPU();
+
+	// transfere as particulas a serem simuladas para a GPU
+	gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, PRITRACK, sizeof(hd_TRACK_MOD) * pilhaPart, 0));
+
+	// Quantidade de blocos no grid e de threads nos blocos
+	dim3 block(blockSize);
+	dim3 grid((sizeTrack / block.x));
+
+	// chamada do kernel para simulacao das particulas primarias
+	g_showers_step1<<<grid, block>>>(sizeTrack);
+	gpuErrchk(cudaDeviceSynchronize());
+	printf("g_showers_step1 e g_showers_step2_G\n");
+
+	g_showers_step3_G<<<grid, block>>>(sizeTrack);
+	gpuErrchk(cudaDeviceSynchronize());
+
+	printf("g_showers_step3_G\n");
+
+	//resgata o valor de particulas que ainda resta a simular
+	transfnTRACKSGPU_to_CPU();
+
+	printf("nFINISH: %d\n", nTRACKS_.nFINISH);
+
+	while (nTRACKS_.nFINISH > 0){
+
+		g_jump2_G<<<grid, block>>>(sizeTrack);
+		gpuErrchk(cudaDeviceSynchronize());
+
+		printf("g_jump2_G\n");
+
+		g_step2_<<<grid, block>>>(sizeTrack);
+		gpuErrchk(cudaDeviceSynchronize());
+
+		printf("g_step2\n");
+
+		g_showers_step4_G<<<grid, block>>>(sizeTrack);
+		gpuErrchk(cudaDeviceSynchronize());
+
+		printf("g_step4_G\n");
+
+		g_knock2_G<<<grid, block>>>(sizeTrack);
+		gpuErrchk(cudaDeviceSynchronize());
+
+		printf("g_knock2_G\n");
+
+		g_showers_step5_G<<<grid, block>>>(sizeTrack);
+		gpuErrchk(cudaDeviceSynchronize());
+
+		printf("g_step5_G\n");
+
+		transfnTRACKSGPU_to_CPU();
+		printf("nFINISH: %d\n", nTRACKS_.nFINISH);
+	}
+
+	//chama o contador de particulas passo 4
+	g_showers_step6<<<grid, block>>>(sizeTrack);
+	// Aguarda o termino da simulação das particulas primarias enviadas
+	gpuErrchk(cudaDeviceSynchronize());
+
+	// resgata as particulas secundarias geradas pela simulacao
+	transfSecTracksGPU_to_CPU();
+	printf("Simulado: %f\n", *CNTRL_.SHN);
+}
+
 
 void simSecTrack_E(){
 
@@ -27995,11 +28100,19 @@ void simSecTrack_E(){
 		printf("[4096]: %lf\n", vTrack_Simular[4096].E);*/
 
 		// chamada do kernel para simulacao das particulas primarias
-	//	showers_sec<<<gridSec, blockSec>>>(sizeTrack);
+		g_showers_step7_E<<<gridSec, blockSec>>>(sizeTrack);
 		// Aguarda o termino da simulação das particulas primarias enviadas
 		gpuErrchk(cudaDeviceSynchronize());
-		// resgata o pacote de particulas primarias da gpu
-		//gpuErrchk(cudaFree(d_TRACK_mod));
+
+		g_showers_step3_E<<<gridSec, blockSec>>>(sizeTrack);
+		gpuErrchk(cudaDeviceSynchronize());
+
+		sizeTrack = pilhaPart;
+		dim3 blockStep4(blockSize);
+		dim3 gridStep4(ceil(sizeTrack / blockSec.x));
+
+		g_showers_step6<<<gridStep4, blockStep4>>>(sizeTrack);
+		gpuErrchk(cudaDeviceSynchronize());
 
 		transfSecTracksGPU_to_CPU();
 //	}
@@ -28037,11 +28150,19 @@ void simSecTrack_G(){
 		printf("[4096]: %lf\n", SECTRACK_E[4096].E);*/
 
 		// chamada do kernel para simulacao das particulas primarias
-//		showers_sec<<<gridSec, blockSec>>>(sizeTrack);
+		g_showers_step5_G<<<gridSec, blockSec>>>(sizeTrack);
 		// Aguarda o termino da simulação das particulas primarias enviadas
 		gpuErrchk(cudaDeviceSynchronize());
-		// resgata o pacote de particulas primarias da gpu
-		//gpuErrchk(cudaFree(d_TRACK_mod));
+
+		g_showers_step3_G<<<gridSec, blockSec>>>(sizeTrack);
+		gpuErrchk(cudaDeviceSynchronize());
+
+		sizeTrack = pilhaPart;
+		dim3 blockStep4(blockSize);
+		dim3 gridStep4(ceil(sizeTrack / blockSec.x));
+
+		g_showers_step6<<<gridStep4, blockStep4>>>(sizeTrack);
+		gpuErrchk(cudaDeviceSynchronize());
 
 		transfSecTracksGPU_to_CPU();
 //	}
@@ -28078,11 +28199,19 @@ void simSecTrack_P(){
 		printf("[4096]: %lf\n", SECTRACK_E[4096].E);*/
 
 		// chamada do kernel para simulacao das particulas primarias
-//		showers_sec<<<gridSec, blockSec>>>(sizeTrack);
+		g_showers_step7_P<<<gridSec, blockSec>>>(sizeTrack);
 		// Aguarda o termino da simulação das particulas primarias enviadas
 		gpuErrchk(cudaDeviceSynchronize());
-		// resgata o pacote de particulas primarias da gpu
-		//gpuErrchk(cudaFree(d_TRACK_mod));
+
+		g_showers_step3_P<<<gridSec, blockSec>>>(sizeTrack);
+		gpuErrchk(cudaDeviceSynchronize());
+
+		sizeTrack = pilhaPart;
+		dim3 blockStep4(blockSize);
+		dim3 gridStep4(ceil(sizeTrack / blockSec.x));
+
+		g_showers_step6<<<gridStep4, blockStep4>>>(sizeTrack);
+		gpuErrchk(cudaDeviceSynchronize());
 
 		transfSecTracksGPU_to_CPU();
 //	}
@@ -28201,6 +28330,72 @@ void transfCNTRL_GPU_to_CPU(){
 	gpuErrchk(cudaMemcpyFromSymbol(d_CNTRL, dg_CNTRL_, sizeof(hd_CNTRL)));
 	gpuErrchk(cudaMemcpy(h_vetN,d_CNTRL->N, sizeof(int)*NB, cudaMemcpyDeviceToHost));
 
+}
+
+
+
+int partition(hd_TRACK_MOD arr[], int start, int end)
+{
+	
+ 
+    //int pivot = arr[start];
+	double pivot = arr[start].E;
+ 
+    int count = 0;
+
+
+	/*for (int i = start + 1; i <= end; i++) {
+        if (arr[i] <= pivot)
+            count++;
+    }*/
+	for (int i = start +1; i <= end; i++){
+		if (arr[i].E <= pivot)
+			count++;
+	}
+
+    // Giving pivot element its correct position
+    int pivotIndex = start + count;
+
+    swap(arr[pivotIndex], arr[start]);
+
+ 
+    // Sorting left and right parts of the pivot element
+    int i = start, j = end;
+ 
+    while (i < pivotIndex && j > pivotIndex) {
+ 
+        while (arr[i].E <= pivot) {
+            i++;
+        }
+ 
+        while (arr[j].E > pivot) {
+            j--;
+        }
+ 
+        if (i < pivotIndex && j > pivotIndex) {
+            swap(arr[i++], arr[j--]);
+        }
+    }
+ 
+    return pivotIndex;
+}
+
+
+void quickSort(hd_TRACK_MOD arr[], int start, int end)
+{
+ 
+    // base case
+    if (start >= end)
+        return;
+ 
+    // partitioning the array
+    int p = partition(arr, start, end);
+ 
+    // Sorting the left part
+    quickSort(arr, start, p - 1);
+ 
+    // Sorting the right part
+    quickSort(arr, p + 1, end);
 }
 
 
