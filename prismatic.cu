@@ -28,12 +28,15 @@ int main() {
 	//Lendo os arquivos de entrada e inicializando os pacotes de simulação.
 	pmrdr2_();
 
-	if (simGPU){//Simulação na GPU
+	if (simGPU){//Simulação na GPUco
 
 		if (*CSOUR0_.JOBEND != 0)
 			goto L103;
 		//Resete da GPUFF
 		gpuErrchk(cudaDeviceReset());
+
+		//cudaDeviceProp prop;
+		//gpuErrchk(cudaDeviceGetAttribute(&cudaCapability, cudaDevAttrComputeCapabilityMajor, 0));
 
 		//alocando memooria na GPU
 		memoryAllocGPU();

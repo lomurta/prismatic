@@ -67,6 +67,10 @@ int h_vetN[pilhaPart];
 
 int blockSize = 128;
 
+//int cudaCapability = 0;
+
+__device__ int d_cudaCapability = 5;
+
 clock_t start, end;
 
 typedef	struct {

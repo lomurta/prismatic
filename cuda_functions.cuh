@@ -172,6 +172,8 @@ __global__ void g_showers_step1(int size)
 	if (index < size)
 	{
 		dg_TRACK_mod_[index].INDEX = index;
+		dg_TRACK_mod_[index].IEXIT = 0;
+
 		d_showers_step2_G(size);
 	}
 }
@@ -210,8 +212,15 @@ __device__ void d_showers_step2_G(int size)
 			}
 			// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT);
 			dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-			// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-			dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+
+			if (d_cudaCapability >= 6)
+			{
+				// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+			}
+			else
+			{
+				dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+			}
 
 			return;
 		}
@@ -233,12 +242,18 @@ __device__ void d_showers_step2_G(int size)
 
 				if (dg_CNT4_.IDCUT[dg_wSHOWERS_[trackIndex].IDET - 1] == 0)
 				{
-					dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] + dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
+					dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] + dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
 					dg_wSHOWERS_[trackIndex].IEXIT = 3;
 					// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT);
 					dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-					// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-					dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+					if (d_cudaCapability >= 6)
+					{
+						// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+					}
+					else
+					{
+						dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+					}
 					return;
 				}
 			}
@@ -256,7 +271,7 @@ __device__ void d_showers_step2_G(int size)
 		}
 		dg_TRACK_mod_[index].E = 0.0e0;
 
-		dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] + dg_wSHOWERS_[trackIndex].DEP;
+		dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] + dg_wSHOWERS_[trackIndex].DEP;
 		if (dg_CNT6_.LDOSEM)
 		{
 			d_sdose2_(dg_wSHOWERS_[trackIndex].DEP, dg_TRACK_mod_[index].X, dg_TRACK_mod_[index].Y, dg_TRACK_mod_[index].Z, dg_TRACK_mod_[index].MAT, dg_TRACK_mod_[index].N);
@@ -264,8 +279,14 @@ __device__ void d_showers_step2_G(int size)
 		dg_wSHOWERS_[trackIndex].IEXIT = 3;
 		// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT);
 		dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-		// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-		dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+		if (d_cudaCapability >= 6)
+		{
+			// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+		}
+		else
+		{
+			dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+		}
 		return;
 	}
 }
@@ -304,8 +325,14 @@ __device__ void d_showers_step2_E(int size)
 			}
 			// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT);
 			dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-			// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-			dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+			if (d_cudaCapability >= 6)
+			{
+				// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+			}
+			else
+			{
+				dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+			}
 
 			return;
 		}
@@ -327,12 +354,18 @@ __device__ void d_showers_step2_E(int size)
 
 				if (dg_CNT4_.IDCUT[dg_wSHOWERS_[trackIndex].IDET - 1] == 0)
 				{
-					dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] + dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
+					dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] + dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
 					dg_wSHOWERS_[trackIndex].IEXIT = 3;
 					// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT);
 					dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-					// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-					dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+					if (d_cudaCapability >= 6)
+					{
+						// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+					}
+					else
+					{
+						dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+					}
 					return;
 				}
 			}
@@ -350,7 +383,7 @@ __device__ void d_showers_step2_E(int size)
 		}
 		dg_TRACK_mod_[index].E = 0.0e0;
 
-		dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] + dg_wSHOWERS_[trackIndex].DEP;
+		dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] + dg_wSHOWERS_[trackIndex].DEP;
 		if (dg_CNT6_.LDOSEM)
 		{
 			d_sdose2_(dg_wSHOWERS_[trackIndex].DEP, dg_TRACK_mod_[index].X, dg_TRACK_mod_[index].Y, dg_TRACK_mod_[index].Z, dg_TRACK_mod_[index].MAT, dg_TRACK_mod_[index].N);
@@ -358,8 +391,14 @@ __device__ void d_showers_step2_E(int size)
 		dg_wSHOWERS_[trackIndex].IEXIT = 3;
 		// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT);
 		dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-		// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-		dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+		if (d_cudaCapability >= 6)
+		{
+			// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+		}
+		else
+		{
+			dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+		}
 		return;
 	}
 }
@@ -398,8 +437,14 @@ __device__ void d_showers_step2_P(int size)
 			}
 			// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT);
 			dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-			// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-			dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+			if (d_cudaCapability >= 6)
+			{
+				// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+			}
+			else
+			{
+				dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+			}
 
 			return;
 		}
@@ -421,12 +466,18 @@ __device__ void d_showers_step2_P(int size)
 
 				if (dg_CNT4_.IDCUT[dg_wSHOWERS_[trackIndex].IDET - 1] == 0)
 				{
-					dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] + dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
+					dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] + dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
 					dg_wSHOWERS_[trackIndex].IEXIT = 3;
 					// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT);
 					dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-					// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-					dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+					if (d_cudaCapability >= 6)
+					{
+						// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+					}
+					else
+					{
+						dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+					}
 					return;
 				}
 			}
@@ -444,7 +495,7 @@ __device__ void d_showers_step2_P(int size)
 		}
 		dg_TRACK_mod_[index].E = 0.0e0;
 
-		dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] + dg_wSHOWERS_[trackIndex].DEP;
+		dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] + dg_wSHOWERS_[trackIndex].DEP;
 		if (dg_CNT6_.LDOSEM)
 		{
 			d_sdose2_(dg_wSHOWERS_[trackIndex].DEP, dg_TRACK_mod_[index].X, dg_TRACK_mod_[index].Y, dg_TRACK_mod_[index].Z, dg_TRACK_mod_[index].MAT, dg_TRACK_mod_[index].N);
@@ -452,8 +503,14 @@ __device__ void d_showers_step2_P(int size)
 		dg_wSHOWERS_[trackIndex].IEXIT = 3;
 		// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT);
 		dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-		// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-		dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+		if (d_cudaCapability >= 6)
+		{
+			// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+		}
+		else
+		{
+			dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+		}
 		return;
 	}
 }
@@ -487,15 +544,21 @@ __global__ void g_showers_step3_G(int size)
 				dg_TRACK_mod_[index].E = 0.0e0;
 
 				// A energia é depositada localmente no material.
-				dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] + dg_wSHOWERS_[trackIndex].DEP;
+				dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] + dg_wSHOWERS_[trackIndex].DEP;
 				if (dg_CNT6_.LDOSEM)
 				{ // Partícula dentro da caixa de dose.
 					d_sdose2_(dg_wSHOWERS_[trackIndex].DEP, dg_TRACK_mod_[index].X, dg_TRACK_mod_[index].Y, dg_TRACK_mod_[index].Z, dg_TRACK_mod_[index].MAT, dg_TRACK_mod_[index].N);
 				}
 				dg_wSHOWERS_[trackIndex].IEXIT = 3; // Marca partículas absorvidas.
 				dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-				// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-				dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+				if (d_cudaCapability >= 6)
+				{
+					// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+				}
+				else
+				{
+					dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+				}
 				// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT); //saida
 				return;
 			}
@@ -527,15 +590,21 @@ __device__ void d_showers_step3_G(int size)
 		dg_TRACK_mod_[index].E = 0.0e0;
 
 		// A energia é depositada localmente no material.
-		dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] + dg_wSHOWERS_[trackIndex].DEP;
+		dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] + dg_wSHOWERS_[trackIndex].DEP;
 		if (dg_CNT6_.LDOSEM)
 		{ // Partícula dentro da caixa de dose.
 			d_sdose2_(dg_wSHOWERS_[trackIndex].DEP, dg_TRACK_mod_[index].X, dg_TRACK_mod_[index].Y, dg_TRACK_mod_[index].Z, dg_TRACK_mod_[index].MAT, dg_TRACK_mod_[index].N);
 		}
 		dg_wSHOWERS_[trackIndex].IEXIT = 3; // Marca partículas absorvidas.
 		dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-		// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-		dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+		if (d_cudaCapability >= 6)
+		{
+			// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+		}
+		else
+		{
+			dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+		}
 		// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT); //saida
 		return;
 	}
@@ -569,15 +638,21 @@ __global__ void g_showers_step3_E(int size)
 				dg_TRACK_mod_[index].E = 0.0e0;
 
 				// A energia é depositada localmente no material.
-				dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] + dg_wSHOWERS_[trackIndex].DEP;
+				dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] + dg_wSHOWERS_[trackIndex].DEP;
 				if (dg_CNT6_.LDOSEM)
 				{ // Partícula dentro da caixa de dose.
 					d_sdose2_(dg_wSHOWERS_[trackIndex].DEP, dg_TRACK_mod_[index].X, dg_TRACK_mod_[index].Y, dg_TRACK_mod_[index].Z, dg_TRACK_mod_[index].MAT, dg_TRACK_mod_[index].N);
 				}
 				dg_wSHOWERS_[trackIndex].IEXIT = 3; // Marca partículas absorvidas.
 				dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-				// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-				dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+				if (d_cudaCapability >= 6)
+				{
+					// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+				}
+				else
+				{
+					dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+				}
 				// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT); //saida
 				return;
 			}
@@ -609,15 +684,21 @@ __device__ void d_showers_step3_E(int size)
 		dg_TRACK_mod_[index].E = 0.0e0;
 
 		// A energia é depositada localmente no material.
-		dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] + dg_wSHOWERS_[trackIndex].DEP;
+		dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] + dg_wSHOWERS_[trackIndex].DEP;
 		if (dg_CNT6_.LDOSEM)
 		{ // Partícula dentro da caixa de dose.
 			d_sdose2_(dg_wSHOWERS_[trackIndex].DEP, dg_TRACK_mod_[index].X, dg_TRACK_mod_[index].Y, dg_TRACK_mod_[index].Z, dg_TRACK_mod_[index].MAT, dg_TRACK_mod_[index].N);
 		}
 		dg_wSHOWERS_[trackIndex].IEXIT = 3; // Marca partículas absorvidas.
 		dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-		// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-		dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+		if (d_cudaCapability >= 6)
+		{
+			// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+		}
+		else
+		{
+			dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+		}
 		// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT); //saida
 		return;
 	}
@@ -651,15 +732,21 @@ __global__ void g_showers_step3_P(int size)
 				dg_TRACK_mod_[index].E = 0.0e0;
 
 				// A energia é depositada localmente no material.
-				dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] + dg_wSHOWERS_[trackIndex].DEP;
+				dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] + dg_wSHOWERS_[trackIndex].DEP;
 				if (dg_CNT6_.LDOSEM)
 				{ // Partícula dentro da caixa de dose.
 					d_sdose2_(dg_wSHOWERS_[trackIndex].DEP, dg_TRACK_mod_[index].X, dg_TRACK_mod_[index].Y, dg_TRACK_mod_[index].Z, dg_TRACK_mod_[index].MAT, dg_TRACK_mod_[index].N);
 				}
 				dg_wSHOWERS_[trackIndex].IEXIT = 3; // Marca partículas absorvidas.
 				dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-				// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-				dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+				if (d_cudaCapability >= 6)
+				{
+					// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+				}
+				else
+				{
+					dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+				}
 				// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT); //saida
 				return;
 			}
@@ -691,15 +778,21 @@ __device__ void d_showers_step3_P(int size)
 		dg_TRACK_mod_[index].E = 0.0e0;
 
 		// A energia é depositada localmente no material.
-		dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] + dg_wSHOWERS_[trackIndex].DEP;
+		dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] + dg_wSHOWERS_[trackIndex].DEP;
 		if (dg_CNT6_.LDOSEM)
 		{ // Partícula dentro da caixa de dose.
 			d_sdose2_(dg_wSHOWERS_[trackIndex].DEP, dg_TRACK_mod_[index].X, dg_TRACK_mod_[index].Y, dg_TRACK_mod_[index].Z, dg_TRACK_mod_[index].MAT, dg_TRACK_mod_[index].N);
 		}
 		dg_wSHOWERS_[trackIndex].IEXIT = 3; // Marca partículas absorvidas.
 		dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-		// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-		dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+		if (d_cudaCapability >= 6)
+		{
+			// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+		}
+		else
+		{
+			dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+		}
 		// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT); //saida
 		return;
 	}
@@ -801,7 +894,7 @@ __global__ void g_showers_step4_G(int size)
 							d_sdose2_(dg_wSHOWERS_[trackIndex].DEP, dg_wSHOWERS_[trackIndex].XL, dg_wSHOWERS_[trackIndex].YL, dg_wSHOWERS_[trackIndex].ZL, dg_wSHOWERS_[trackIndex].MATL, dg_TRACK_mod_[index].N);
 						}
 					}
-					dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_wSHOWERS_[trackIndex].IBODYL - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_wSHOWERS_[trackIndex].IBODYL - 1] + dg_wSHOWERS_[trackIndex].DEP;
+					dg_CNT1_.DEBO[trackIndex][dg_wSHOWERS_[trackIndex].IBODYL - 1] = dg_CNT1_.DEBO[trackIndex][dg_wSHOWERS_[trackIndex].IBODYL - 1] + dg_wSHOWERS_[trackIndex].DEP;
 				}
 				// Verifique se a partícula está fora do invólucro.
 				if (dg_TRACK_mod_[index].MAT == 0)
@@ -815,8 +908,14 @@ __global__ void g_showers_step4_G(int size)
 						dg_wSHOWERS_[trackIndex].IEXIT = 2; // Rotula partículas descendentes emergentes.
 					}
 					dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-					// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-					dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+					if (d_cudaCapability >= 6)
+					{
+						// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+					}
+					else
+					{
+						dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+					}
 					// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT); //Saida
 					return;
 				}
@@ -839,11 +938,17 @@ __global__ void g_showers_step4_G(int size)
 
 						if (dg_CNT4_.IDCUT[dg_wSHOWERS_[trackIndex].IDET - 1] == 0)
 						{
-							dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] + dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
+							dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] + dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
 							dg_wSHOWERS_[trackIndex].IEXIT = 3;
 							dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-							// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-							dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+							if (d_cudaCapability >= 6)
+							{
+								// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+							}
+							else
+							{
+								dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+							}
 							// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT);
 							return;
 						}
@@ -950,7 +1055,7 @@ __global__ void g_showers_step4_E(int size)
 							d_sdose2_(dg_wSHOWERS_[trackIndex].DEP, dg_wSHOWERS_[trackIndex].XL, dg_wSHOWERS_[trackIndex].YL, dg_wSHOWERS_[trackIndex].ZL, dg_wSHOWERS_[trackIndex].MATL, dg_TRACK_mod_[index].N);
 						}
 					}
-					dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_wSHOWERS_[trackIndex].IBODYL - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_wSHOWERS_[trackIndex].IBODYL - 1] + dg_wSHOWERS_[trackIndex].DEP;
+					dg_CNT1_.DEBO[trackIndex][dg_wSHOWERS_[trackIndex].IBODYL - 1] = dg_CNT1_.DEBO[trackIndex][dg_wSHOWERS_[trackIndex].IBODYL - 1] + dg_wSHOWERS_[trackIndex].DEP;
 				}
 				// Verifique se a partícula está fora do invólucro.
 				if (dg_TRACK_mod_[index].MAT == 0)
@@ -964,8 +1069,14 @@ __global__ void g_showers_step4_E(int size)
 						dg_wSHOWERS_[trackIndex].IEXIT = 2; // Rotula partículas descendentes emergentes.
 					}
 					dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-					// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-					dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+					if (d_cudaCapability >= 6)
+					{
+						// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+					}
+					else
+					{
+						dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+					}
 					// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT); //Saida
 					return;
 				}
@@ -988,11 +1099,17 @@ __global__ void g_showers_step4_E(int size)
 
 						if (dg_CNT4_.IDCUT[dg_wSHOWERS_[trackIndex].IDET - 1] == 0)
 						{
-							dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] + dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
+							dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] + dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
 							dg_wSHOWERS_[trackIndex].IEXIT = 3;
 							dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-							// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-							dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+							if (d_cudaCapability >= 6)
+							{
+								// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+							}
+							else
+							{
+								dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+							}
 							// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT);
 							return;
 						}
@@ -1098,7 +1215,7 @@ __global__ void g_showers_step4_P(int size)
 							d_sdose2_(dg_wSHOWERS_[trackIndex].DEP, dg_wSHOWERS_[trackIndex].XL, dg_wSHOWERS_[trackIndex].YL, dg_wSHOWERS_[trackIndex].ZL, dg_wSHOWERS_[trackIndex].MATL, dg_TRACK_mod_[index].N);
 						}
 					}
-					dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_wSHOWERS_[trackIndex].IBODYL - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_wSHOWERS_[trackIndex].IBODYL - 1] + dg_wSHOWERS_[trackIndex].DEP;
+					dg_CNT1_.DEBO[trackIndex][dg_wSHOWERS_[trackIndex].IBODYL - 1] = dg_CNT1_.DEBO[trackIndex][dg_wSHOWERS_[trackIndex].IBODYL - 1] + dg_wSHOWERS_[trackIndex].DEP;
 				}
 				// Verifique se a partícula está fora do invólucro.
 				if (dg_TRACK_mod_[index].MAT == 0)
@@ -1112,8 +1229,14 @@ __global__ void g_showers_step4_P(int size)
 						dg_wSHOWERS_[trackIndex].IEXIT = 2; // Rotula partículas descendentes emergentes.
 					}
 					dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-					// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-					dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+					if (d_cudaCapability >= 6)
+					{
+						// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+					}
+					else
+					{
+						dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+					}
 					// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT); //Saida
 					return;
 				}
@@ -1136,11 +1259,17 @@ __global__ void g_showers_step4_P(int size)
 
 						if (dg_CNT4_.IDCUT[dg_wSHOWERS_[trackIndex].IDET - 1] == 0)
 						{
-							dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] + dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
+							dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] + dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
 							dg_wSHOWERS_[trackIndex].IEXIT = 3;
 							dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-							// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-							dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+							if (d_cudaCapability >= 6)
+							{
+								// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+							}
+							else
+							{
+								dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+							}
 							// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT);
 							return;
 						}
@@ -1162,10 +1291,8 @@ __global__ void g_showers_step5_G(int size)
 
 	int trackIndex = dg_TRACK_mod_[index].INDEX;
 
-	
-	if ((index >=2000) && (index <=2100))
-	printf("IEXIT %d\n", dg_TRACK_mod_[index].IEXIT);
-
+	if ((index >= 2000) && (index <= 2100))
+		printf("IEXIT %d\n", dg_TRACK_mod_[index].IEXIT);
 
 	if (index < size)
 	{
@@ -1193,8 +1320,14 @@ __global__ void g_showers_step5_G(int size)
 			{										////A partícula foi absorvida.
 				dg_wSHOWERS_[trackIndex].IEXIT = 3; // Marca partículas absorvidas.
 				dg_TRACK_mod_[index].IEXIT = dg_wSHOWERS_[trackIndex].IEXIT;
-				// atomicAdd(&dg_nTRACKS_.nFINISH, -1)
-				dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+				if (d_cudaCapability >= 6)
+				{
+					// atomicAdd(&dg_nTRACKS_.nFINISH, -1);
+				}
+				else
+				{
+					dg_nTRACKS_.nFINISH = dg_nTRACKS_.nFINISH - 1;
+				}
 				// showers_step3(size, dg_wSHOWERS_[trackIndex].IEXIT); //saida
 				return;
 			}
@@ -1305,8 +1438,8 @@ __global__ void g_showers_step7_G(int size)
 			}
 			// printf("\nprocessando secundaria finaliznado.\n");
 			DEP = dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
-			// dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] - DEP;
-			dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] - DEP;
+			// dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] - DEP;
+			dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] - DEP;
 
 			if (dg_CNT6_.LDOSEM)
 			{
@@ -1386,8 +1519,8 @@ __global__ void g_showers_step7_E(int size)
 			}
 			// printf("\nprocessando secundaria finaliznado.\n");
 			DEP = dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
-			// dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] - DEP;
-			dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] - DEP;
+			// dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] - DEP;
+			dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] - DEP;
 
 			if (dg_CNT6_.LDOSEM)
 			{
@@ -1467,8 +1600,8 @@ __global__ void g_showers_step7_P(int size)
 			}
 			// printf("\nprocessando secundaria finaliznado.\n");
 			DEP = dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
-			// dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] - DEP;
-			dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] - DEP;
+			// dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] - DEP;
+			dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] - DEP;
 
 			if (dg_CNT6_.LDOSEM)
 			{
@@ -1521,11 +1654,16 @@ __global__ void g_showers_step8(int size)
 		// if (index == 0){
 		for (int KB = 1; KB <= dg_PENGEOM_mod_.NBODY; KB++)
 		{
-			dg_CNT1_.TDEBO[KB - 1] = dg_CNT1_.TDEBO[KB - 1] + dg_CNT1_.DEBO[trackIndex][KB - 1];
-			// dg_CNT1_.TDEBO2[KB - 1] = dg_CNT1_.TDEBO2[KB - 1] + pow(dg_CNT1_.DEBO[trackIndex][KB - 1], 2);
-			dg_CNT1_.TDEBO2[KB - 1] = dg_CNT1_.TDEBO2[KB - 1] + (dg_CNT1_.DEBO[trackIndex][KB - 1] * dg_CNT1_.DEBO[trackIndex][KB - 1]);
-			// atomicAdd(&dg_CNT1_.TDEBO[KB - 1], dg_CNT1_.DEBO[trackIndex][KB - 1]);
-			// atomicAdd(&dg_CNT1_.TDEBO2[KB - 1], pow(dg_CNT1_.DEBO[trackIndex][KB - 1], 2));
+			if (d_cudaCapability >= 6)
+			{
+				// atomicAdd(&dg_CNT1_.TDEBO[KB - 1], dg_CNT1_.DEBO[trackIndex][KB - 1]);
+				// atomicAdd(&dg_CNT1_.TDEBO2[KB - 1], pow(dg_CNT1_.DEBO[trackIndex][KB - 1], 2));
+			}
+			else
+			{
+				dg_CNT1_.TDEBO[KB - 1] = dg_CNT1_.TDEBO[KB - 1] + dg_CNT1_.DEBO[trackIndex][KB - 1];
+				dg_CNT1_.TDEBO2[KB - 1] = dg_CNT1_.TDEBO2[KB - 1] + (dg_CNT1_.DEBO[trackIndex][KB - 1] * dg_CNT1_.DEBO[trackIndex][KB - 1]);
+			}
 			//	printf("TDBEBO: %f\n", dg_CNT1_.TDEBO[KB-1]);
 			//	printf("TDBEBO2: %f\n\n", dg_CNT1_.TDEBO2[KB-1]);
 
@@ -1535,38 +1673,51 @@ __global__ void g_showers_step8(int size)
 		// Contadores de estado final
 		for (int I = 1; I <= 3; I++)
 		{
-			// atomicAdd(&dg_CNT0_.PRIM[I - 1], dg_CNT0_.DPRIM[trackIndex][I - 1]);
-			// atomicAdd(&dg_CNT0_.PRIM2[I - 1] , pow(dg_CNT0_.DPRIM[trackIndex][I - 1], 2));
-			dg_CNT0_.PRIM[I - 1] = dg_CNT0_.PRIM[I - 1] + dg_CNT0_.DPRIM[trackIndex][I - 1];
-			// dg_CNT0_.PRIM2[I - 1] = dg_CNT0_.PRIM2[I - 1] + pow(dg_CNT0_.DPRIM[trackIndex][I - 1], 2);
-			dg_CNT0_.PRIM2[I - 1] = dg_CNT0_.PRIM2[I - 1] + (dg_CNT0_.DPRIM[trackIndex][I - 1] * dg_CNT0_.DPRIM[trackIndex][I - 1]);
+			if (d_cudaCapability >= 6)
+			{
+				// atomicAdd(&dg_CNT0_.PRIM[I - 1], dg_CNT0_.DPRIM[trackIndex][I - 1]);
+				// atomicAdd(&dg_CNT0_.PRIM2[I - 1] , pow(dg_CNT0_.DPRIM[trackIndex][I - 1], 2));
+			}
+			else
+			{
+				dg_CNT0_.PRIM[I - 1] = dg_CNT0_.PRIM[I - 1] + dg_CNT0_.DPRIM[trackIndex][I - 1];
+				dg_CNT0_.PRIM2[I - 1] = dg_CNT0_.PRIM2[I - 1] + (dg_CNT0_.DPRIM[trackIndex][I - 1] * dg_CNT0_.DPRIM[trackIndex][I - 1]);
+			}
 			for (int K = 1; K <= 3; K++)
 			{
-				// atomicAdd(&dg_CNT0_.SEC[I - 1][K - 1], dg_CNT0_.DSEC[trackIndex][I - 1][K - 1]);
-				// atomicAdd(&dg_CNT0_.SEC2[I - 1][K - 1] , pow(dg_CNT0_.DSEC[trackIndex][I - 1][K - 1], 2));
-				dg_CNT0_.SEC[I - 1][K - 1] = dg_CNT0_.SEC[I - 1][K - 1] + dg_CNT0_.DSEC[trackIndex][I - 1][K - 1];
-				// dg_CNT0_.SEC2[I - 1][K - 1] = dg_CNT0_.SEC2[I - 1][K - 1] + pow(dg_CNT0_.DSEC[trackIndex][I - 1][K - 1], 2);
-				dg_CNT0_.SEC2[I - 1][K - 1] = dg_CNT0_.SEC2[I - 1][K - 1] + (dg_CNT0_.DSEC[trackIndex][I - 1][K - 1] * dg_CNT0_.DSEC[trackIndex][I - 1][K - 1]);
+				if (d_cudaCapability >= 6)
+				{
+					// atomicAdd(&dg_CNT0_.SEC[I - 1][K - 1], dg_CNT0_.DSEC[trackIndex][I - 1][K - 1]);
+					// atomicAdd(&dg_CNT0_.SEC2[I - 1][K - 1] , pow(dg_CNT0_.DSEC[trackIndex][I - 1][K - 1], 2));
+				}
+				else
+				{
+					dg_CNT0_.SEC[I - 1][K - 1] = dg_CNT0_.SEC[I - 1][K - 1] + dg_CNT0_.DSEC[trackIndex][I - 1][K - 1];
+					dg_CNT0_.SEC2[I - 1][K - 1] = dg_CNT0_.SEC2[I - 1][K - 1] + (dg_CNT0_.DSEC[trackIndex][I - 1][K - 1] * dg_CNT0_.DSEC[trackIndex][I - 1][K - 1]);
+				}
 			}
 		}
 
 		for (int I = 1; I <= 2; I++)
 		{
-			// atomicAdd(&dg_CNT0_.AVW[I - 1], dg_CNT0_.DAVW[trackIndex][I - 1]);
-			// atomicAdd(&dg_CNT0_.AVW2[I - 1] , pow(dg_CNT0_.DAVW[trackIndex][I - 1], 2));
-			dg_CNT0_.AVW[I - 1] = dg_CNT0_.AVW[I - 1] + dg_CNT0_.DAVW[trackIndex][I - 1];
-			// dg_CNT0_.AVW2[I - 1] = dg_CNT0_.AVW2[I - 1] + pow(dg_CNT0_.DAVW[trackIndex][I - 1], 2);
-			dg_CNT0_.AVW2[I - 1] = dg_CNT0_.AVW2[I - 1] + (dg_CNT0_.DAVW[trackIndex][I - 1] * dg_CNT0_.DAVW[trackIndex][I - 1]);
-			// atomicAdd(&dg_CNT0_.AVA[I - 1], dg_CNT0_.DAVA[trackIndex][I - 1]);
-			// atomicAdd(&dg_CNT0_.AVA2[I - 1] , pow(dg_CNT0_.DAVA[trackIndex][I - 1], 2));
-			dg_CNT0_.AVA[I - 1] = dg_CNT0_.AVA[I - 1] + dg_CNT0_.DAVA[trackIndex][I - 1];
-			// dg_CNT0_.AVA2[I - 1] = dg_CNT0_.AVA2[I - 1] + pow(dg_CNT0_.DAVA[trackIndex][I - 1], 2);
-			dg_CNT0_.AVA2[I - 1] = dg_CNT0_.AVA2[I - 1] + (dg_CNT0_.DAVA[trackIndex][I - 1] * dg_CNT0_.DAVA[trackIndex][I - 1]);
-			// atomicAdd(&dg_CNT0_.AVE[I - 1], dg_CNT0_.DAVE[trackIndex][I - 1]);
-			// atomicAdd(&dg_CNT0_.AVE2[I - 1] , pow(dg_CNT0_.DAVE[trackIndex][I - 1], 2));
-			dg_CNT0_.AVE[I - 1] = dg_CNT0_.AVE[I - 1] + dg_CNT0_.DAVE[trackIndex][I - 1];
-			dg_CNT0_.AVE2[I - 1] = dg_CNT0_.AVE2[I - 1] + (dg_CNT0_.DAVE[trackIndex][I - 1] * dg_CNT0_.DAVE[trackIndex][I - 1]);
-			// dg_CNT0_.AVE2[I - 1] = dg_CNT0_.AVE2[I - 1] + pow(dg_CNT0_.DAVE[trackIndex][I - 1], 2);
+			if (d_cudaCapability >= 6)
+			{
+				// atomicAdd(&dg_CNT0_.AVW[I - 1], dg_CNT0_.DAVW[trackIndex][I - 1]);
+				// atomicAdd(&dg_CNT0_.AVW2[I - 1] , pow(dg_CNT0_.DAVW[trackIndex][I - 1], 2));
+				// atomicAdd(&dg_CNT0_.AVA[I - 1], dg_CNT0_.DAVA[trackIndex][I - 1]);
+				// atomicAdd(&dg_CNT0_.AVA2[I - 1] , pow(dg_CNT0_.DAVA[trackIndex][I - 1], 2));
+				// atomicAdd(&dg_CNT0_.AVE[I - 1], dg_CNT0_.DAVE[trackIndex][I - 1]);
+				// atomicAdd(&dg_CNT0_.AVE2[I - 1] , pow(dg_CNT0_.DAVE[trackIndex][I - 1], 2));
+			}
+			else
+			{
+				dg_CNT0_.AVW[I - 1] = dg_CNT0_.AVW[I - 1] + dg_CNT0_.DAVW[trackIndex][I - 1];
+				dg_CNT0_.AVW2[I - 1] = dg_CNT0_.AVW2[I - 1] + (dg_CNT0_.DAVW[trackIndex][I - 1] * dg_CNT0_.DAVW[trackIndex][I - 1]);
+				dg_CNT0_.AVA[I - 1] = dg_CNT0_.AVA[I - 1] + dg_CNT0_.DAVA[trackIndex][I - 1];
+				dg_CNT0_.AVA2[I - 1] = dg_CNT0_.AVA2[I - 1] + (dg_CNT0_.DAVA[trackIndex][I - 1] * dg_CNT0_.DAVA[trackIndex][I - 1]);
+				dg_CNT0_.AVE[I - 1] = dg_CNT0_.AVE[I - 1] + dg_CNT0_.DAVE[trackIndex][I - 1];
+				dg_CNT0_.AVE2[I - 1] = dg_CNT0_.AVE2[I - 1] + (dg_CNT0_.DAVE[trackIndex][I - 1] * dg_CNT0_.DAVE[trackIndex][I - 1]);
+			}
 		}
 	}
 }
@@ -1651,7 +1802,7 @@ __global__ void showers_sec_G(int size)
 				}*/
 
 		/*	if ((index == 0) || (index == 1)){
-				printf("SHOWER SEC DEBO[%d]: %f\n", index, dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1]);
+				printf("SHOWER SEC DEBO[%d]: %f\n", index, dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1]);
 			}*/
 
 		//	int  KEn;
@@ -1707,8 +1858,8 @@ __global__ void showers_sec_G(int size)
 			}
 			// printf("\nprocessando secundaria finaliznado.\n");
 			DEP = dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
-			// dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] - DEP;
-			dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] - DEP;
+			// dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] - DEP;
+			dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] - DEP;
 
 			if (dg_CNT6_.LDOSEM)
 			{
@@ -1743,7 +1894,7 @@ __global__ void showers_sec_E(int size)
 				}*/
 
 		/*	if ((index == 0) || (index == 1)){
-				printf("SHOWER SEC DEBO[%d]: %f\n", index, dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1]);
+				printf("SHOWER SEC DEBO[%d]: %f\n", index, dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1]);
 			}*/
 
 		// int  KEn;
@@ -1799,8 +1950,8 @@ __global__ void showers_sec_E(int size)
 			}
 			// printf("\nprocessando secundaria finaliznado.\n");
 			DEP = dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
-			// dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] - DEP;
-			dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] - DEP;
+			// dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] - DEP;
+			dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] - DEP;
 
 			if (dg_CNT6_.LDOSEM)
 			{
@@ -1835,7 +1986,7 @@ __global__ void showers_sec_P(int size)
 				}*/
 
 		/*	if ((index == 0) || (index == 1)){
-				printf("SHOWER SEC DEBO[%d]: %f\n", index, dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1]);
+				printf("SHOWER SEC DEBO[%d]: %f\n", index, dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1]);
 			}*/
 
 		// int  KEn;
@@ -1891,8 +2042,8 @@ __global__ void showers_sec_P(int size)
 			}
 			// printf("\nprocessando secundaria finaliznado.\n");
 			DEP = dg_TRACK_mod_[index].E * dg_TRACK_mod_[index].WGHT;
-			// dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] - DEP;
-			dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[dg_TRACK_mod_[index].INDEX][dg_TRACK_mod_[index].IBODY - 1] - DEP;
+			// dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] - DEP;
+			dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] = dg_CNT1_.DEBO[trackIndex][dg_TRACK_mod_[index].IBODY - 1] - DEP;
 
 			if (dg_CNT6_.LDOSEM)
 			{
@@ -5544,8 +5695,11 @@ __device__ void d_stores2_(double &EI, double &XI, double &YI, double &ZI, doubl
 		else
 		{
 			IE = dg_nTRACKS_.nSECTRACK_E;
-			// atomicAdd(&dg_nTRACKS_.nSECTRACK_E, 1);
+			if (d_cudaCapability >= 6){
+				// atomicAdd(&dg_nTRACKS_.nSECTRACK_E, 1);
+			}else{ 
 			dg_nTRACKS_.nSECTRACK_E = dg_nTRACKS_.nSECTRACK_E + 1;
+			}
 		}
 
 		dg_SECTRACK_E_[IE].E = EI;
@@ -5603,8 +5757,11 @@ __device__ void d_stores2_(double &EI, double &XI, double &YI, double &ZI, doubl
 		else
 		{
 			IG = dg_nTRACKS_.nSECTRACK_G;
-			// atomicAdd(&dg_nTRACKS_.nSECTRACK_G, 1);
-			dg_nTRACKS_.nSECTRACK_G = dg_nTRACKS_.nSECTRACK_G + 1;
+			if (d_cudaCapability >= 6){
+				// atomicAdd(&dg_nTRACKS_.nSECTRACK_G, 1);
+			}else {
+				dg_nTRACKS_.nSECTRACK_G = dg_nTRACKS_.nSECTRACK_G + 1;
+			}
 		}
 
 		dg_SECTRACK_G_[IG].E = EI;
@@ -5661,8 +5818,11 @@ __device__ void d_stores2_(double &EI, double &XI, double &YI, double &ZI, doubl
 		else
 		{
 			IP = dg_nTRACKS_.nSECTRACK_P;
-			// atomicAdd(&dg_nTRACKS_.nSECTRACK_P, 1);
-			dg_nTRACKS_.nSECTRACK_P = dg_nTRACKS_.nSECTRACK_P + 1;
+			if (d_cudaCapability >= 6){
+				// atomicAdd(&dg_nTRACKS_.nSECTRACK_P, 1);
+			}else {
+				dg_nTRACKS_.nSECTRACK_P = dg_nTRACKS_.nSECTRACK_P + 1;
+			}
 		}
 
 		dg_SECTRACK_P_[IP].E = EI;
@@ -11004,17 +11164,26 @@ __device__ void d_sdose2_(double &DEP, double &XD, double &YD, double &ZD, int &
 			I3 = (int)(1.0e0 + (ZD - dg_CDOSE3_.DXL[3 - 1]) * dg_CDOSE3_.RBDOSE[3 - 1]);
 			if (N != dg_CDOSE2_.LDDOSE[I3 - 1])
 			{
-				// atomicAdd(&dg_CDOSE2_.DDOSE[I3 - 1], dg_CDOSE2_.DDOSEP[I3 - 1]);
-				// atomicAdd(&dg_CDOSE2_.DDOSE2[I3 - 1], pow(dg_CDOSE2_.DDOSEP[I3 - 1], 2));
-				dg_CDOSE2_.DDOSE[I3 - 1] = dg_CDOSE2_.DDOSE[I3 - 1] + dg_CDOSE2_.DDOSEP[I3 - 1];
-				dg_CDOSE2_.DDOSE2[I3 - 1] = dg_CDOSE2_.DDOSE2[I3 - 1] + pow(dg_CDOSE2_.DDOSEP[I3 - 1], 2);
+				if (d_cudaCapability >= 6)
+				{
+					// atomicAdd(&dg_CDOSE2_.DDOSE[I3 - 1], dg_CDOSE2_.DDOSEP[I3 - 1]);
+					// atomicAdd(&dg_CDOSE2_.DDOSE2[I3 - 1], pow(dg_CDOSE2_.DDOSEP[I3 - 1], 2));
+				}
+				else
+				{
+					dg_CDOSE2_.DDOSE[I3 - 1] = dg_CDOSE2_.DDOSE[I3 - 1] + dg_CDOSE2_.DDOSEP[I3 - 1];
+					dg_CDOSE2_.DDOSE2[I3 - 1] = dg_CDOSE2_.DDOSE2[I3 - 1] + pow(dg_CDOSE2_.DDOSEP[I3 - 1], 2);
+				}
 				dg_CDOSE2_.DDOSEP[I3 - 1] = DEP * dg_PENELOPE_mod_.RDEN[MATC - 1];
 				dg_CDOSE2_.LDDOSE[I3 - 1] = N;
 			}
 			else
 			{
-				// atomicAdd(&dg_CDOSE2_.DDOSEP[I3 - 1], DEP * dg_PENELOPE_mod_.RDEN[MATC - 1]);
-				dg_CDOSE2_.DDOSEP[I3 - 1] = dg_CDOSE2_.DDOSEP[I3 - 1] + DEP * dg_PENELOPE_mod_.RDEN[MATC - 1];
+				if (d_cudaCapability >= 6){
+					// atomicAdd(&dg_CDOSE2_.DDOSEP[I3 - 1], DEP * dg_PENELOPE_mod_.RDEN[MATC - 1]);
+				}else {
+					dg_CDOSE2_.DDOSEP[I3 - 1] = dg_CDOSE2_.DDOSEP[I3 - 1] + DEP * dg_PENELOPE_mod_.RDEN[MATC - 1];
+				}
 			}
 
 			if (((XD > dg_CDOSE3_.DXL[1 - 1]) && (XD < dg_CDOSE3_.DXU[1 - 1])) && ((YD > dg_CDOSE3_.DXL[2 - 1]) && (YD < dg_CDOSE3_.DXU[2 - 1])))
@@ -11023,17 +11192,26 @@ __device__ void d_sdose2_(double &DEP, double &XD, double &YD, double &ZD, int &
 				I2 = (int)(1.0e0 + (YD - dg_CDOSE3_.DXL[2 - 1]) * dg_CDOSE3_.RBDOSE[2 - 1]);
 				if (N != dg_CDOSE1_.LDOSE[I3 - 1][I2 - 1][I1 - 1])
 				{
-					// atomicAdd(&dg_CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1], dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1]);
-					// atomicAdd(&dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1], pow(dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1], 2));
-					dg_CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1] + dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1];
-					dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] + pow(dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1], 2);
+					if (d_cudaCapability >= 6)
+					{
+						// atomicAdd(&dg_CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1], dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1]);
+						// atomicAdd(&dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1], pow(dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1], 2));
+					}
+					else
+					{
+						dg_CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1] + dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1];
+						dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] + pow(dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1], 2);
+					}
 					dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1] = DEP;
 					dg_CDOSE1_.LDOSE[I3 - 1][I2 - 1][I1 - 1] = N;
 				}
 				else
 				{
-					// atomicAdd(&dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1], DEP);
-					dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1] + DEP;
+					if (d_cudaCapability >= 6){
+						// atomicAdd(&dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1], DEP);
+					}else {
+						dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1] + DEP;
+					}
 				}
 			}
 		}
