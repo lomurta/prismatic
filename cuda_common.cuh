@@ -7,20 +7,24 @@
 #include <stdio.h>
 #include <iostream>
 
-#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+#define gpuErrchk(ans)                        \
+	{                                         \
+		gpuAssert((ans), __FILE__, __LINE__); \
+	}
 
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort = true)
 {
 	if (code != cudaSuccess)
 	{
 		fprintf(stderr, "GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
-		if (abort) exit(code);
+		if (abort)
+			exit(code);
 	}
 }
 
-__global__ void scan_efficient_1G(int * input, int* auxiliry_array, int input_size);
-__global__ void scan_summation(int * input, int * auxiliry_array, int input_size);
+__global__ void scan_efficient_1G(int *input, int *auxiliry_array, int input_size);
+__global__ void scan_summation(int *input, int *auxiliry_array, int input_size);
 
 #endif // !CUDA_COMMON_H
 
-//void query_device();
+// void query_device();
