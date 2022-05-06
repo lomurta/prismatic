@@ -110,8 +110,8 @@ typedef struct
 typedef struct
 {
 	double E, X, Y, Z, U, V, W, WGHT, SP1, SP2, SP3, PAGE;
-	int KPAR, IBODY, MAT, ILB[5], IPOL, INDEX, N, IEXIT;
-	bool LAGE;
+	int KPAR, IBODY, MAT, ILB[5], IPOL, INDEX, N, IEXIT, STEP;
+	bool LAGE, CROSS;
 } hd_TRACK_MOD;
 
 typedef struct
@@ -775,7 +775,7 @@ typedef struct
 
 typedef struct
 {
-	double TDEBO[NB], TDEBO2[NB], DEBO[pilhaPart][NB];
+	double TDEBO[NB], TDEBO2[NB], DEBO[NB];
 } hd_CNT1;
 
 // Distribuições contínuas.
@@ -1342,6 +1342,8 @@ hd_nTRACKS *d_nTRACKS;
 __device__ int size;
 int *d_size;
 
-//__device__ double d_S[NS2M];
-//__device__ int d_IS[NS2M];
+__device__ double d_S[pilhaPart][NS2M/100];
+__device__ int d_IS[pilhaPart][NS2M/100];
 __device__ int d_wIPOLI = 0;
+
+__device__ int d_contStores = 0;

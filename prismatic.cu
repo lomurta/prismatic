@@ -137,6 +137,7 @@ int main()
 			{
 				if (nTRACKS_.nSECTRACK_E > 0)
 				{
+					//nTRACKS_.nSECTRACK_E = 0;
 					simSecTrack_E();
 					// nTRACKS_.nSECTRACK_E = 0;
 				}
