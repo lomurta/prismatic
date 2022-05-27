@@ -341,7 +341,7 @@ L103:;
 		//Correção da perda de energia suave (CSDA).
 		if (dg_TRACK_mod_[index].KPAR != 2) {
 			dg_TRACK_mod_[index].E = dg_PENELOPE_mod_.E0STEP[index] - dg_PENELOPE_mod_.SSOFT[index] * DSEF;
-			if (dg_CJUMP1_[index].MHINGE == 0) {
+			if (dg_CJUMP1_.MHINGE[index] == 0) {
 				DEP = dg_PENELOPE_mod_.SSOFT[index] * DSEF * dg_TRACK_mod_[index].WGHT;
 				if (dg_CNT6_.LDOSEM) {
 					DSEFR = d_rand2_(8.0e0) * DSEF;
@@ -4420,18 +4420,18 @@ __device__ void d_knock2_(double& DE, int& ICOL) {
 	}
 
 L1000:;
-	if (dg_CJUMP1_[index].MHINGE == 1)
+	if (dg_CJUMP1_.MHINGE[index] == 1)
 		goto L1100;
 
 	//Eletrons 
 	//Dobradiça, evento suave artificial (ICOL=1).
 
 	ICOL = 1;
-	dg_CJUMP1_[index].MHINGE = 1;
+	dg_CJUMP1_.MHINGE[index] = 1;
 
 	//Perda de Energia
 
-	if (dg_CJUMP1_[index].KSOFTI == 1) {
+	if (dg_CJUMP1_.KSOFTI[index] == 1) {
 		DE = dg_PENELOPE_mod_.DESOFT[index];
 		dg_TRACK_mod_[index].E = dg_TRACK_mod_[index].E - DE;
 		if (dg_TRACK_mod_[index].E < dg_PENELOPE_mod_.EABS[dg_TRACK_mod_[index].MAT - 1][1 - 1]) {
@@ -4440,7 +4440,7 @@ L1000:;
 			return;
 		}
 		dg_PENELOPE_mod_.E0STEP[index] = dg_PENELOPE_mod_.E0STEP[index] - dg_PENELOPE_mod_.SSOFT[index] * (dg_CJUMP0_.DST[index] - dg_CJUMP0_.DSR[index]);
-		if (dg_CJUMP1_[index].KSOFTE == 0)
+		if (dg_CJUMP1_.KSOFTE[index] == 0)
 			return;
 		dg_CEGRID_.XEL[index] = log(dg_PENELOPE_mod_.E0STEP[index]);
 		dg_CEGRID_.XE[index] = 1.0e0 + (dg_CEGRID_.XEL[index] - dg_CEGRID_.DLEMP1) * dg_CEGRID_.DLFC;
@@ -4487,9 +4487,9 @@ L1000:;
 
 L1100:;
 
-	dg_CJUMP1_[index].MHINGE = 0;
+	dg_CJUMP1_.MHINGE[index] = 0;
 	//Uma interação delta (ICOL=7) ocorre quando o máximo comprimento de passo permitido é excedido.
-	if (dg_CJUMP1_[index].KDELTA == 1) {
+	if (dg_CJUMP1_.KDELTA[index] == 1) {
 		ICOL = 7;
 		DE = 0.0e0;
 		return;
@@ -4876,18 +4876,18 @@ L2800:;
 
 L3000:;
 
-	if (dg_CJUMP1_[index].MHINGE == 1)
+	if (dg_CJUMP1_.MHINGE[index] == 1)
 		goto L3100;
 
 
 	//Dobradiça, evento suave artificial (ICOL=1).
 
 	ICOL = 1;
-	dg_CJUMP1_[index].MHINGE = 1;
+	dg_CJUMP1_.MHINGE[index] = 1;
 
 	//Perda de Energia
 
-	if (dg_CJUMP1_[index].KSOFTI == 1) {
+	if (dg_CJUMP1_.KSOFTI[index] == 1) {
 		DE = dg_PENELOPE_mod_.DESOFT[index];
 		dg_TRACK_mod_[index].E = dg_TRACK_mod_[index].E - DE;
 		if (dg_TRACK_mod_[index].E < dg_PENELOPE_mod_.EABS[dg_TRACK_mod_[index].MAT - 1][3 - 1]) {
@@ -4897,7 +4897,7 @@ L3000:;
 			return;
 		}
 		dg_PENELOPE_mod_.E0STEP[index] = dg_PENELOPE_mod_.E0STEP[index] - dg_PENELOPE_mod_.SSOFT[index] * (dg_CJUMP0_.DST[index] - dg_CJUMP0_.DSR[index]);
-		if (dg_CJUMP1_[index].KSOFTE == 0)
+		if (dg_CJUMP1_.KSOFTE[index] == 0)
 			return;
 
 		dg_CEGRID_.XEL[index] = log(dg_PENELOPE_mod_.E0STEP[index]);
@@ -4944,9 +4944,9 @@ L3000:;
 
 L3100:;
 
-	dg_CJUMP1_[index].MHINGE = 0;
+	dg_CJUMP1_.MHINGE[index] = 0;
 	//Uma interação delta (ICOL=7) ocorre quando o máximo comprimento de passo permitido é excedido.
-	if (dg_CJUMP1_[index].KDELTA == 1) {
+	if (dg_CJUMP1_.KDELTA[index] == 1) {
 		ICOL = 7;
 		DE = 0.0e0;
 		return;
@@ -5458,9 +5458,9 @@ __device__ void d_start2_() {
 		//exit(0);
 		return;
 	}
-	dg_CJUMP1_[index].MHINGE = 0;
-	dg_CJUMP1_[index].ELAST1 = dg_TRACK_mod_[index].E + 1.0e30;
-	dg_CJUMP1_[index].ELAST2 = dg_CJUMP1_[index].ELAST1;
+	dg_CJUMP1_.MHINGE[index] = 0;
+	dg_CJUMP1_.ELAST1[index] = dg_TRACK_mod_[index].E + 1.0e30;
+	dg_CJUMP1_.ELAST2[index] = dg_CJUMP1_.ELAST1[index];
 
 	/*	if (imprimiu==0){
 		printf("\n\nSTART2\n\n");
@@ -5496,29 +5496,29 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 	int KE1;
 
 	if (dg_TRACK_mod_[index].KPAR == 1) { //eletrons
-		if (dg_CJUMP1_[index].MHINGE == 1) {
-			if (dg_TRACK_mod_[index].E < dg_CJUMP1_[index].ELAST1) {
+		if (dg_CJUMP1_.MHINGE[index] == 1) {
+			if (dg_TRACK_mod_[index].E < dg_CJUMP1_.ELAST1[index]) {
 				dg_CEGRID_.XEL[index] = log(dg_TRACK_mod_[index].E);
 				dg_CEGRID_.XE[index] = 1.0e0 + (dg_CEGRID_.XEL[index] - dg_CEGRID_.DLEMP1) * dg_CEGRID_.DLFC;
 				dg_CEGRID_.KE[index] = (int)dg_CEGRID_.XE[index];
 				dg_CEGRID_.XEK[index] = dg_CEGRID_.XE[index] - dg_CEGRID_.KE[index];
 				int wvar = 1;
 				d_eimfp2_(wvar);
-				dg_CJUMP1_[index].ELAST1 = dg_TRACK_mod_[index].E;
+				dg_CJUMP1_.ELAST1[index] = dg_TRACK_mod_[index].E;
 			}
 			DS = dg_CJUMP0_.DSR[index];
 			return;
 		}
 		dg_PENELOPE_mod_.E0STEP[index] = dg_TRACK_mod_[index].E;
-		if (dg_TRACK_mod_[index].E < dg_CJUMP1_[index].ELAST2) {
+		if (dg_TRACK_mod_[index].E < dg_CJUMP1_.ELAST2[index]) {
 			dg_CEGRID_.XEL[index] = log(dg_TRACK_mod_[index].E);
 			dg_CEGRID_.XE[index] = 1.0e0 + (dg_CEGRID_.XEL[index] - dg_CEGRID_.DLEMP1) * dg_CEGRID_.DLFC;
 			dg_CEGRID_.KE[index] = (int)dg_CEGRID_.XE[index];
 			dg_CEGRID_.XEK[index] = dg_CEGRID_.XE[index] - dg_CEGRID_.KE[index];
 			int wvar = 2;
 			d_eimfp2_(wvar);
-			dg_CJUMP1_[index].ELAST2 = dg_TRACK_mod_[index].E;
-			dg_CJUMP1_[index].ELAST1 = dg_TRACK_mod_[index].E;
+			dg_CJUMP1_.ELAST2[index] = dg_TRACK_mod_[index].E;
+			dg_CJUMP1_.ELAST1[index] = dg_TRACK_mod_[index].E;
 		}
 
 		//Caminho livre médio rígido inverso (probabilidade de interação por unidade comprimento do caminho).
@@ -5532,7 +5532,7 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 		*/
 
 		if (dg_CJUMP0_.W1[index] > 1.0e-20) {
-			dg_CJUMP1_[index].KSOFTI = 1;
+			dg_CJUMP1_.KSOFTI[index] = 1;
 			/*
 			O comprimento máximo do passo, DSMAXP, é determinado em termos do
 			valor DSMAX de entrada (que é especificado pelo usuário) e a média
@@ -5576,7 +5576,7 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 			dg_CJUMP0_.ST[index] = fmax(dg_CJUMP0_.ST[index], STLWR);
 		}
 		else {
-			dg_CJUMP1_[index].KSOFTI = 0;
+			dg_CJUMP1_.KSOFTI[index] = 0;
 			dg_PENELOPE_mod_.DESOFT[index] = 0.0e0;
 			dg_PENELOPE_mod_.SSOFT[index] = 0.0e0;
 		}
@@ -5588,10 +5588,10 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 		*/
 
 		if (dg_CJUMP0_.T1[index] > 1.0e-20) {
-			dg_CJUMP1_[index].KSOFTE = 1;
+			dg_CJUMP1_.KSOFTE[index] = 1;
 		}
 		else {
-			dg_CJUMP1_[index].KSOFTE = 0;
+			dg_CJUMP1_.KSOFTE[index] = 0;
 		}
 
 		/*
@@ -5602,21 +5602,21 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 
 		dg_CJUMP0_.DST[index] = -log(d_rand2_(2.0e0)) / dg_CJUMP0_.ST[index];
 		if (dg_CJUMP0_.DST[index] < DSMAXP) {
-			dg_CJUMP1_[index].KDELTA = 0;
+			dg_CJUMP1_.KDELTA[index] = 0;
 		}
 		else {
 			dg_CJUMP0_.DST[index] = DSMAXP;
-			dg_CJUMP1_[index].KDELTA = 1;
+			dg_CJUMP1_.KDELTA[index] = 1;
 		}
 
-		if (dg_CJUMP1_[index].KSOFTE + dg_CJUMP1_[index].KSOFTI == 0) {
-			dg_CJUMP1_[index].MHINGE = 1;
+		if (dg_CJUMP1_.KSOFTE[index] + dg_CJUMP1_.KSOFTI[index] == 0) {
+			dg_CJUMP1_.MHINGE[index] = 1;
 			DS = dg_CJUMP0_.DST[index];
 		}
 		else {
 			DS = dg_CJUMP0_.DST[index] * d_rand2_(3.0e0);
 			dg_CJUMP0_.DSR[index] = dg_CJUMP0_.DST[index] - DS;
-			if (dg_CJUMP1_[index].KSOFTI == 1) {
+			if (dg_CJUMP1_.KSOFTI[index] == 1) {
 				if (dg_CJUMP0_.DST[index] < 1.0e-8) {
 					dg_PENELOPE_mod_.SSOFT[index] = dg_CJUMP0_.W1[index];
 					dg_PENELOPE_mod_.DESOFT[index] = dg_PENELOPE_mod_.SSOFT[index] * dg_CJUMP0_.DST[index];
@@ -5644,12 +5644,12 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 							if (RU < PNULL) {
 								dg_PENELOPE_mod_.DESOFT[index] = 0.0e0;
 								dg_PENELOPE_mod_.SSOFT[index] = 0.0e0;
-								if (dg_CJUMP1_[index].KSOFTE == 0) {
-									dg_CJUMP1_[index].MHINGE = 1;
+								if (dg_CJUMP1_.KSOFTE[index] == 0) {
+									dg_CJUMP1_.MHINGE[index] = 1;
 									DS = dg_CJUMP0_.DST[index];
 								}
 								else {
-									dg_CJUMP1_[index].KSOFTI = 0;
+									dg_CJUMP1_.KSOFTI[index] = 0;
 								}
 								return;
 							}
@@ -5670,30 +5670,30 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 	}
 	else if (dg_TRACK_mod_[index].KPAR == 3) { //Positrons
 
-		if (dg_CJUMP1_[index].MHINGE == 1) {
-			if (dg_TRACK_mod_[index].E < dg_CJUMP1_[index].ELAST1) {
+		if (dg_CJUMP1_.MHINGE[index] == 1) {
+			if (dg_TRACK_mod_[index].E < dg_CJUMP1_.ELAST1[index]) {
 				dg_CEGRID_.XEL[index] = log(dg_TRACK_mod_[index].E);
 				dg_CEGRID_.XE[index] = 1.0e0 + (dg_CEGRID_.XEL[index] - dg_CEGRID_.DLEMP1) * dg_CEGRID_.DLFC;
 				dg_CEGRID_.KE[index] = (int)(dg_CEGRID_.XE[index]);
 				dg_CEGRID_.XEK[index] = dg_CEGRID_.XE[index] - dg_CEGRID_.KE[index];
 				int wvar = 1;
 				d_pimfp2_(wvar);
-				dg_CJUMP1_[index].ELAST1 = dg_TRACK_mod_[index].E;
+				dg_CJUMP1_.ELAST1[index] = dg_TRACK_mod_[index].E;
 			}
 			DS = dg_CJUMP0_.DSR[index];
 			return;
 		}
 
 		dg_PENELOPE_mod_.E0STEP[index] = dg_TRACK_mod_[index].E;
-		if (dg_TRACK_mod_[index].E < dg_CJUMP1_[index].ELAST2) {
+		if (dg_TRACK_mod_[index].E < dg_CJUMP1_.ELAST2[index]) {
 			dg_CEGRID_.XEL[index] = log(dg_TRACK_mod_[index].E);
 			dg_CEGRID_.XE[index] = 1.0e0 + (dg_CEGRID_.XEL[index] - dg_CEGRID_.DLEMP1) * dg_CEGRID_.DLFC;
 			dg_CEGRID_.KE[index] = (int)dg_CEGRID_.XE[index];
 			dg_CEGRID_.XEK[index] = dg_CEGRID_.XE[index] - dg_CEGRID_.KE[index];
 			int wvar = 2;
 			d_pimfp2_(wvar);
-			dg_CJUMP1_[index].ELAST2 = dg_TRACK_mod_[index].E;
-			dg_CJUMP1_[index].ELAST1 = dg_TRACK_mod_[index].E;
+			dg_CJUMP1_.ELAST2[index] = dg_TRACK_mod_[index].E;
+			dg_CJUMP1_.ELAST1[index] = dg_TRACK_mod_[index].E;
 		}
 
 		//Caminho livre médio rígido inverso (probabilidade de interação por unidade comprimento do caminho).
@@ -5707,7 +5707,7 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 		*/
 
 		if (dg_CJUMP0_.W1[index] > 1.0e-20) {
-			dg_CJUMP1_[index].KSOFTI = 1;
+			dg_CJUMP1_.KSOFTI[index] = 1;
 			/*
 			O comprimento máximo do passo, DSMAXP, é determinado em termos do
 			valor DSMAX de entrada (que é especificado pelo usuário) e a média
@@ -5751,7 +5751,7 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 			dg_CJUMP0_.ST[index] = fmax(dg_CJUMP0_.ST[index], STLWR);
 		}
 		else {
-			dg_CJUMP1_[index].KSOFTI = 0;
+			dg_CJUMP1_.KSOFTI[index] = 0;
 			dg_PENELOPE_mod_.DESOFT[index] = 0.0e0;
 			dg_PENELOPE_mod_.SSOFT[index] = 0.0e0;
 		}
@@ -5763,10 +5763,10 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 		*/
 
 		if (dg_CJUMP0_.T1[index] > 1.0e-20) {
-			dg_CJUMP1_[index].KSOFTE = 1;
+			dg_CJUMP1_.KSOFTE[index] = 1;
 		}
 		else {
-			dg_CJUMP1_[index].KSOFTE = 0;
+			dg_CJUMP1_.KSOFTE[index] = 0;
 		}
 
 		/*
@@ -5777,21 +5777,21 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 
 		dg_CJUMP0_.DST[index] = -log(d_rand2_(2.0e0)) / dg_CJUMP0_.ST[index];
 		if (dg_CJUMP0_.DST[index] < DSMAXP) {
-			dg_CJUMP1_[index].KDELTA = 0;
+			dg_CJUMP1_.KDELTA[index] = 0;
 		}
 		else {
 			dg_CJUMP0_.DST[index] = DSMAXP;
-			dg_CJUMP1_[index].KDELTA = 1;
+			dg_CJUMP1_.KDELTA[index] = 1;
 		}
 
-		if (dg_CJUMP1_[index].KSOFTE + dg_CJUMP1_[index].KSOFTI == 0) {
-			dg_CJUMP1_[index].MHINGE = 1;
+		if (dg_CJUMP1_.KSOFTE[index] + dg_CJUMP1_.KSOFTI[index] == 0) {
+			dg_CJUMP1_.MHINGE[index] = 1;
 			DS = dg_CJUMP0_.DST[index];
 		}
 		else {
 			DS = dg_CJUMP0_.DST[index] * d_rand2_(3.0e0);
 			dg_CJUMP0_.DSR[index] = dg_CJUMP0_.DST[index] - DS;
-			if (dg_CJUMP1_[index].KSOFTI == 1) {
+			if (dg_CJUMP1_.KSOFTI[index] == 1) {
 				if (dg_CJUMP0_.DST[index] < 1.0e-8) {
 					dg_PENELOPE_mod_.SSOFT[index] = dg_CJUMP0_.W1[index];
 					dg_PENELOPE_mod_.DESOFT[index] = dg_PENELOPE_mod_.SSOFT[index] * dg_CJUMP0_.DST[index];
@@ -5819,12 +5819,12 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 							if (RU < PNULL) {
 								dg_PENELOPE_mod_.DESOFT[index] = 0.0e0;
 								dg_PENELOPE_mod_.SSOFT[index] = 0.0e0;
-								if (dg_CJUMP1_[index].KSOFTE == 0) {
-									dg_CJUMP1_[index].MHINGE = 1;
+								if (dg_CJUMP1_.KSOFTE[index] == 0) {
+									dg_CJUMP1_.MHINGE[index] = 1;
 									DS = dg_CJUMP0_.DST[index];
 								}
 								else {
-									dg_CJUMP1_[index].KSOFTI = 0;
+									dg_CJUMP1_.KSOFTI[index] = 0;
 								}
 								return;
 							}
@@ -5845,13 +5845,13 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 	}
 	else { //Fotons
 
-		if (dg_TRACK_mod_[index].E < dg_CJUMP1_[index].ELAST1) {
+		if (dg_TRACK_mod_[index].E < dg_CJUMP1_.ELAST1[index]) {
 			dg_CEGRID_.XEL[index] = log(dg_TRACK_mod_[index].E);
 			dg_CEGRID_.XE[index] = 1.0e0 + (dg_CEGRID_.XEL[index] - dg_CEGRID_.DLEMP1) * dg_CEGRID_.DLFC;
 			dg_CEGRID_.KE[index] = (int)dg_CEGRID_.XE[index];
 			dg_CEGRID_.XEK[index] = dg_CEGRID_.XE[index] - dg_CEGRID_.KE[index];
 			d_gimfp2_();
-			dg_CJUMP1_[index].ELAST1 = dg_TRACK_mod_[index].E;
+			dg_CJUMP1_.ELAST1[index] = dg_TRACK_mod_[index].E;
 			dg_CJUMP0_.ST[index] = dg_CJUMP0_.P[1 - 1][index] + dg_CJUMP0_.P[2 - 1][index] + dg_CJUMP0_.P[3 - 1][index] + dg_CJUMP0_.P[4 - 1][index] + dg_CJUMP0_.P[8 - 1][index];
 		}
 

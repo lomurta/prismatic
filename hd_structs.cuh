@@ -884,8 +884,8 @@ typedef struct {
 }CJUMP1;
 
 typedef struct {
-	double ELAST1, ELAST2;
-	int MHINGE, KSOFTE, KSOFTI, KDELTA;
+	double ELAST1[pilhaPart], ELAST2[pilhaPart];
+	int MHINGE[pilhaPart], KSOFTE[pilhaPart], KSOFTI[pilhaPart], KDELTA[pilhaPart];
 }hd_CJUMP1;
 
 typedef struct {
@@ -1054,7 +1054,7 @@ __device__ hd_CEGRID dg_CEGRID_;
 hd_CEGRID* d_CEGRID;
 
 //__device__ hd_CJUMP1 dg_CJUMP1_;
-__device__ hd_CJUMP1 dg_CJUMP1_[pilhaPart];
+__device__ hd_CJUMP1 dg_CJUMP1_;
 hd_CJUMP1* d_CJUMP1;
 
 __device__ hd_CEIMFP dg_CEIMFP_;
