@@ -903,7 +903,7 @@ typedef struct {
 }CJUMP0;
 
 typedef struct {
-	double P[8], ST, DST, DSR, W1, W2, T1, T2;
+	double P[8][pilhaPart], ST[pilhaPart], DST[pilhaPart], DSR[pilhaPart], W1[pilhaPart], W2[pilhaPart], T1[pilhaPart], T2[pilhaPart];
 }hd_CJUMP0;
 
 typedef struct {
@@ -1064,7 +1064,7 @@ __device__ hd_CPIMFP dg_CPIMFP_;
 hd_CPIMFP* d_CPIMFP;
 
 //__device__ hd_CJUMP0 dg_CJUMP0_;
-__device__ hd_CJUMP0 dg_CJUMP0_[pilhaPart];
+__device__ hd_CJUMP0 dg_CJUMP0_;
 hd_CJUMP0* d_CJUMP0;
 
 __device__ hd_CGIMFP dg_CGIMFP_;

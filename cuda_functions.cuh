@@ -4439,7 +4439,7 @@ L1000:;
 			dg_TRACK_mod_[index].E = 0.0e0;
 			return;
 		}
-		dg_PENELOPE_mod_.E0STEP[index] = dg_PENELOPE_mod_.E0STEP[index] - dg_PENELOPE_mod_.SSOFT[index] * (dg_CJUMP0_[index].DST - dg_CJUMP0_[index].DSR);
+		dg_PENELOPE_mod_.E0STEP[index] = dg_PENELOPE_mod_.E0STEP[index] - dg_PENELOPE_mod_.SSOFT[index] * (dg_CJUMP0_.DST[index] - dg_CJUMP0_.DSR[index]);
 		if (dg_CJUMP1_[index].KSOFTE == 0)
 			return;
 		dg_CEGRID_.XEL[index] = log(dg_PENELOPE_mod_.E0STEP[index]);
@@ -4454,18 +4454,18 @@ L1000:;
 
 	//Deflexão Angular
 	if (dg_CEIMFP_.T1E[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] > -78.3e0) {
-		dg_CJUMP0_[index].T1 = exp(dg_CEIMFP_.T1E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CEIMFP_.T1E[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CEIMFP_.T1E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
-		dg_CJUMP0_[index].T2 = exp(dg_CEIMFP_.T2E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CEIMFP_.T2E[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CEIMFP_.T2E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+		dg_CJUMP0_.T1[index] = exp(dg_CEIMFP_.T1E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CEIMFP_.T1E[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CEIMFP_.T1E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+		dg_CJUMP0_.T2[index] = exp(dg_CEIMFP_.T2E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CEIMFP_.T2E[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CEIMFP_.T2E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
 	}
 	else {
-		dg_CJUMP0_[index].T1 = 0.0e0;
-		dg_CJUMP0_[index].T2 = 0.0e0;
+		dg_CJUMP0_.T1[index] = 0.0e0;
+		dg_CJUMP0_.T2[index] = 0.0e0;
 	}
-	if (dg_CJUMP0_[index].T1 < 1.0e-20)
+	if (dg_CJUMP0_.T1[index] < 1.0e-20)
 		return;
 	//1º e 2º momentos da distribuição angular.
-	EMU1 = 0.5e0 * (1.0e0 - exp(-dg_CJUMP0_[index].DST * dg_CJUMP0_[index].T1));
-	EMU2 = EMU1 - (1.0e0 - exp(-dg_CJUMP0_[index].DST * dg_CJUMP0_[index].T2)) / 6.0e0;
+	EMU1 = 0.5e0 * (1.0e0 - exp(-dg_CJUMP0_.DST[index] * dg_CJUMP0_.T1[index]));
+	EMU2 = EMU1 - (1.0e0 - exp(-dg_CJUMP0_.DST[index] * dg_CJUMP0_.T2[index])) / 6.0e0;
 	//Amostragem de um histograma de duas barras com esses momentos.
 	PNUM = 2.0e0 * EMU1 - 3.0e0 * EMU2;
 	PDEN = 1.0e0 - 2.0e0 * EMU1;
@@ -4496,25 +4496,25 @@ L1100:;
 	}
 
 	//Amostragem aleatória do tipo de interação.
-	STNOW = dg_CJUMP0_[index].P[2 - 1] + dg_CJUMP0_[index].P[3 - 1] + dg_CJUMP0_[index].P[4 - 1] + dg_CJUMP0_[index].P[5 - 1] + dg_CJUMP0_[index].P[8 - 1];
-	STS = fmax(STNOW, dg_CJUMP0_[index].ST) * d_rand2_(4.0e0);
-	SS = dg_CJUMP0_[index].P[2 - 1];
+	STNOW = dg_CJUMP0_.P[2 - 1][index] + dg_CJUMP0_.P[3 - 1][index] + dg_CJUMP0_.P[4 - 1][index] + dg_CJUMP0_.P[5 - 1][index] + dg_CJUMP0_.P[8 - 1][index];
+	STS = fmax(STNOW, dg_CJUMP0_.ST[index]) * d_rand2_(4.0e0);
+	SS = dg_CJUMP0_.P[2 - 1][index];
 	if (SS > STS)
 		goto L1200;
 
-	SS = SS + dg_CJUMP0_[index].P[3 - 1];
+	SS = SS + dg_CJUMP0_.P[3 - 1][index];
 	if (SS > STS)
 		goto L1300;
 
-	SS = SS + dg_CJUMP0_[index].P[4 - 1];
+	SS = SS + dg_CJUMP0_.P[4 - 1][index];
 	if (SS > STS)
 		goto L1400;
 
-	SS = SS + dg_CJUMP0_[index].P[5 - 1];
+	SS = SS + dg_CJUMP0_.P[5 - 1][index];
 	if (SS > STS)
 		goto L1500;
 
-	SS = SS + dg_CJUMP0_[index].P[8 - 1];
+	SS = SS + dg_CJUMP0_.P[8 - 1][index];
 	if (SS > STS)
 		goto L1800;
 
@@ -4668,24 +4668,24 @@ L1800:;
 
 L2000:;
 
-	STS = dg_CJUMP0_[index].ST * d_rand2_(1.0e0);
-	SS = dg_CJUMP0_[index].P[1 - 1];
+	STS = dg_CJUMP0_.ST[index] * d_rand2_(1.0e0);
+	SS = dg_CJUMP0_.P[1 - 1][index];
 	if (SS > STS)
 		goto L2100;
 
-	SS = SS + dg_CJUMP0_[index].P[2 - 1];
+	SS = SS + dg_CJUMP0_.P[2 - 1][index];
 	if (SS > STS)
 		goto L2200;
 
-	SS = SS + dg_CJUMP0_[index].P[3 - 1];
+	SS = SS + dg_CJUMP0_.P[3 - 1][index];
 	if (SS > STS)
 		goto L2300;
 
-	SS = SS + dg_CJUMP0_[index].P[4 - 1];
+	SS = SS + dg_CJUMP0_.P[4 - 1][index];
 	if (SS > STS)
 		goto L2400;
 
-	SS = SS + dg_CJUMP0_[index].P[8 - 1];
+	SS = SS + dg_CJUMP0_.P[8 - 1][index];
 	if (SS > STS)
 		goto L2800;
 
@@ -4896,7 +4896,7 @@ L3000:;
 			dg_TRACK_mod_[index].E = 0.0e0;
 			return;
 		}
-		dg_PENELOPE_mod_.E0STEP[index] = dg_PENELOPE_mod_.E0STEP[index] - dg_PENELOPE_mod_.SSOFT[index] * (dg_CJUMP0_[index].DST - dg_CJUMP0_[index].DSR);
+		dg_PENELOPE_mod_.E0STEP[index] = dg_PENELOPE_mod_.E0STEP[index] - dg_PENELOPE_mod_.SSOFT[index] * (dg_CJUMP0_.DST[index] - dg_CJUMP0_.DSR[index]);
 		if (dg_CJUMP1_[index].KSOFTE == 0)
 			return;
 
@@ -4911,18 +4911,18 @@ L3000:;
 
 	//Deflexão Angular
 	if (dg_CPIMFP_.T1P[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] > -78.3e0) {
-		dg_CJUMP0_[index].T1 = exp(dg_CPIMFP_.T1P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.T1P[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.T1P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
-		dg_CJUMP0_[index].T2 = exp(dg_CPIMFP_.T2P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.T2P[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.T2P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+		dg_CJUMP0_.T1[index] = exp(dg_CPIMFP_.T1P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.T1P[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.T1P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+		dg_CJUMP0_.T2[index] = exp(dg_CPIMFP_.T2P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.T2P[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.T2P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
 	}
 	else {
-		dg_CJUMP0_[index].T1 = 0.0e0;
-		dg_CJUMP0_[index].T2 = 0.0e0;
+		dg_CJUMP0_.T1[index] = 0.0e0;
+		dg_CJUMP0_.T2[index] = 0.0e0;
 	}
-	if (dg_CJUMP0_[index].T1 < 1.0e-20)
+	if (dg_CJUMP0_.T1[index] < 1.0e-20)
 		return;
 	//1º e 2º momentos da distribuição angular.
-	EMU1 = 0.5e0 * (1.0e0 - exp(-dg_CJUMP0_[index].DST * dg_CJUMP0_[index].T1));
-	EMU2 = EMU1 - (1.0e0 - exp(-dg_CJUMP0_[index].DST * dg_CJUMP0_[index].T2)) / 6.0e0;
+	EMU1 = 0.5e0 * (1.0e0 - exp(-dg_CJUMP0_.DST[index] * dg_CJUMP0_.T1[index]));
+	EMU2 = EMU1 - (1.0e0 - exp(-dg_CJUMP0_.DST[index] * dg_CJUMP0_.T2[index])) / 6.0e0;
 	//Amostragem de um histograma de duas barras com esses momentos.
 	PNUM = 2.0e0 * EMU1 - 3.0e0 * EMU2;
 	PDEN = 1.0e0 - 2.0e0 * EMU1;
@@ -4953,29 +4953,29 @@ L3100:;
 	}
 
 	//Amostragem aleatória do tipo de interação.
-	STNOW = dg_CJUMP0_[index].P[2 - 1] + dg_CJUMP0_[index].P[3 - 1] + dg_CJUMP0_[index].P[4 - 1] + dg_CJUMP0_[index].P[5 - 1] + dg_CJUMP0_[index].P[6 - 1] + dg_CJUMP0_[index].P[8 - 1];
-	STS = fmax(STNOW, dg_CJUMP0_[index].ST) * d_rand2_(4.0e0);
-	SS = dg_CJUMP0_[index].P[2 - 1];
+	STNOW = dg_CJUMP0_.P[2 - 1][index] + dg_CJUMP0_.P[3 - 1][index] + dg_CJUMP0_.P[4 - 1][index] + dg_CJUMP0_.P[5 - 1][index] + dg_CJUMP0_.P[6 - 1][index] + dg_CJUMP0_.P[8 - 1][index];
+	STS = fmax(STNOW, dg_CJUMP0_.ST[index]) * d_rand2_(4.0e0);
+	SS = dg_CJUMP0_.P[2 - 1][index];
 	if (SS > STS)
 		goto L3200;
 
-	SS = SS + dg_CJUMP0_[index].P[3 - 1];
+	SS = SS + dg_CJUMP0_.P[3 - 1][index];
 	if (SS > STS)
 		goto L3300;
 
-	SS = SS + dg_CJUMP0_[index].P[4 - 1];
+	SS = SS + dg_CJUMP0_.P[4 - 1][index];
 	if (SS > STS)
 		goto L3400;
 
-	SS = SS + dg_CJUMP0_[index].P[5 - 1];
+	SS = SS + dg_CJUMP0_.P[5 - 1][index];
 	if (SS > STS)
 		goto L3500;
 
-	SS = SS + dg_CJUMP0_[index].P[6 - 1];
+	SS = SS + dg_CJUMP0_.P[6 - 1][index];
 	if (SS > STS)
 		goto L3600;
 
-	SS = SS + dg_CJUMP0_[index].P[8 - 1];
+	SS = SS + dg_CJUMP0_.P[8 - 1][index];
 	if (SS > STS)
 		goto L3800;
 
@@ -5351,33 +5351,33 @@ __device__ void d_pimfp2_(int& IEND) {
 		 imprimiu++;
 	 }*/
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
-	dg_CJUMP0_[index].P[2 - 1] = exp(dg_CPIMFP_.SPHEL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.SPHEL[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.SPHEL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
-	dg_CJUMP0_[index].P[3 - 1] = exp(dg_CPIMFP_.SPHIN[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.SPHIN[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.SPHIN[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
-	dg_CJUMP0_[index].P[4 - 1] = exp(dg_CPIMFP_.SPHBR[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.SPHBR[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.SPHBR[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
-	dg_CJUMP0_[index].P[5 - 1] = exp(dg_CPIMFP_.SPISI[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.SPISI[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.SPISI[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
-	dg_CJUMP0_[index].P[6 - 1] = exp(dg_CPIMFP_.SPAN[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.SPAN[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.SPAN[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
-	dg_CJUMP0_[index].P[8 - 1] = 0.0e0;
+	dg_CJUMP0_.P[2 - 1][index] = exp(dg_CPIMFP_.SPHEL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.SPHEL[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.SPHEL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+	dg_CJUMP0_.P[3 - 1][index] = exp(dg_CPIMFP_.SPHIN[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.SPHIN[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.SPHIN[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+	dg_CJUMP0_.P[4 - 1][index] = exp(dg_CPIMFP_.SPHBR[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.SPHBR[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.SPHBR[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+	dg_CJUMP0_.P[5 - 1][index] = exp(dg_CPIMFP_.SPISI[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.SPISI[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.SPISI[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+	dg_CJUMP0_.P[6 - 1][index] = exp(dg_CPIMFP_.SPAN[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.SPAN[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.SPAN[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+	dg_CJUMP0_.P[8 - 1][index] = 0.0e0;
 
 	if (IEND == 1) {
 		return;
 	}
 
 	if (dg_CPIMFP_.W1P[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] > -78.3e0) {
-		dg_CJUMP0_[index].W1 = exp(dg_CPIMFP_.W1P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.W1P[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.W1P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
-		dg_CJUMP0_[index].W2 = exp(dg_CPIMFP_.W2P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.W2P[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.W2P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+		dg_CJUMP0_.W1[index] = exp(dg_CPIMFP_.W1P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.W1P[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.W1P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+		dg_CJUMP0_.W2[index] = exp(dg_CPIMFP_.W2P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.W2P[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.W2P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
 	}
 	else {
-		dg_CJUMP0_[index].W1 = 0.0e0;
-		dg_CJUMP0_[index].W2 = 0.0e0;
+		dg_CJUMP0_.W1[index] = 0.0e0;
+		dg_CJUMP0_.W2[index] = 0.0e0;
 	}
 
 	if (dg_CPIMFP_.T1P[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] > -78.3e0) {
-		dg_CJUMP0_[index].T1 = exp(dg_CPIMFP_.T1P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.T1P[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.T1P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
-		dg_CJUMP0_[index].T2 = exp(dg_CPIMFP_.T2P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.T2P[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.T2P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+		dg_CJUMP0_.T1[index] = exp(dg_CPIMFP_.T1P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.T1P[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.T1P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+		dg_CJUMP0_.T2[index] = exp(dg_CPIMFP_.T2P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.T2P[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.T2P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
 	}
 	else {
-		dg_CJUMP0_[index].T1 = 0.0e0;
-		dg_CJUMP0_[index].T2 = 0.0e0;
+		dg_CJUMP0_.T1[index] = 0.0e0;
+		dg_CJUMP0_.T2[index] = 0.0e0;
 	}
 }
 
@@ -5387,32 +5387,32 @@ __device__ void d_eimfp2_(int& IEND) {
 	ações de eletrons com a energia atual no material M.
 	*/
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
-	dg_CJUMP0_[index].P[2 - 1] = exp(dg_CEIMFP_.SEHEL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CEIMFP_.SEHEL[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CEIMFP_.SEHEL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
-	dg_CJUMP0_[index].P[3 - 1] = exp(dg_CEIMFP_.SEHIN[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CEIMFP_.SEHIN[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CEIMFP_.SEHIN[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
-	dg_CJUMP0_[index].P[4 - 1] = exp(dg_CEIMFP_.SEHBR[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CEIMFP_.SEHBR[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CEIMFP_.SEHBR[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
-	dg_CJUMP0_[index].P[5 - 1] = exp(dg_CEIMFP_.SEISI[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CEIMFP_.SEISI[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CEIMFP_.SEISI[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
-	dg_CJUMP0_[index].P[8 - 1] = 0.0e0;
+	dg_CJUMP0_.P[2 - 1][index] = exp(dg_CEIMFP_.SEHEL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CEIMFP_.SEHEL[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CEIMFP_.SEHEL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+	dg_CJUMP0_.P[3 - 1][index] = exp(dg_CEIMFP_.SEHIN[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CEIMFP_.SEHIN[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CEIMFP_.SEHIN[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+	dg_CJUMP0_.P[4 - 1][index] = exp(dg_CEIMFP_.SEHBR[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CEIMFP_.SEHBR[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CEIMFP_.SEHBR[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+	dg_CJUMP0_.P[5 - 1][index] = exp(dg_CEIMFP_.SEISI[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CEIMFP_.SEISI[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CEIMFP_.SEISI[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+	dg_CJUMP0_.P[8 - 1][index] = 0.0e0;
 
 	if (IEND == 1) {
 		return;
 	}
 
 	if (dg_CEIMFP_.W1E[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] > -78.3e0) {
-		dg_CJUMP0_[index].W1 = exp(dg_CEIMFP_.W1E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CEIMFP_.W1E[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CEIMFP_.W1E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
-		dg_CJUMP0_[index].W2 = exp(dg_CEIMFP_.W2E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CEIMFP_.W2E[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CEIMFP_.W2E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+		dg_CJUMP0_.W1[index] = exp(dg_CEIMFP_.W1E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CEIMFP_.W1E[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CEIMFP_.W1E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+		dg_CJUMP0_.W2[index] = exp(dg_CEIMFP_.W2E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CEIMFP_.W2E[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CEIMFP_.W2E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
 	}
 	else {
-		dg_CJUMP0_[index].W1 = 0.0e0;
-		dg_CJUMP0_[index].W2 = 0.0e0;
+		dg_CJUMP0_.W1[index] = 0.0e0;
+		dg_CJUMP0_.W2[index] = 0.0e0;
 	}
 
 	if (dg_CEIMFP_.T1E[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] > -78.3e0) {
-		dg_CJUMP0_[index].T1 = exp(dg_CEIMFP_.T1E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CEIMFP_.T1E[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CEIMFP_.T1E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
-		dg_CJUMP0_[index].T2 = exp(dg_CEIMFP_.T2E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CEIMFP_.T2E[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CEIMFP_.T2E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+		dg_CJUMP0_.T1[index] = exp(dg_CEIMFP_.T1E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CEIMFP_.T1E[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CEIMFP_.T1E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+		dg_CJUMP0_.T2[index] = exp(dg_CEIMFP_.T2E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CEIMFP_.T2E[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CEIMFP_.T2E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
 	}
 	else {
-		dg_CJUMP0_[index].T1 = 0.0e0;
-		dg_CJUMP0_[index].T2 = 0.0e0;
+		dg_CJUMP0_.T1[index] = 0.0e0;
+		dg_CJUMP0_.T2[index] = 0.0e0;
 	}
 }
 
@@ -5427,17 +5427,17 @@ __device__ void d_gimfp2_() {
 		imprimiu++;
 	}*/
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
-	dg_CJUMP0_[index].P[1 - 1] = dg_CGIMFP_.SGRA[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1];
-	dg_CJUMP0_[index].P[2 - 1] = exp(dg_CGIMFP_.SGCO[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CGIMFP_.SGCO[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CGIMFP_.SGCO[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
-	dg_CJUMP0_[index].P[3 - 1] = dg_CGIMFP_.SGPH[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1];
+	dg_CJUMP0_.P[1 - 1][index] = dg_CGIMFP_.SGRA[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1];
+	dg_CJUMP0_.P[2 - 1][index] = exp(dg_CGIMFP_.SGCO[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CGIMFP_.SGCO[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CGIMFP_.SGCO[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+	dg_CJUMP0_.P[3 - 1][index] = dg_CGIMFP_.SGPH[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1];
 
 	if (dg_TRACK_mod_[index].E < 1.023e6) {
-		dg_CJUMP0_[index].P[4 - 1] = 0.0e0;
+		dg_CJUMP0_.P[4 - 1][index] = 0.0e0;
 	}
 	else {
-		dg_CJUMP0_[index].P[4 - 1] = exp(dg_CGIMFP_.SGPP[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CGIMFP_.SGPP[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CGIMFP_.SGPP[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
+		dg_CJUMP0_.P[4 - 1][index] = exp(dg_CGIMFP_.SGPP[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CGIMFP_.SGPP[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CGIMFP_.SGPP[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1]) * dg_CEGRID_.XEK[index]);
 	}
-	dg_CJUMP0_[index].P[8 - 1] = 0.0e0;
+	dg_CJUMP0_.P[8 - 1][index] = 0.0e0;
 }
 
 __device__ void d_start2_() {
@@ -5506,7 +5506,7 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 				d_eimfp2_(wvar);
 				dg_CJUMP1_[index].ELAST1 = dg_TRACK_mod_[index].E;
 			}
-			DS = dg_CJUMP0_[index].DSR;
+			DS = dg_CJUMP0_.DSR[index];
 			return;
 		}
 		dg_PENELOPE_mod_.E0STEP[index] = dg_TRACK_mod_[index].E;
@@ -5522,7 +5522,7 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 		}
 
 		//Caminho livre médio rígido inverso (probabilidade de interação por unidade comprimento do caminho).
-		dg_CJUMP0_[index].ST = dg_CJUMP0_[index].P[2 - 1] + dg_CJUMP0_[index].P[3 - 1] + dg_CJUMP0_[index].P[4 - 1] + dg_CJUMP0_[index].P[5 - 1] + dg_CJUMP0_[index].P[8 - 1];
+		dg_CJUMP0_.ST[index] = dg_CJUMP0_.P[2 - 1][index] + dg_CJUMP0_.P[3 - 1][index] + dg_CJUMP0_.P[4 - 1][index] + dg_CJUMP0_.P[5 - 1][index] + dg_CJUMP0_.P[8 - 1][index];
 		DSMAXP = DSMAX;
 
 		/*
@@ -5531,14 +5531,14 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 		KSOFTI=0, a parada suave não está ativa.
 		*/
 
-		if (dg_CJUMP0_[index].W1 > 1.0e-20) {
+		if (dg_CJUMP0_.W1[index] > 1.0e-20) {
 			dg_CJUMP1_[index].KSOFTI = 1;
 			/*
 			O comprimento máximo do passo, DSMAXP, é determinado em termos do
 			valor DSMAX de entrada (que é especificado pelo usuário) e a média
 			caminho livre para interações difíceis (1/ST).
 			*/
-			DSMC = 4.0e0 / dg_CJUMP0_[index].ST;
+			DSMC = 4.0e0 / dg_CJUMP0_.ST[index];
 			if (DSMAXP > DSMC) {
 				DSMAXP = DSMC;
 			}
@@ -5551,8 +5551,8 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 
 			//Limite superior para a probabilidade de interação ao longo da etapa (incluindo straggling de energia suave).
 
-			EDE0 = dg_CJUMP0_[index].W1 * DSMAXP;
-			VDE0 = dg_CJUMP0_[index].W2 * DSMAXP;
+			EDE0 = dg_CJUMP0_.W1[index] * DSMAXP;
+			VDE0 = dg_CJUMP0_.W2[index] * DSMAXP;
 			FSEDE = fmax(1.0e0 - dg_CEIMFP_.DW1EL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] * EDE0, 0.75e0);
 			FSVDE = fmax(1.0e0 - dg_CEIMFP_.DW2EL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] * EDE0, 0.75e0);
 			EDEM = EDE0 * FSEDE;
@@ -5573,7 +5573,7 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 			KE1 = (int)XE1;
 			XEK1 = XE1 - KE1;
 			STLWR = exp(dg_CEIMFP_.SETOT[KE1 - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CEIMFP_.SETOT[KE1 + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CEIMFP_.SETOT[KE1 - 1][dg_TRACK_mod_[index].MAT - 1]) * XEK1);
-			dg_CJUMP0_[index].ST = fmax(dg_CJUMP0_[index].ST, STLWR);
+			dg_CJUMP0_.ST[index] = fmax(dg_CJUMP0_.ST[index], STLWR);
 		}
 		else {
 			dg_CJUMP1_[index].KSOFTI = 0;
@@ -5587,7 +5587,7 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 		KSOFTE=0, dispersão suave não está ativa.
 		*/
 
-		if (dg_CJUMP0_[index].T1 > 1.0e-20) {
+		if (dg_CJUMP0_.T1[index] > 1.0e-20) {
 			dg_CJUMP1_[index].KSOFTE = 1;
 		}
 		else {
@@ -5600,30 +5600,30 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 		KDELTA=1, segue-se uma interação delta.
 		*/
 
-		dg_CJUMP0_[index].DST = -log(d_rand2_(2.0e0)) / dg_CJUMP0_[index].ST;
-		if (dg_CJUMP0_[index].DST < DSMAXP) {
+		dg_CJUMP0_.DST[index] = -log(d_rand2_(2.0e0)) / dg_CJUMP0_.ST[index];
+		if (dg_CJUMP0_.DST[index] < DSMAXP) {
 			dg_CJUMP1_[index].KDELTA = 0;
 		}
 		else {
-			dg_CJUMP0_[index].DST = DSMAXP;
+			dg_CJUMP0_.DST[index] = DSMAXP;
 			dg_CJUMP1_[index].KDELTA = 1;
 		}
 
 		if (dg_CJUMP1_[index].KSOFTE + dg_CJUMP1_[index].KSOFTI == 0) {
 			dg_CJUMP1_[index].MHINGE = 1;
-			DS = dg_CJUMP0_[index].DST;
+			DS = dg_CJUMP0_.DST[index];
 		}
 		else {
-			DS = dg_CJUMP0_[index].DST * d_rand2_(3.0e0);
-			dg_CJUMP0_[index].DSR = dg_CJUMP0_[index].DST - DS;
+			DS = dg_CJUMP0_.DST[index] * d_rand2_(3.0e0);
+			dg_CJUMP0_.DSR[index] = dg_CJUMP0_.DST[index] - DS;
 			if (dg_CJUMP1_[index].KSOFTI == 1) {
-				if (dg_CJUMP0_[index].DST < 1.0e-8) {
-					dg_PENELOPE_mod_.SSOFT[index] = dg_CJUMP0_[index].W1;
-					dg_PENELOPE_mod_.DESOFT[index] = dg_PENELOPE_mod_.SSOFT[index] * dg_CJUMP0_[index].DST;
+				if (dg_CJUMP0_.DST[index] < 1.0e-8) {
+					dg_PENELOPE_mod_.SSOFT[index] = dg_CJUMP0_.W1[index];
+					dg_PENELOPE_mod_.DESOFT[index] = dg_PENELOPE_mod_.SSOFT[index] * dg_CJUMP0_.DST[index];
 				}
 				else {
-					EDE0 = dg_CJUMP0_[index].W1 * dg_CJUMP0_[index].DST;
-					VDE0 = dg_CJUMP0_[index].W2 * dg_CJUMP0_[index].DST;
+					EDE0 = dg_CJUMP0_.W1[index] * dg_CJUMP0_.DST[index];
+					VDE0 = dg_CJUMP0_.W2[index] * dg_CJUMP0_.DST[index];
 					FSEDE = fmax(1.0e0 - dg_CEIMFP_.DW1EL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] * EDE0, 0.75e0);
 					FSVDE = fmax(1.0e0 - dg_CEIMFP_.DW2EL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] * EDE0, 0.75e0);
 					EDE = EDE0 * FSEDE;
@@ -5646,7 +5646,7 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 								dg_PENELOPE_mod_.SSOFT[index] = 0.0e0;
 								if (dg_CJUMP1_[index].KSOFTE == 0) {
 									dg_CJUMP1_[index].MHINGE = 1;
-									DS = dg_CJUMP0_[index].DST;
+									DS = dg_CJUMP0_.DST[index];
 								}
 								else {
 									dg_CJUMP1_[index].KSOFTI = 0;
@@ -5662,7 +5662,7 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 							dg_PENELOPE_mod_.DESOFT[index] = EDE + (2.0e0 * RU - 1.0e0) * sqrt(VDE3);
 						}
 					}
-					dg_PENELOPE_mod_.SSOFT[index] = dg_PENELOPE_mod_.DESOFT[index] / dg_CJUMP0_[index].DST;
+					dg_PENELOPE_mod_.SSOFT[index] = dg_PENELOPE_mod_.DESOFT[index] / dg_CJUMP0_.DST[index];
 				}
 			}
 		}
@@ -5680,7 +5680,7 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 				d_pimfp2_(wvar);
 				dg_CJUMP1_[index].ELAST1 = dg_TRACK_mod_[index].E;
 			}
-			DS = dg_CJUMP0_[index].DSR;
+			DS = dg_CJUMP0_.DSR[index];
 			return;
 		}
 
@@ -5697,7 +5697,7 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 		}
 
 		//Caminho livre médio rígido inverso (probabilidade de interação por unidade comprimento do caminho).
-		dg_CJUMP0_[index].ST = dg_CJUMP0_[index].P[2 - 1] + dg_CJUMP0_[index].P[3 - 1] + dg_CJUMP0_[index].P[4 - 1] + dg_CJUMP0_[index].P[5 - 1] + dg_CJUMP0_[index].P[6 - 1] + dg_CJUMP0_[index].P[8 - 1];
+		dg_CJUMP0_.ST[index] = dg_CJUMP0_.P[2 - 1][index] + dg_CJUMP0_.P[3 - 1][index] + dg_CJUMP0_.P[4 - 1][index] + dg_CJUMP0_.P[5 - 1][index] + dg_CJUMP0_.P[6 - 1][index] + dg_CJUMP0_.P[8 - 1][index];
 		DSMAXP = DSMAX;
 
 		/*
@@ -5706,14 +5706,14 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 		KSOFTI=0, a parada suave não está ativa.
 		*/
 
-		if (dg_CJUMP0_[index].W1 > 1.0e-20) {
+		if (dg_CJUMP0_.W1[index] > 1.0e-20) {
 			dg_CJUMP1_[index].KSOFTI = 1;
 			/*
 			O comprimento máximo do passo, DSMAXP, é determinado em termos do
 			valor DSMAX de entrada (que é especificado pelo usuário) e a média
 			caminho livre para interações difíceis (1/ST).
 			*/
-			DSMC = 4.0e0 / dg_CJUMP0_[index].ST;
+			DSMC = 4.0e0 / dg_CJUMP0_.ST[index];
 			if (DSMAXP > DSMC) {
 				DSMAXP = DSMC;
 			}
@@ -5726,8 +5726,8 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 
 			//Limite superior para a probabilidade de interação ao longo da etapa (incluindo straggling de energia suave).
 
-			EDE0 = dg_CJUMP0_[index].W1 * DSMAXP;
-			VDE0 = dg_CJUMP0_[index].W2 * DSMAXP;
+			EDE0 = dg_CJUMP0_.W1[index] * DSMAXP;
+			VDE0 = dg_CJUMP0_.W2[index] * DSMAXP;
 			FSEDE = fmax(1.0e0 - dg_CPIMFP_.DW1PL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] * EDE0, 0.75e0);
 			FSVDE = fmax(1.0e0 - dg_CPIMFP_.DW2PL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] * EDE0, 0.75e0);
 			EDEM = EDE0 * FSEDE;
@@ -5748,7 +5748,7 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 			KE1 = (int)XE1;
 			XEK1 = XE1 - KE1;
 			STLWR = exp(dg_CPIMFP_.SPTOT[KE1 - 1][dg_TRACK_mod_[index].MAT - 1] + (dg_CPIMFP_.SPTOT[KE1 + 1 - 1][dg_TRACK_mod_[index].MAT - 1] - dg_CPIMFP_.SPTOT[KE1 - 1][dg_TRACK_mod_[index].MAT - 1]) * XEK1);
-			dg_CJUMP0_[index].ST = fmax(dg_CJUMP0_[index].ST, STLWR);
+			dg_CJUMP0_.ST[index] = fmax(dg_CJUMP0_.ST[index], STLWR);
 		}
 		else {
 			dg_CJUMP1_[index].KSOFTI = 0;
@@ -5762,7 +5762,7 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 		KSOFTE=0, dispersão suave não está ativa.
 		*/
 
-		if (dg_CJUMP0_[index].T1 > 1.0e-20) {
+		if (dg_CJUMP0_.T1[index] > 1.0e-20) {
 			dg_CJUMP1_[index].KSOFTE = 1;
 		}
 		else {
@@ -5775,30 +5775,30 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 		KDELTA=1, segue-se uma interação delta.
 		*/
 
-		dg_CJUMP0_[index].DST = -log(d_rand2_(2.0e0)) / dg_CJUMP0_[index].ST;
-		if (dg_CJUMP0_[index].DST < DSMAXP) {
+		dg_CJUMP0_.DST[index] = -log(d_rand2_(2.0e0)) / dg_CJUMP0_.ST[index];
+		if (dg_CJUMP0_.DST[index] < DSMAXP) {
 			dg_CJUMP1_[index].KDELTA = 0;
 		}
 		else {
-			dg_CJUMP0_[index].DST = DSMAXP;
+			dg_CJUMP0_.DST[index] = DSMAXP;
 			dg_CJUMP1_[index].KDELTA = 1;
 		}
 
 		if (dg_CJUMP1_[index].KSOFTE + dg_CJUMP1_[index].KSOFTI == 0) {
 			dg_CJUMP1_[index].MHINGE = 1;
-			DS = dg_CJUMP0_[index].DST;
+			DS = dg_CJUMP0_.DST[index];
 		}
 		else {
-			DS = dg_CJUMP0_[index].DST * d_rand2_(3.0e0);
-			dg_CJUMP0_[index].DSR = dg_CJUMP0_[index].DST - DS;
+			DS = dg_CJUMP0_.DST[index] * d_rand2_(3.0e0);
+			dg_CJUMP0_.DSR[index] = dg_CJUMP0_.DST[index] - DS;
 			if (dg_CJUMP1_[index].KSOFTI == 1) {
-				if (dg_CJUMP0_[index].DST < 1.0e-8) {
-					dg_PENELOPE_mod_.SSOFT[index] = dg_CJUMP0_[index].W1;
-					dg_PENELOPE_mod_.DESOFT[index] = dg_PENELOPE_mod_.SSOFT[index] * dg_CJUMP0_[index].DST;
+				if (dg_CJUMP0_.DST[index] < 1.0e-8) {
+					dg_PENELOPE_mod_.SSOFT[index] = dg_CJUMP0_.W1[index];
+					dg_PENELOPE_mod_.DESOFT[index] = dg_PENELOPE_mod_.SSOFT[index] * dg_CJUMP0_.DST[index];
 				}
 				else {
-					EDE0 = dg_CJUMP0_[index].W1 * dg_CJUMP0_[index].DST;
-					VDE0 = dg_CJUMP0_[index].W2 * dg_CJUMP0_[index].DST;
+					EDE0 = dg_CJUMP0_.W1[index] * dg_CJUMP0_.DST[index];
+					VDE0 = dg_CJUMP0_.W2[index] * dg_CJUMP0_.DST[index];
 					FSEDE = fmax(1.0e0 - dg_CPIMFP_.DW1PL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] * EDE0, 0.75e0);
 					FSVDE = fmax(1.0e0 - dg_CPIMFP_.DW2PL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_[index].MAT - 1] * EDE0, 0.75e0);
 					EDE = EDE0 * FSEDE;
@@ -5821,7 +5821,7 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 								dg_PENELOPE_mod_.SSOFT[index] = 0.0e0;
 								if (dg_CJUMP1_[index].KSOFTE == 0) {
 									dg_CJUMP1_[index].MHINGE = 1;
-									DS = dg_CJUMP0_[index].DST;
+									DS = dg_CJUMP0_.DST[index];
 								}
 								else {
 									dg_CJUMP1_[index].KSOFTI = 0;
@@ -5837,7 +5837,7 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 							dg_PENELOPE_mod_.DESOFT[index] = EDE + (2.0e0 * RU - 1.0e0) * sqrt(VDE3);
 						}
 					}
-					dg_PENELOPE_mod_.SSOFT[index] = dg_PENELOPE_mod_.DESOFT[index] / dg_CJUMP0_[index].DST;
+					dg_PENELOPE_mod_.SSOFT[index] = dg_PENELOPE_mod_.DESOFT[index] / dg_CJUMP0_.DST[index];
 				}
 			}
 		}
@@ -5852,10 +5852,10 @@ __device__ void d_jump2_(double& DSMAX, double& DS) {
 			dg_CEGRID_.XEK[index] = dg_CEGRID_.XE[index] - dg_CEGRID_.KE[index];
 			d_gimfp2_();
 			dg_CJUMP1_[index].ELAST1 = dg_TRACK_mod_[index].E;
-			dg_CJUMP0_[index].ST = dg_CJUMP0_[index].P[1 - 1] + dg_CJUMP0_[index].P[2 - 1] + dg_CJUMP0_[index].P[3 - 1] + dg_CJUMP0_[index].P[4 - 1] + dg_CJUMP0_[index].P[8 - 1];
+			dg_CJUMP0_.ST[index] = dg_CJUMP0_.P[1 - 1][index] + dg_CJUMP0_.P[2 - 1][index] + dg_CJUMP0_.P[3 - 1][index] + dg_CJUMP0_.P[4 - 1][index] + dg_CJUMP0_.P[8 - 1][index];
 		}
 
-		DS = -log(d_rand2_(1.0e0)) / dg_CJUMP0_[index].ST;
+		DS = -log(d_rand2_(1.0e0)) / dg_CJUMP0_.ST[index];
 	}
 
 	/*	if (imprimiu==0){

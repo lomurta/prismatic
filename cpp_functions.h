@@ -26364,7 +26364,7 @@ void transfCPU_to_GPU(){
 	//CJUMP0
 	
    // gpuErrchk(cudaMemcpy(d_CJUMP1, CJUMP1_, sizeof(hd_CJUMP1)*pilhaPart, cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpyToSymbol(dg_CJUMP0_, d_CJUMP0, sizeof(hd_CJUMP0)*pilhaPart));
+    gpuErrchk(cudaMemcpyToSymbol(dg_CJUMP0_, d_CJUMP0, sizeof(hd_CJUMP0)));
 
 	//CGIMFP
 	
@@ -27018,7 +27018,7 @@ void transfGPU_to_CPU(){
 	gpuErrchk(cudaMemcpy(CJUMP0_.T2,&d_CJUMP0->T2, sizeof(double), cudaMemcpyDeviceToHost));*/
 
 	//CJUMP0
-	gpuErrchk(cudaMemcpyFromSymbol(d_CJUMP0, dg_CJUMP0_, sizeof(hd_CJUMP0)*pilhaPart));
+	gpuErrchk(cudaMemcpyFromSymbol(d_CJUMP0, dg_CJUMP0_, sizeof(hd_CJUMP0)));
 	//gpuErrchk(cudaMemcpy(CJUMP0_, d_CJUMP0,  sizeof(hd_CJUMP0)*pilhaPart, cudaMemcpyDeviceToHost));
 
 
@@ -27408,7 +27408,7 @@ void memoryAllocGPU(){
 	gpuErrchk(cudaMalloc((void **)&d_CJUMP1, sizeof(hd_CJUMP1)*pilhaPart));
 	gpuErrchk(cudaMalloc((void **)&d_CEIMFP, sizeof(hd_CEIMFP)));
 	gpuErrchk(cudaMalloc((void **)&d_CPIMFP, sizeof(hd_CPIMFP)));
-	gpuErrchk(cudaMalloc((void **)&d_CJUMP0, sizeof(hd_CJUMP0)*pilhaPart));
+	gpuErrchk(cudaMalloc((void **)&d_CJUMP0, sizeof(hd_CJUMP0)));
 	gpuErrchk(cudaMalloc((void **)&d_CGIMFP, sizeof(hd_CGIMFP)));
 	gpuErrchk(cudaMalloc((void **)&d_CHIST, sizeof(hd_CHIST)));
 	gpuErrchk(cudaMalloc((void **)&d_COMPOS, sizeof(hd_COMPOS)));
