@@ -12,16 +12,16 @@ static const int NM = 512;
 static const int NR = 128;
 static const double ZERO = 1.0e-75;
 static const double ZEROT = 0.1 * ZERO;
-static const double A0B = 5.2917721092e-9; // Bohr radius (cm)
-static const double HREV = 27.21138505e0;  // Hartree energy (eV)
-static const double AVOG = 6.02214129e23;  // Avogadro's number
-static const double SL = 137.035999074e0;  // Speed of light (1/alpha)
+static const double A0B = 5.2917721092e-9; //Bohr radius (cm)
+static const double HREV = 27.21138505e0; //Hartree energy (eV)
+static const double AVOG = 6.02214129e23; //Avogadro's number
+static const double SL = 137.035999074e0; //Speed of light (1/alpha)
 static const double PI = 3.1415926535897932e0;
 static const double FOURPI = 4.0e0 * PI;
 static const int NO = 512;
 static const int NOCO = 512;
 static const int NDIM = 12000;
-static const double HBAR = 6.58211928e-16; // Constante de Planck eV*s
+static const double HBAR = 6.58211928e-16; //Constante de Planck eV*s
 static const int NBE = 57;
 static const int NBW = 32;
 static const int NE = 96;
@@ -42,18 +42,8 @@ static const int NDXM = 201;
 static const int NDYM = 201;
 static const int NDZM = 201;
 
-__constant__ double d_PI = 3.1415926535897932e0;
-__constant__ double d_REV = 5.10998928e5;
-__constant__ double d_TREV = 2.0e0 * 5.10998928e5;
-__constant__ double d_RREV = 1.0e0 / 5.10998928e5;
-__constant__ double d_TWOPI = 2.0e0 * 3.1415926535897932e0;
-__constant__ double d_RTREV = 1.0e0 / (2.0e0 * 5.10998928e5);
-
-
-
-
-static const int pilhaPart = 4096; // 64*64
-static const int pilhaSec = 4096;  // 64*64
+static const int pilhaPart = 4096; //64*64
+static const int pilhaSec = 4096; //64*64
 
 char LINHA[200];
 char APOIO[200];
@@ -65,821 +55,725 @@ double S[NS2M];
 int IS[NS2M];
 int imprimiu = 0;
 int wIPOLI = 0;
-int h_N = 0; // mesma funcionalidade do CNTRL_.N
+int h_N = 0; //mesma funcionalidade do CNTRL_.N
 int h_vetN[pilhaPart];
 
 int blockSize = 128;
 
-// int cudaCapability = 0;
-
-__device__ int d_cudaCapability = 6;
-
 clock_t start, end;
 
-typedef struct
-{
-	double *AXX, *AXY, *AXZ, *AYY, *AYZ,
-		*AZZ, *AX, *AY, *AZ, *A0;
-	int *NSURF, *KPLANE;
+typedef	struct {
+	double* AXX, * AXY, * AXZ, * AYY, * AYZ,
+		* AZZ, * AX, * AY, * AZ, * A0;
+	int* NSURF, * KPLANE;
 } QSURF;
 
-typedef struct
-{
-	double AXX[NS], AXY[NS], AXZ[NS], AYY[NS], AYZ[NS],
-		AZZ[NS], AX[NS], AY[NS], AZ[NS], A0[NS];
+typedef	struct {
+	double AXX[NS],  AXY[NS],  AXZ[NS],  AYY[NS], AYZ[NS],
+	       AZZ[NS],  AX[NS], AY[NS], AZ[NS], A0[NS];
 	int NSURF, KPLANE[NS];
 } hd_QSURF;
 
-typedef struct
-{
-	int *NBODYS, *KMOTH, (*KDGHT)[NB], (*KSURF)[NB], (*KFLAG)[NB], *KSP, *NWARN;
+typedef struct {
+	int* NBODYS, * KMOTH, (*KDGHT)[NB], (*KSURF)[NB], (*KFLAG)[NB], * KSP, * NWARN;
 } QTREE;
 
-typedef struct
-{
-	int NBODYS, KMOTH[NB], KDGHT[NXG][NB], KSURF[NXG][NB], KFLAG[NXG][NB], KSP[pilhaPart][NS], NWARN[pilhaPart];
+typedef struct {
+	int NBODYS, KMOTH[NB], KDGHT[NXG][NB], KSURF[NXG][NB], KFLAG[NXG][NB], KSP[NS][pilhaPart], NWARN[pilhaPart];
 } hd_QTREE;
 
-typedef struct
-{
-	double *E, *X, *Y, *Z, *U, *V, *W, *WGHT, *SP1, *SP2, *SP3, *PAGE;
-	int *KPAR, *IBODY, *MAT, *ILB, *IPOL;
-	bool *LAGE;
+typedef struct {
+	double* E, * X, * Y, * Z, * U, * V, * W, * WGHT, * SP1, * SP2, * SP3, * PAGE;
+	int* KPAR, * IBODY, * MAT, * ILB, * IPOL;
+	bool* LAGE;
 } TRACK_MOD;
 
-typedef struct
-{
+typedef struct {
 	double E, X, Y, Z, U, V, W, WGHT, SP1, SP2, SP3, PAGE;
-	int KPAR, IBODY, MAT, ILB[5], IPOL, INDEX, N, IEXIT, STEP;
-	bool LAGE, CROSS;
+	int KPAR, IBODY, MAT, ILB[5], IPOL, INDEX, N;
+	bool LAGE;
 } hd_TRACK_MOD;
 
-typedef struct
-{
-	double (*EABS)[3], *C1, *C2, *WCC, *WCR, *DEN, *RDEN, *E0STEP, *DESOFT, *SSOFT;
-	int *NMS, *NEGP, *NMAT;
-} PENELOPE_MOD;
+typedef struct {
+	double(*EABS)[3], * C1, * C2, * WCC, * WCR, * DEN, * RDEN, * E0STEP, * DESOFT, * SSOFT;
+	int* NMS, * NEGP, * NMAT;
+}PENELOPE_MOD;
 
-typedef struct
-{
+typedef struct {
 	double EABS[MAXMAT][3], C1[MAXMAT], C2[MAXMAT], WCC[MAXMAT], WCR[MAXMAT], DEN[MAXMAT], RDEN[MAXMAT], E0STEP[pilhaPart], DESOFT[pilhaPart], SSOFT[pilhaPart];
 	int NMS, NEGP, NMAT;
-} hd_PENELOPE_MOD;
+}  hd_PENELOPE_MOD;
 
-typedef struct
-{
-	char (*BALIAS)[5];
-	double *DSTOT;
-	int *MATER, *KDET, *KSLAST, *NBODY;
-	bool *LVERB;
+
+typedef struct {
+	char(*BALIAS)[5];
+	double* DSTOT;
+	int* MATER, * KDET, * KSLAST, * NBODY;
+	bool* LVERB;
 } PENGEOM_MOD;
 
-typedef struct
-{
+typedef struct {
 	char BALIAS[NB][5];
 	double DSTOT[pilhaPart];
 	int MATER[NB], KDET[NB], KSLAST[pilhaPart], NBODY;
 	bool LVERB;
 } hd_PENGEOM_MOD;
 
-typedef struct
-{
-	int (*KBODY)[NB], *KBOMO;
+typedef struct {
+	int(*KBODY)[NB], * KBOMO;
 } QBODY;
 
-typedef struct
-{
+typedef struct {
 	int KBODY[NXG][NB], KBOMO[NB];
 } hd_QBODY;
 
-typedef struct
-{
-	double *ECUTR;
-} CECUTR;
+typedef struct {
+	double* ECUTR;
+} CECUTR; 
 
-typedef struct
-{
+typedef struct {
 	double ECUTR[MAXMAT];
-} hd_CECUTR;
+} hd_CECUTR; 
 
-typedef struct
-{
-	int *ISGAW;
+typedef struct {
+	int* ISGAW;
 } CSGAWR;
 
-typedef struct
-{
-	int *IERSEC;
+typedef struct {
+	int* IERSEC;
 } CERSEC;
 
-typedef struct
-{
+typedef struct {
 	int IERSEC;
 } hd_CERSEC;
 
-typedef struct
-{
-	double *EMIN, *EL, *EU, *ET, *DLEMP, *DLEMP1, *DLFC, *XEL, *XE, *XEK;
-	int *KE;
-} CEGRID; // Rede de energia e constantes de interpolacao para a energia atual.
+typedef struct {
+	double* EMIN, * EL, * EU, * ET, * DLEMP, * DLEMP1, * DLFC, * XEL, * XE, * XEK;
+	int* KE;
+} CEGRID; //Rede de energia e constantes de interpolacao para a energia atual.
 
-typedef struct
-{
+typedef struct {
 	double EMIN, EL, EU, ET[NEGP], DLEMP[NEGP], DLEMP1, DLFC, XEL[pilhaPart], XE[pilhaPart], XEK[pilhaPart];
 	int KE[pilhaPart];
 } hd_CEGRID;
 
-typedef struct
-{
-	double (*XESI)[NRP];
-	int *IESIF, *IESIL, *NSESI, *NCURE;
-} CESI0; // Ioniza��o da camada interna por impacto de el�trons e p�sitrons.
 
-typedef struct
-{
-	double (*XPSI)[NRP];
-	int *IPSIF, *IPSIL, *NSPSI, *NCURP;
-} CPSI0; // Ioniza��o da camada interna por impacto de el�trons e p�sitrons.
+typedef struct {
+	double(*XESI)[NRP];
+	int* IESIF, * IESIL, * NSESI, * NCURE;
+} CESI0; //Ioniza��o da camada interna por impacto de el�trons e p�sitrons.
 
-typedef struct
-{
-	double *ATW, *EPX, *RSCR, *ETA, (*EB)[99], (*ALW)[99], (*CP0)[99];
-	int (*IFI)[99], (*IKS)[99], *NSHT;
-	char (*LASYMB)[3];
-} CADATA; // Dados elemento
 
-typedef struct
-{
+typedef struct {
+	double(*XPSI)[NRP];
+	int* IPSIF, * IPSIL, * NSPSI, * NCURP;
+} CPSI0; //Ioniza��o da camada interna por impacto de el�trons e p�sitrons.
+
+
+typedef struct {
+	double* ATW, * EPX, * RSCR, * ETA, (*EB)[99], (*ALW)[99], (*CP0)[99];
+	int(*IFI)[99], (*IKS)[99], * NSHT;
+	char(*LASYMB)[3];
+} CADATA; //Dados elemento
+
+typedef struct {
 	double ATW[99], EPX[99], RSCR[99], ETA[99], EB[30][99], ALW[30][99], CP0[30][99];
 	int IFI[30][99], IKS[30][99], NSHT[99];
 	char LASYMB[99][3];
 } hd_CADATA;
 
-typedef struct
-{
-	double *EPH, (*XPH)[NTP];
-	int *IPHF, *IPHL, *NPHS, *NCUR;
+typedef struct {
+	double* EPH, (*XPH)[NTP];
+	int* IPHF, * IPHL, * NPHS, * NCUR;
 } CGPH00;
 
-typedef struct
-{
+typedef struct {
 	double EPH[NTP], XPH[17][NTP];
 	int IPHF[99], IPHL[99], NPHS[99], NCUR;
 } hd_CGPH00;
 
-typedef struct
-{
-	double *P, *ET, *F;
-	int *IS0, *IS1, *IS2, (*IFIRST)[99], (*ILAST)[99], *NCUR, *KS, *MODER;
+
+typedef struct {
+	double* P, * ET, * F;
+	int* IS0, * IS1, * IS2, (*IFIRST)[99], (*ILAST)[99], * NCUR, * KS, * MODER;
 } CRELAX;
 
-typedef struct
-{
+typedef struct {
 	double P[NRX], ET[NRX], F[NRX];
 	int IS0[NRX], IS1[NRX], IS2[NRX], IFIRST[16][99], ILAST[16][99], NCUR, KS[pilhaPart], MODER;
 } hd_CRELAX;
 
-typedef struct
-{
 
-	double *XA, *AA, *BA;
-	double *FA;
-	int *IA, *NPM1A;
+typedef struct {
+
+	double* XA, * AA, * BA;
+	double* FA;
+	int* IA, * NPM1A;
 
 } CRITAA;
 
-typedef struct
-{
-	double *X, *A, *B;
-	double *F;
-	int *KA, *NPM1;
+typedef struct {
+	double* X, * A, * B;
+	double* F;
+	int* KA, * NPM1;
 } CRNDG3;
 
-typedef struct
-{
+
+typedef struct {
 	double X[NR], A[NR], B[NR], F[NR];
 	int KA[NR], NPM1;
 } hd_CRNDG3;
 
-typedef struct
-{
-	double *XT, *PAC, *DPAC, *A, *B;
-	int *IL, *IU, *NPM1;
 
-	double *QTI, *PACI, *DPACI, *AI, *BI;
-	int *ITLI, *ITUI, *NPM1I;
+typedef struct {
+	double* XT, * PAC, * DPAC, * A, * B;
+	int* IL, * IU, * NPM1;
 
-	double *XTI;
+	double* QTI, * PACI, * DPACI, * AI, * BI;
+	int* ITLI, * ITUI, * NPM1I;
+
+	double* XTI;
 
 } CRITA;
 
-typedef struct
-{
+typedef struct {
 
-	double *CNORM;
+	double* CNORM;
 
 } CRITAN;
 
-typedef struct
-{
-	double (*STF)[MAXMAT], *ZT, *AT, *RHO, *VMOL;
-	int (*IZ)[MAXMAT], *NELEM;
-} COMPOS; // Dados Composicao
 
-typedef struct
-{
+typedef struct {
+	double(*STF)[MAXMAT], * ZT, * AT, * RHO, * VMOL;
+	int(*IZ)[MAXMAT], * NELEM;
+} COMPOS; //Dados Composicao
+
+typedef struct {
 	double STF[30][MAXMAT], ZT[MAXMAT], AT[MAXMAT], RHO[MAXMAT], VMOL[MAXMAT];
 	int IZ[30][MAXMAT], NELEM[MAXMAT];
 } hd_COMPOS;
 
-typedef struct
-{
 
-	double (*RANGE)[MAXMAT][3], (*RANGEL)[MAXMAT][3];
+
+
+
+
+typedef struct {
+
+	double(*RANGE)[MAXMAT][3], (*RANGEL)[MAXMAT][3];
 
 } CRANGE;
 
-typedef struct
-{
-	double *EXPOT, *OP2, (*F)[MAXMAT], (*UI)[MAXMAT], (*WRI)[MAXMAT];
-	int (*KZ)[MAXMAT], (*KS)[MAXMAT], *NOSC;
-} CEIN; // Colisoes Inelasticas
+typedef struct {
+	double* EXPOT, * OP2, (*F)[MAXMAT], (*UI)[MAXMAT], (*WRI)[MAXMAT];
+	int(*KZ)[MAXMAT], (*KS)[MAXMAT], * NOSC;
+}CEIN; //Colisoes Inelasticas
 
-typedef struct
-{
+typedef struct {
 	double EXPOT[MAXMAT], OP2[MAXMAT], F[NO][MAXMAT], UI[NO][MAXMAT], WRI[NO][MAXMAT];
 	int KZ[NO][MAXMAT], KS[NO][MAXMAT], NOSC[MAXMAT];
-} hd_CEIN;
+}hd_CEIN;
 
-typedef struct
-{
-	double *T1EI, *T2EI, *T1PI, *T2PI;
+typedef struct {
+	double* T1EI, * T2EI, * T1PI, * T2PI;
 
 } CEINTF;
 
-typedef struct
-{
-	double *SEH0, *SEH1, *SEH2, *SES0, *SES1, *SES2, *SET0, *SET1, *SET2;
-} CEIN00; // Se��es transversais parciais de conchas / osciladores individuais.
+typedef struct {
+	double* SEH0, * SEH1, * SEH2, * SES0, * SES1, * SES2, * SET0, * SET1, * SET2;
+} CEIN00; //Se��es transversais parciais de conchas / osciladores individuais.
 
-typedef struct
-{
+typedef struct {
 
-	double *SPH0, *SPH1, *SPH2, *SPS0, *SPS1, *SPS2, *SPT0, *SPT1, *SPT2;
+	double* SPH0, * SPH1, * SPH2, * SPS0, * SPS1, * SPS2, * SPT0, * SPT1, * SPT2;
 
 } CPIN00;
 
-typedef struct
-{
-	double (*EINAC)[NEGP][MAXMAT];
-	int (*IEIN)[MAXMAT], *NEIN;
-} CEINAC; // Inelestica de eletrons. e tabelas de ionizacao de camada interna.
+typedef struct {
+	double(*EINAC)[NEGP][MAXMAT];
+	int(*IEIN)[MAXMAT], * NEIN;
+} CEINAC; //Inelestica de eletrons. e tabelas de ionizacao de camada interna.
 
-typedef struct
-{
+typedef struct {
 	double EINAC[NO][NEGP][MAXMAT];
 	int IEIN[NO][MAXMAT], NEIN[MAXMAT];
 } hd_CEINAC;
 
-typedef struct
-{
-	double (*ESIAC)[NEGP][MAXMAT];
-	int (*IESI)[MAXMAT], *NESI;
-} CESIAC; // Inelastica de el�trons. e tabelas de ionizazaoo de camada interna.
+typedef struct {
+	double(*ESIAC)[NEGP][MAXMAT];
+	int(*IESI)[MAXMAT], * NESI;
+} CESIAC; //Inelastica de el�trons. e tabelas de ionizazaoo de camada interna.
 
-typedef struct
-{
+typedef struct {
 	double ESIAC[NO][NEGP][MAXMAT];
 	int IESI[NO][MAXMAT], NESI[MAXMAT];
 } hd_CESIAC;
 
-typedef struct
-{
+typedef struct {
 
-	double (*XSEIN)[NEGP], (*XSESI)[NEGP];
-	int *ISIE;
+	double(*XSEIN)[NEGP], (*XSESI)[NEGP];
+	int* ISIE;
 
-} CESIN; // Inel�stica de el�trons. e tabelas de ioniza��o de camada interna.
 
-typedef struct
-{
-	double (*PINAC)[NEGP][MAXMAT];
-	int (*IPIN)[MAXMAT], *NPIN;
-} CPINAC; // Positron inel�stica coll. e tabelas de ioniza��o de camada interna.
+} CESIN; //Inel�stica de el�trons. e tabelas de ioniza��o de camada interna.
 
-typedef struct
-{
+
+typedef struct {
+	double(*PINAC)[NEGP][MAXMAT];
+	int(*IPIN)[MAXMAT], * NPIN;
+} CPINAC; //Positron inel�stica coll. e tabelas de ioniza��o de camada interna.
+
+typedef struct {
 	double PINAC[NO][NEGP][MAXMAT];
 	int IPIN[NO][MAXMAT], NPIN[MAXMAT];
 } hd_CPINAC;
 
-typedef struct
-{
-	double (*PSIAC)[NEGP][MAXMAT];
-	int (*IPSI)[MAXMAT], *NPSI;
-} CPSIAC; // Positron inel�stica coll. e tabelas de ioniza��o de camada interna.
+typedef struct {
+	double(*PSIAC)[NEGP][MAXMAT];
+	int(*IPSI)[MAXMAT], * NPSI;
+} CPSIAC; //Positron inel�stica coll. e tabelas de ioniza��o de camada interna.
 
-typedef struct
-{
+typedef struct {
 	double PSIAC[NO][NEGP][MAXMAT];
 	int IPSI[NO][MAXMAT], NPSI[MAXMAT];
-} hd_CPSIAC;
+} hd_CPSIAC; 
 
-typedef struct
-{
+typedef struct {
 
-	double (*XSPIN)[NEGP], (*XSPSI)[NEGP];
-	int *ISIP;
+	double(*XSPIN)[NEGP], (*XSPSI)[NEGP];
+	int* ISIP;
 
-} CPSIN; // Positron inel�stica coll. e tabelas de ioniza��o de camada interna.
 
-// novos
-typedef struct
-{
-	double (*FCO)[MAXMAT], (*UICO)[MAXMAT], (*FJ0)[MAXMAT], (*PTRSH)[MAXMAT];
-	int (*KZCO)[MAXMAT], (*KSCO)[MAXMAT], *NOSCCO;
-} CGCO; // Espalhamento Compton
+} CPSIN; //Positron inel�stica coll. e tabelas de ioniza��o de camada interna.
 
-typedef struct
-{
+//novos
+typedef struct {
+	double(*FCO)[MAXMAT], (*UICO)[MAXMAT], (*FJ0)[MAXMAT], (*PTRSH)[MAXMAT];
+	int(*KZCO)[MAXMAT], (*KSCO)[MAXMAT], * NOSCCO;
+} CGCO; //Espalhamento Compton
+
+typedef struct {
 	double FCO[NOCO][MAXMAT], UICO[NOCO][MAXMAT], FJ0[NOCO][MAXMAT], PTRSH[NOCO][MAXMAT];
 	int KZCO[NOCO][MAXMAT], KSCO[NOCO][MAXMAT], NOSCCO[MAXMAT];
 } hd_CGCO;
 
-typedef struct
-{
-	double (*SEHEL)[MAXMAT], (*SEHIN)[MAXMAT], (*SEISI)[MAXMAT], (*SEHBR)[MAXMAT], (*SEAUX)[MAXMAT],
+typedef struct {
+	double(*SEHEL)[MAXMAT], (*SEHIN)[MAXMAT], (*SEISI)[MAXMAT], (*SEHBR)[MAXMAT], (*SEAUX)[MAXMAT],
 		(*SETOT)[MAXMAT], (*CSTPE)[MAXMAT], (*RSTPE)[MAXMAT], (*DEL)[MAXMAT], (*W1E)[MAXMAT],
 		(*W2E)[MAXMAT], (*DW1EL)[MAXMAT], (*DW2EL)[MAXMAT], (*RNDCE)[MAXMAT], (*AE)[MAXMAT], (*BE)[MAXMAT],
 		(*T1E)[MAXMAT], (*T2E)[MAXMAT];
 
-} CEIMFP; // Tabela e simula��o do Eletron
+} CEIMFP; //Tabela e simula��o do Eletron
 
-typedef struct
-{
+typedef struct {
 	double SEHEL[NEGP][MAXMAT], SEHIN[NEGP][MAXMAT], SEISI[NEGP][MAXMAT], SEHBR[NEGP][MAXMAT], SEAUX[NEGP][MAXMAT],
 		SETOT[NEGP][MAXMAT], CSTPE[NEGP][MAXMAT], RSTPE[NEGP][MAXMAT], DEL[NEGP][MAXMAT], W1E[NEGP][MAXMAT],
 		W2E[NEGP][MAXMAT], DW1EL[NEGP][MAXMAT], DW2EL[NEGP][MAXMAT], RNDCE[NEGP][MAXMAT], AE[NEGP][MAXMAT], BE[NEGP][MAXMAT],
 		T1E[NEGP][MAXMAT], T2E[NEGP][MAXMAT];
 } hd_CEIMFP;
 
-typedef struct
-{
-	double (*TSTPE)[MAXMAT], (*TSTRE)[MAXMAT], (*TRL1E)[MAXMAT], (*TRL2E)[MAXMAT];
+
+typedef struct {
+	double(*TSTPE)[MAXMAT], (*TSTRE)[MAXMAT], (*TRL1E)[MAXMAT], (*TRL2E)[MAXMAT];
 
 } CLAS1E;
 
-typedef struct
-{
-	double (*SPHEL)[MAXMAT], (*SPHIN)[MAXMAT], (*SPISI)[MAXMAT], (*SPHBR)[MAXMAT], (*SPAN)[MAXMAT],
+typedef struct {
+	double(*SPHEL)[MAXMAT], (*SPHIN)[MAXMAT], (*SPISI)[MAXMAT], (*SPHBR)[MAXMAT], (*SPAN)[MAXMAT],
 		(*SPAUX)[MAXMAT], (*SPTOT)[MAXMAT], (*CSTPP)[MAXMAT], (*RSTPP)[MAXMAT], (*W1P)[MAXMAT],
 		(*W2P)[MAXMAT], (*DW1PL)[MAXMAT], (*DW2PL)[MAXMAT], (*RNDCP)[MAXMAT], (*AP)[MAXMAT], (*BP)[MAXMAT],
 		(*T1P)[MAXMAT], (*T2P)[MAXMAT];
 } CPIMFP; // Tabelas de simula��o dos positrons
 
-typedef struct
-{
+typedef struct {
 	double SPHEL[NEGP][MAXMAT], SPHIN[NEGP][MAXMAT], SPISI[NEGP][MAXMAT], SPHBR[NEGP][MAXMAT], SPAN[NEGP][MAXMAT],
 		SPAUX[NEGP][MAXMAT], SPTOT[NEGP][MAXMAT], CSTPP[NEGP][MAXMAT], RSTPP[NEGP][MAXMAT], W1P[NEGP][MAXMAT],
 		W2P[NEGP][MAXMAT], DW1PL[NEGP][MAXMAT], DW2PL[NEGP][MAXMAT], RNDCP[NEGP][MAXMAT], AP[NEGP][MAXMAT], BP[NEGP][MAXMAT],
 		T1P[NEGP][MAXMAT], T2P[NEGP][MAXMAT];
 } hd_CPIMFP;
 
-typedef struct
-{
-	double (*TSTPP)[MAXMAT], (*TSTRP)[MAXMAT], (*TRL1P)[MAXMAT], (*TRL2P)[MAXMAT];
+
+typedef struct {
+	double(*TSTPP)[MAXMAT], (*TSTRP)[MAXMAT], (*TRL1P)[MAXMAT], (*TRL2P)[MAXMAT];
 
 } CLAS1P;
 
-// Espalhamento elastico de eletrons e positrons
+//Espalhamento elastico de eletrons e positrons
 
-typedef struct
-{
+typedef struct {
 
-	double *EJT, *XE0, *XE1, *XE2, *XP0, *XP1, *XP2, *T1E0, *T2E0, *T1P0,
-		*T2P0, *EJTL, *FJL, *A, *B, *C, *D;
+	double* EJT, * XE0, * XE1, * XE2, * XP0, * XP1, * XP2, * T1E0, * T2E0, * T1P0,
+		* T2P0, * EJTL, * FJL, * A, * B, * C, * D;
 
 } CEEL00;
 
-// Rendimentos radiativos de el�trons e p�sitrons.
+//Rendimentos radiativos de el�trons e p�sitrons.
 
-typedef struct
-{
-	double (*EBRY)[MAXMAT], (*PBRY)[MAXMAT];
+typedef struct {
+	double(*EBRY)[MAXMAT], (*PBRY)[MAXMAT];
 } CBRYLD;
 
-// tabelas de simula��o dos fotons
+//tabelas de simula��o dos fotons
 
-typedef struct
-{
-	double (*SGRA)[MAXMAT], (*SGCO)[MAXMAT], (*SGPH)[MAXMAT], (*SGPP)[MAXMAT], (*SGAUX)[MAXMAT];
+typedef struct {
+	double(*SGRA)[MAXMAT], (*SGCO)[MAXMAT], (*SGPH)[MAXMAT], (*SGPP)[MAXMAT], (*SGAUX)[MAXMAT];
 } CGIMFP;
 
-typedef struct
-{
+typedef struct {
 	double SGRA[NEGP][MAXMAT], SGCO[NEGP][MAXMAT], SGPH[NEGP][MAXMAT], SGPP[NEGP][MAXMAT], SGAUX[NEGP][MAXMAT];
 } hd_CGIMFP;
 
-typedef struct
-{
-	double *ER, *XSR;
-	int *NPHD;
+typedef struct {
+	double* ER, * XSR;
+	int* NPHD;
 
 } CGPH01;
 
-typedef struct
-{
-	double (*TRIP)[MAXMAT];
+typedef struct {
+	double(*TRIP)[MAXMAT];
 } CGPP01;
 
-typedef struct
-{
+typedef struct {
 	double TRIP[NEGP][MAXMAT];
 } hd_CGPP01;
 
-typedef struct
-{
-	double *WB, (*PBCUT)[MAXMAT], (*WBCUT)[MAXMAT], (*PDFB)[NEGP][MAXMAT], (*DPDFB)[NEGP][MAXMAT], (*PACB)[NEGP][MAXMAT], *ZBR2;
+typedef struct {
+	double* WB, (*PBCUT)[MAXMAT], (*WBCUT)[MAXMAT], (*PDFB)[NEGP][MAXMAT], (*DPDFB)[NEGP][MAXMAT], (*PACB)[NEGP][MAXMAT], * ZBR2;
 } CEBR;
 
-typedef struct
-{
+typedef struct {
 	double WB[NBW], PBCUT[NEGP][MAXMAT], WBCUT[NEGP][MAXMAT], PDFB[NBW][NEGP][MAXMAT], DPDFB[NBW][NEGP][MAXMAT], PACB[NBW][NEGP][MAXMAT], ZBR2[MAXMAT];
 } hd_CEBR;
 
-typedef struct
-{
-	double *EBT, (*XS)[NBE], *TXS, *X, *Y;
+
+typedef struct {
+	double* EBT, (*XS)[NBE], * TXS, * X, * Y;
 
 } CEBR01;
 
-typedef struct
-{
-	double (*P0)[NEGP][MAXMAT];
 
-} CEBR02;
+typedef struct {
+	double(*P0)[NEGP][MAXMAT];
 
-typedef struct
-{
-	double *BET, *BK, (*BP1)[21][6][MAXMAT], (*BP2)[21][6][MAXMAT], *ZBEQ;
-} CBRANG;
+}CEBR02;
 
-typedef struct
-{
+typedef struct {
+	double* BET, * BK, (*BP1)[21][6][MAXMAT], (*BP2)[21][6][MAXMAT], * ZBEQ;
+}CBRANG;
+
+typedef struct {
 	double BET[6], BK[21], BP1[4][21][6][MAXMAT], BP2[4][21][6][MAXMAT], ZBEQ[MAXMAT];
 } hd_CBRANG;
 
-typedef struct
-{
+typedef struct {
 
-	double *EI, *EE, *CPS, *AMOL;
-	int *MOM;
+	double* EI, * EE, * CPS, * AMOL;
+	int* MOM;
 
 } CEIN01;
 
-typedef struct
-{
-	int *IERGA, *NCALL;
+typedef struct {
+	int* IERGA, * NCALL;
 
 } CSUMGA;
 
-typedef struct
-{
+typedef struct {
 
-	double *EI, *CPS, *BHA1, *BHA2, *BHA3, *BHA4;
-	int *MOM;
+	double* EI, * CPS, * BHA1, * BHA2, * BHA3, * BHA4;
+	int* MOM;
 
 } CPIN01;
 
-// Elastic scattering simulation tables.
-typedef struct
-{
 
-	double *ETS, *ETL, *TH, *THR, *XMU, *XMUL, *ECS, *ETCS1, *ETCS2, (*EDCS)[NE],
-		*PCS, *PTCS1, *PTCS2, (*PDCS)[NE], *DCSI, *DCSIL, *CSI, *TCS1I, *TCS2I;
+//Elastic scattering simulation tables.
+typedef struct {
+
+	double* ETS, * ETL, * TH, * THR, * XMU, * XMUL, * ECS, * ETCS1, * ETCS2, (*EDCS)[NE],
+		* PCS, * PTCS1, * PTCS2, (*PDCS)[NE], * DCSI, * DCSIL, * CSI, * TCS1I, * TCS2I;
 
 } CDCSEP;
 
-typedef struct
-{
-	double (*XSE)[NEGP][NP], (*PSE)[NEGP][NP], (*ASE)[NEGP][NP], (*BSE)[NEGP][NP];
-	int (*ITLE)[NEGP][NP], (*ITUE)[NEGP][NP];
-} CEELDB;
+typedef struct {
+	double(*XSE)[NEGP][NP], (*PSE)[NEGP][NP], (*ASE)[NEGP][NP], (*BSE)[NEGP][NP];
+	int(*ITLE)[NEGP][NP], (*ITUE)[NEGP][NP];
+}CEELDB;
 
-typedef struct
-{
-	double XSE[MAXMAT][NEGP][NP], PSE[MAXMAT][NEGP][NP], ASE[MAXMAT][NEGP][NP], BSE[MAXMAT][NEGP][NP];
+typedef struct{
+    double XSE[MAXMAT][NEGP][NP], PSE[MAXMAT][NEGP][NP], ASE[MAXMAT][NEGP][NP], BSE[MAXMAT][NEGP][NP];
 	int ITLE[MAXMAT][NEGP][NP], ITUE[MAXMAT][NEGP][NP];
-} hd_CEELDB;
+}hd_CEELDB;
 
-typedef struct
-{
-	double (*XSP)[NEGP][NP], (*PSP)[NEGP][NP], (*ASP)[NEGP][NP], (*BSP)[NEGP][NP];
-	int (*ITLP)[NEGP][NP], (*ITUP)[NEGP][NP];
-} CPELDB;
 
-typedef struct
-{
+typedef struct {
+	double(*XSP)[NEGP][NP], (*PSP)[NEGP][NP], (*ASP)[NEGP][NP], (*BSP)[NEGP][NP];
+	int(*ITLP)[NEGP][NP], (*ITUP)[NEGP][NP];
+}CPELDB;
+
+typedef struct {
 	double XSP[MAXMAT][NEGP][NP], PSP[MAXMAT][NEGP][NP], ASP[MAXMAT][NEGP][NP], BSP[MAXMAT][NEGP][NP];
 	int ITLP[MAXMAT][NEGP][NP], ITUP[MAXMAT][NEGP][NP];
 } hd_CPELDB;
 
-typedef struct
-{
-	double *EELMAX, *PELMAX, (*RNDCED)[MAXMAT], (*RNDCPD)[MAXMAT];
-} CELSEP;
+typedef struct {
+	double* EELMAX, * PELMAX, (*RNDCED)[MAXMAT], (*RNDCPD)[MAXMAT];
+}CELSEP;
 
-typedef struct
-{
+typedef struct {
 	double EELMAX[MAXMAT], PELMAX[MAXMAT], RNDCED[NEGP][MAXMAT], RNDCPD[NEGP][MAXMAT];
 } hd_CELSEP;
 
-typedef struct
-{
-	double *FACTE, *Q2MAX;
-	int *MM, *MOM;
+typedef struct {
+	double* FACTE, * Q2MAX;
+	int* MM, * MOM;
 } CGRA00;
 
-typedef struct
-{
-	double (*FF)[MAXMAT], *ERA, (*XSRA)[MAXMAT];
-	int *IED, *IEU, *NE;
-} CGRA01;
+typedef struct {
+	double(*FF)[MAXMAT], * ERA, (*XSRA)[MAXMAT];
+	int* IED, * IEU, * NE;
+}CGRA01;
 
-typedef struct
-{
+typedef struct {
 	double FF[NQ][MAXMAT], ERA[NEX], XSRA[NEX][MAXMAT];
 	int IED[NEGP], IEU[NEGP], NE;
 } hd_CGRA01;
 
-typedef struct
-{
-	double *QQ, (*AR)[MAXMAT], (*BR)[MAXMAT], (*CR)[MAXMAT], (*DR)[MAXMAT], *FF0, *QQM;
-} CGRA02;
 
-typedef struct
-{
-	double (*QRA)[NP2], (*PRA)[NP2], (*DPRA)[NP2], (*ARA)[NP2],
+typedef struct {
+	double* QQ, (*AR)[MAXMAT], (*BR)[MAXMAT], (*CR)[MAXMAT], (*DR)[MAXMAT], * FF0, * QQM;
+}CGRA02;
+
+typedef struct {
+	double(*QRA)[NP2], (*PRA)[NP2], (*DPRA)[NP2], (*ARA)[NP2],
 		(*BRA)[NP2], (*PMAX)[NEGP];
-	int (*ITLRA)[NP2], (*ITURA)[NP2];
-} CGRA03;
+	int(*ITLRA)[NP2], (*ITURA)[NP2];
+}CGRA03;
 
-typedef struct
-{
+
+typedef struct {
 	double QRA[MAXMAT][NP2], PRA[MAXMAT][NP2], DPRA[MAXMAT][NP2], ARA[MAXMAT][NP2],
 		BRA[MAXMAT][NP2], PMAX[MAXMAT][NEGP];
 	int ITLRA[MAXMAT][NP2], ITURA[MAXMAT][NP2];
 } hd_CGRA03;
 
-typedef struct
-{
-	double *ZEQPP, (*F0)[MAXMAT], *BCB;
-} CGPP00;
+typedef struct {
+	double* ZEQPP, (*F0)[MAXMAT], * BCB;
+}CGPP00;
 
-typedef struct
-{
+typedef struct {
 	double ZEQPP[MAXMAT], F0[2][MAXMAT], BCB[MAXMAT];
-} hd_CGPP00;
+}hd_CGPP00;
 
-// novos commons
 
-typedef struct
-{
-	int *ISEED1, *ISEED2;
-} RSEED;
+//novos commons
 
-typedef struct
-{
+typedef struct {
+	int* ISEED1, * ISEED2;
+}RSEED;
+
+typedef struct {
 	int ISEED1, ISEED2;
 } hd_RSEED;
 
-typedef struct
-{
-	char *TITLE, *TITLE2;
+
+
+
+typedef struct {
+	char* TITLE, * TITLE2;
 
 } CTITLE;
 
-typedef struct
-{
-	char *DATE23;
+typedef struct {
+	char* DATE23;
 
 } CDATE;
 
-typedef struct
-{
-	double *DSMAX, (*EABSB)[3];
-} CSPGEO;
+typedef struct {
+	double* DSMAX, (*EABSB)[3];
+}CSPGEO;
 
-typedef struct
-{
+typedef struct {
 	double DSMAX[NB], EABSB[NB][3];
 } hd_CSPGEO;
 
-// Forçando interação, janelas de peso.
-typedef struct
-{
-	double (*WLOW)[NBV], (*WHIG)[NBV];
-	bool (*LFORCE)[NBV];
+//Forçando interação, janelas de peso.
+typedef struct {
+	double(*WLOW)[NBV], (*WHIG)[NBV];
+	bool(*LFORCE)[NBV];
 
-} CFORCI;
+}CFORCI;
 
-// Divisão de raios-X
-typedef struct
-{
-	int *IXRSPL, *ILBA;
-	bool *LXRSPL;
-} CXRSPL;
+//Divisão de raios-X
+typedef struct {
+	int* IXRSPL, * ILBA;
+	bool* LXRSPL;
+}CXRSPL;
 
-typedef struct
-{
+typedef struct {
 	int IXRSPL[NBV], ILBA[pilhaPart][5];
 	bool LXRSPL[NBV];
 } hd_CXRSPL;
 
-// Definição de origem.
-//  Particulas primarias
+//Definição de origem.
+// Particulas primarias
 
-typedef struct
-{
+typedef struct {
 
-	double *CTHL, *DCTH, *PHIL, *DPHI;
-	int *KPARP, *JOBEND;
-	bool *LSCONE, *LGPOL, *LPSF;
+	double* CTHL, * DCTH, * PHIL, * DPHI;
+	int* KPARP, * JOBEND;
+	bool* LSCONE, * LGPOL, * LPSF;
 } CSOUR0;
 
-typedef struct
-{
-	double *E0, *EPMAX, *SP10, *SP20, *SP30;
+typedef struct {
+	double* E0, * EPMAX, * SP10, * SP20, * SP30;
 
 } CSOUR1;
 
-// Espectro de Energia
-typedef struct
-{
-	double *ESRC, *PSRC, *FSRC;
-	int *IASRC;
-	bool *LSPEC;
+//Espectro de Energia
+typedef struct {
+	double* ESRC, * PSRC, * FSRC;
+	int* IASRC;
+	bool* LSPEC;
 
-} CSOUR2;
+}CSOUR2;
 
 // Fonte estendida
 
-typedef struct
-{
-	double *SX0, *SY0, *SZ0, *SSX, *SSY, *SSZ;
-	int *IXSBOD;
-	bool *LEXSRC, *LEXBD;
+typedef struct {
+	double* SX0, * SY0, * SZ0, * SSX, * SSY, * SSZ;
+	int* IXSBOD;
+	bool* LEXSRC, * LEXBD;
 
 } CSOUR3;
 
-// Arquivo de espaço de fase de entrada
-typedef struct
-{
-	double *WGMIN, *RWGMIN, *WGMAX, *RLREAD;
-	int *IPSFI, *NPSF, *NPSN, *NSPLIT, *KODEPS;
+//Arquivo de espaço de fase de entrada
+typedef struct {
+	double* WGMIN, * RWGMIN, * WGMAX, * RLREAD;
+	int* IPSFI, * NPSF, * NPSN, * NSPLIT, * KODEPS;
 } CSOUR4;
 
-typedef struct
-{
-	char (*PSFI)[20];
+typedef struct {
+	char(*PSFI)[20];
 
-} CSOUR5;
+}CSOUR5;
 
 // contadores discretos
 
-typedef struct
-{
-	double *PRIM, *PRIM2, *DPRIM;			  // Numero de particulas IEXIT;
-	double (*SEC)[3], (*SEC2)[3], (*DSEC)[3]; // Geradores de particulas secundarias.
-	double *AVW, *AVW2, *DAVW;				  // Cosseno final do diretor polar.
-	double *AVA, *AVA2, *DAVA;				  // Angulo final polar
-	double *AVE, *AVE2, *DAVE;				  // Energia final
-} CNT0;
+typedef struct {
+	double* PRIM, * PRIM2, * DPRIM; //Numero de particulas IEXIT;
+	double(*SEC)[3], (*SEC2)[3], (*DSEC)[3]; // Geradores de particulas secundarias.
+	double* AVW, * AVW2, * DAVW; //Cosseno final do diretor polar.
+	double* AVA, * AVA2, * DAVA; // Angulo final polar
+	double* AVE, * AVE2, * DAVE; // Energia final
+}CNT0;
 
-typedef struct
-{
-	double PRIM[3], PRIM2[3], DPRIM[pilhaPart][3];		 // Numero de particulas IEXIT;
-	double SEC[3][3], SEC2[3][3], DSEC[pilhaPart][3][3]; // Geradores de particulas secundarias.
-	double AVW[2], AVW2[2], DAVW[pilhaPart][2];			 // Cosseno final do diretor polar.
-	double AVA[2], AVA2[2], DAVA[pilhaPart][2];			 // Angulo final polar
-	double AVE[2], AVE2[2], DAVE[pilhaPart][2];			 // Energia final
+typedef struct {
+	double PRIM[3], PRIM2[3], DPRIM[3][pilhaPart]; //Numero de particulas IEXIT;
+	double SEC[3][3], SEC2[3][3], DSEC[3][3][pilhaPart]; // Geradores de particulas secundarias.
+	double AVW[2], AVW2[2], DAVW[2][pilhaPart]; //Cosseno final do diretor polar.
+	double AVA[2], AVA2[2], DAVA[2][pilhaPart]; // Angulo final polar
+	double AVE[2], AVE2[2], DAVE[2][pilhaPart]; // Energia final
 } hd_CNT0;
+
 
 // Energias depositadas em vários corpos.
 
-typedef struct
-{
-	double *TDEBO, *TDEBO2, *DEBO;
+typedef struct {
+	double* TDEBO, * TDEBO2, *DEBO;
 
-} CNT1;
+}CNT1;
 
-typedef struct
-{
-	double TDEBO[NB], TDEBO2[NB], DEBO[NB];
+typedef struct {
+	double TDEBO[NB], TDEBO2[NB], DEBO[NB][pilhaPart];
 } hd_CNT1;
 
-// Distribuições contínuas.
-// Espectro de energia da fonte.
+//Distribuições contínuas.
+//Espectro de energia da fonte.
 
-typedef struct
-{
-	double *SHIST; // definicao
-	int *NSEB;
-} CNT2;
+typedef struct {
+	double* SHIST; //definicao
+	int* NSEB;
+}CNT2;
 
-typedef struct
-{
-	double (*SEDS)[3], (*SEDS2)[3], *DSDE, *RDSDE;
-	int *NSDE;
-} CNT3;
+typedef struct {
+	double(*SEDS)[3], (*SEDS2)[3], * DSDE, * RDSDE;
+	int* NSDE;
+}CNT3;
 
-typedef struct
-{
-	double SEDS[pilhaPart][NSEM][3], SEDS2[pilhaPart][NSEM][3], DSDE, RDSDE;
+typedef struct {
+	double SEDS[NSEM][3][pilhaPart],  SEDS2[NSEM][3][pilhaPart], DSDE, RDSDE;
 	int NSDE;
 } hd_CNT3;
 
-// Detectores (até diferentes detectores NIDM).
-typedef struct
-{
-	double *RLAST, *RWRITE;
-	int *IDCUT, (*KKDI)[NIDM], *IPSF, *NID, *NPSFO, *IPSFO;
-} CNT4;
 
-typedef struct
-{
+//Detectores (até diferentes detectores NIDM).
+typedef struct {
+	double* RLAST, * RWRITE;
+	int* IDCUT, (*KKDI)[NIDM], * IPSF, * NID, * NPSFO, * IPSFO;
+}CNT4;
+
+typedef struct {
 	double RLAST, RWRITE;
 	int IDCUT[NIDM], KKDI[3][NIDM], IPSF[NIDM], NID, NPSFO, IPSFO;
 } hd_CNT4;
 
-typedef struct
-{
-	double *DEDE;
-	int *KBDE, *NED;
-} CNT5;
+typedef struct {
+	double* DEDE;
+	int* KBDE, * NED;
+}CNT5;
 
-typedef struct
-{
-	double DEDE[pilhaPart][NIDM];
+typedef struct {
+	double DEDE[NIDM][pilhaPart];
 	int KBDE[NB], NED;
 } hd_CNT5;
 
-typedef struct
-{
-	bool *LDOSEM;
-} CNT6;
+typedef struct {
+	bool* LDOSEM;
+}CNT6;
 
-typedef struct
-{
+typedef struct {
 	bool LDOSEM;
 } hd_CNT6;
 
 // Detalhes do trabalho
 
-// Arquivo dump
-typedef struct
-{
-	bool *LDUMP;
-	char *PFILED;
-} CDUMP;
+//Arquivo dump
+typedef struct {
+	bool* LDUMP;
+	char* PFILED;
+}CDUMP;
 
-// controlador de tempo e contador de simulacoes.
+//controlador de tempo e contador de simulacoes.
 
-typedef struct
-{
-	double *TSIM, *TSEC, *TSECA, *TSECAD, *CPUT0, *DUMPP, *DSHN, *SHN;
-	int *N;
-} CNTRL;
+typedef struct {
+	double* TSIM, * TSEC, * TSECA, * TSECAD, * CPUT0, * DUMPP, * DSHN, * SHN;
+	int* N;
+}CNTRL;
 
-typedef struct
-{
+typedef struct {
 	double TSIM, TSEC, TSECA, TSECAD, CPUT0, DUMPP, DSHN, SHN;
 	int N[pilhaPart];
 } hd_CNTRL;
 
-typedef struct
-{
-	double *CPCT, *CPST, *SPCT, *SPST, *SPHI, *CPHI, *STHE, *CTHE, *CAPER;
-} CGCONE;
+typedef struct {
+	double* CPCT, * CPST, * SPCT, * SPST, * SPHI, * CPHI, * STHE, * CTHE, * CAPER;
+}CGCONE;
 
-typedef struct
-{
+typedef struct {
 	double CPCT, CPST, SPCT, SPST, SPHI, CPHI, STHE, CTHE, CAPER;
-} hd_CGCONE;
+}hd_CGCONE;
 
-typedef struct
-{
-	double *EL, *EU, *THL, *THU, *BSE, *RBSE, *BSTH, *RBSTH, *BSPH, *RBSPH;
-	double (*PDE)[2][3], (*PDE2)[2][3], (*PDEP)[2][3];
-	double (*PDA)[NBTHM][3], (*PDA2)[NBTHM][3], (*PDAP)[NBTHM][3];
-	int (*LPDE)[2][3];
-	int (*LPDA)[NBTHM][3];
-	int *NE, *NTH, *NPH, *LLE;
-	bool *LLTH;
-} CENANG;
+typedef struct {
+	double* EL, * EU, * THL, * THU, * BSE, * RBSE, * BSTH, * RBSTH, * BSPH, * RBSPH;
+	double(*PDE)[2][3], (*PDE2)[2][3], (*PDEP)[2][3];
+	double(*PDA)[NBTHM][3], (*PDA2)[NBTHM][3], (*PDAP)[NBTHM][3];
+	int(*LPDE)[2][3];
+	int(*LPDA)[NBTHM][3];
+	int* NE, * NTH, * NPH, *LLE;
+	bool * LLTH;
+}CENANG;
 
-typedef struct
-{
+
+typedef struct {
 	double EL, EU, THL, THU, BSE, RBSE, BSTH, RBSTH, BSPH, RBSPH;
 	double PDE[NBEM][2][3], PDE2[NBEM][2][3], PDEP[NBEM][2][3];
 	double PDA[NBPHM][NBTHM][3], PDA2[NBPHM][NBTHM][3], PDAP[NBPHM][NBTHM][3];
@@ -889,31 +783,30 @@ typedef struct
 	bool LLTH;
 } hd_CENANG;
 
-typedef struct
-{
-	double *EL, *EU, *BSE, *RBSE;
-	double (*ET)[NIDM], *EDEP, *EDEP2, *EDEPP;
-	double (*DIT)[NIDM], (*DIT2)[NIDM], (*DITP)[NIDM];
-	double (*DIP)[NBEM2][NIDM], (*DIP2)[NBEM2][NIDM], (*DIPP)[NBEM2][NIDM];
-	double (*FLT)[NIDM], (*FLT2)[NIDM], (*FLTP)[NIDM];
-	double (*FLP)[NBEM2][NIDM], (*FLP2)[NBEM2][NIDM], (*FLPP)[NBEM2][NIDM];
-	double *AGEL, *AGEU, *BAGE, *RBAGE, (*AGE)[NIDM];
-	double (*AGE2)[NIDM], (*AGEP)[NIDM];
-	int *LEDEP;
-	int (*LDIT)[NIDM];
-	int (*LDIP)[NBEM2][NIDM];
-	int (*LFLT)[NIDM];
-	int (*LFLP)[NBEM2][NIDM];
-	int (*LAGEA)[NIDM];
-	int *IDCUT, *NE, *LLE;
-	bool *LLAGE;
-	int *NAGE, *NID;
-} CIMDET;
 
-typedef struct
-{
+typedef struct {
+	double* EL, * EU, * BSE, * RBSE;
+	double(*ET)[NIDM], * EDEP, * EDEP2, * EDEPP;
+	double(*DIT)[NIDM], (*DIT2)[NIDM], (*DITP)[NIDM];
+	double(*DIP)[NBEM2][NIDM], (*DIP2)[NBEM2][NIDM], (*DIPP)[NBEM2][NIDM];
+	double(*FLT)[NIDM], (*FLT2)[NIDM], (*FLTP)[NIDM];
+	double(*FLP)[NBEM2][NIDM], (*FLP2)[NBEM2][NIDM], (*FLPP)[NBEM2][NIDM];
+	double* AGEL, * AGEU, * BAGE, * RBAGE, (*AGE)[NIDM];
+	double(*AGE2)[NIDM], (*AGEP)[NIDM];
+	int* LEDEP;
+	int(*LDIT)[NIDM];
+	int(*LDIP)[NBEM2][NIDM];
+	int(*LFLT)[NIDM];
+	int(*LFLP)[NBEM2][NIDM];
+	int(*LAGEA)[NIDM];
+	int* IDCUT, * NE, *LLE;
+	bool * LLAGE;
+	int* NAGE, * NID;
+}CIMDET;
+
+typedef struct {
 	double EL[NIDM], EU[NIDM], BSE[NIDM], RBSE[NIDM];
-	double ET[NBEM2 + 1][NIDM], EDEP[NIDM], EDEP2[NIDM], EDEPP[NIDM];
+	double ET[NBEM2+1][NIDM], EDEP[NIDM], EDEP2[NIDM], EDEPP[NIDM];
 	double DIT[NBEM2][NIDM], DIT2[NBEM2][NIDM], DITP[NBEM2][NIDM];
 	double DIP[3][NBEM2][NIDM], DIP2[3][NBEM2][NIDM], DIPP[3][NBEM2][NIDM];
 	double FLT[NBEM2][NIDM], FLT2[NBEM2][NIDM], FLTP[NBEM2][NIDM];
@@ -931,121 +824,99 @@ typedef struct
 	int NAGE[NIDM], NID;
 } hd_CIMDET;
 
-typedef struct
-{
-	double *EL, *EU, *BSE, *RBSE, *EDEP, *EDEP2, (*DET)[NIDM];
-	int *NE, *NID;
-	int *LLE;
-} CENDET;
 
-typedef struct
-{
-	double EL[NIDM], EU[NIDM], BSE[NIDM], RBSE[NIDM], EDEP[NIDM], EDEP2[NIDM], DET[NBEM2][NIDM];
+
+typedef struct {
+	double* EL, * EU, * BSE, * RBSE, * EDEP, * EDEP2, (*DET)[NIDM];
+	int* NE, * NID;
+	int* LLE;
+}CENDET;
+
+
+typedef struct {
+	double  EL[NIDM], EU[NIDM], BSE[NIDM], RBSE[NIDM], EDEP[NIDM], EDEP2[NIDM], DET[NBEM2][NIDM];
 	int NE[NIDM], NID[NIDM];
 	int LLE[NIDM];
 } hd_CENDET;
 
-typedef struct
-{
-	double (*DOSE)[NDYM][NDXM], (*DOSE2)[NDYM][NDXM], (*DOSEP)[NDYM][NDXM];
-	int (*LDOSE)[NDYM][NDXM], *KDOSE;
+typedef struct {
+	double(*DOSE)[NDYM][NDXM], (*DOSE2)[NDYM][NDXM], (*DOSEP)[NDYM][NDXM];
+	int(*LDOSE)[NDYM][NDXM], * KDOSE;
 } CDOSE1;
 
-typedef struct
-{
+typedef struct {
 	double DOSE[NDZM][NDYM][NDXM], DOSE2[NDZM][NDYM][NDXM], DOSEP[NDZM][NDYM][NDXM];
 	int LDOSE[NDZM][NDYM][NDXM], KDOSE;
 } hd_CDOSE1;
 
-typedef struct
-{
-	double *DDOSE, *DDOSE2, *DDOSEP;
-	int *LDDOSE;
-} CDOSE2;
+typedef struct {
+	double* DDOSE, * DDOSE2, * DDOSEP;
+	int* LDDOSE;
+}CDOSE2;
 
-typedef struct
-{
+typedef struct {
 	double DDOSE[NDZM], DDOSE2[NDZM], DDOSEP[NDZM];
 	int LDDOSE[NDZM];
 } hd_CDOSE2;
 
-typedef struct
-{
-	double *DXL, *DXU, *BDOSE, *RBDOSE;
-	int *NDB;
-} CDOSE3;
+typedef struct {
+	double* DXL, * DXU, * BDOSE, * RBDOSE;
+	int* NDB;
+}CDOSE3;
 
-typedef struct
-{
+typedef struct {
 	double DXL[3], DXU[3], BDOSE[3], RBDOSE[3];
 	int NDB[3];
 } hd_CDOSE3;
 
-typedef struct
-{
-	double (*VMASS)[NDYM][NDXM];
-} CDOSE4;
+typedef struct {
+	double(*VMASS)[NDYM][NDXM];
+}CDOSE4;
 
-typedef struct
-{
+typedef struct {
 	double VMASS[NDZM][NDYM][NDXM];
 } hd_CDOSE4;
 
-typedef struct
-{
-	double *ELAST1, *ELAST2;
-	int *MHINGE, *KSOFTE, *KSOFTI, *KDELTA;
-} CJUMP1;
 
-typedef struct
-{
+typedef struct {
+	double* ELAST1, * ELAST2;
+	int* MHINGE, * KSOFTE, * KSOFTI, * KDELTA;
+}CJUMP1;
+
+typedef struct {
 	double ELAST1, ELAST2;
 	int MHINGE, KSOFTE, KSOFTI, KDELTA;
-} hd_CJUMP1;
+}hd_CJUMP1;
 
-typedef struct
-{
-	double *ES, *XS, *YS, *ZS, *US, *VS, *WS, *WGHTS, *SP1S, *SP2S, *SP3S, *PAGES;
-	int *KS, *IBODYS, *MS, (*ILBS)[5], *IPOLS, *NSEC;
-} SECST;
+typedef struct {
+	double* ES, * XS, * YS, * ZS, * US, * VS, * WS, * WGHTS, * SP1S, * SP2S, * SP3S, * PAGES;
+	int* KS, * IBODYS, * MS, (*ILBS)[5], * IPOLS, * NSEC;
+}SECST;
 
-typedef struct
-{
-	double ES[NMS], XS[NMS], YS[NMS], ZS[NMS], US[NMS], VS[NMS], WS[NMS], WGHTS[NMS], SP1S[NMS], SP2S[NMS], SP3S[NMS], PAGES[NMS];
-	int KS[NMS], IBODYS[NMS], MS[NMS], ILBS[NMS][5], IPOLS[NMS], NSEC;
-} hd_SECST;
+typedef struct {
+	double ES[NMS],  XS[NMS],  YS[NMS],  ZS[NMS],  US[NMS],  VS[NMS],  WS[NMS],  WGHTS[NMS],  SP1S[NMS],  SP2S[NMS],  SP3S[NMS],  PAGES[NMS];
+	int KS[NMS],  IBODYS[NMS],  MS[NMS], ILBS[NMS][5],  IPOLS[NMS],  NSEC;
+}hd_SECST;
 
-typedef struct
-{
-	double *P, *ST, *DST, *DSR, *W1, *W2, *T1, *T2;
-} CJUMP0;
+typedef struct {
+	double* P, * ST, * DST, * DSR, * W1, * W2, * T1, * T2;
+}CJUMP0;
 
-typedef struct
-{
+typedef struct {
 	double P[8], ST, DST, DSR, W1, W2, T1, T2;
-} hd_CJUMP0;
+}hd_CJUMP0;
 
-typedef struct
-{
-	int *ILBA;
-} CHIST;
+typedef struct {
+	int* ILBA;
+}CHIST;
 
-typedef struct
-{
+typedef struct {
 	int ILBA[pilhaPart][5];
 } hd_CHIST;
 
-typedef struct
-{
-	int nFINISH, nPRITRACK, nSECTRACK_E, nSECTRACK_G, nSECTRACK_P;
+typedef struct{
+	int nPRITRACK, nSECTRACK_E, nSECTRACK_G, nSECTRACK_P;
 } hd_nTRACKS;
-
-typedef struct
-{
-	int IEXIT, KEn, IBODYL, NCROSS, IDET, MATL, ICOL, LEFT;
-	double DSEF, DS, DSMAX, DEP, XL, YL, ZL, DECSD, DSEFR, XD, YD, ZD, DE, WS, US, VS, SDTS, DF;
-	bool LINTF, CROSS;
-} hd_wSHOWERS;
 
 PENELOPE_MOD PENELOPE_mod_;
 PENGEOM_MOD PENGEOM_mod_;
@@ -1139,16 +1010,15 @@ CJUMP0 CJUMP0_;
 CHIST CHIST_;
 hd_nTRACKS nTRACKS_;
 
-hd_TRACK_MOD *PRITRACK;
-hd_TRACK_MOD *SECTRACK_G;
+hd_TRACK_MOD *PRITRACK; 
+hd_TRACK_MOD *SECTRACK_G; 
 hd_TRACK_MOD *SECTRACK_E;
-hd_TRACK_MOD *SECTRACK_P;
+hd_TRACK_MOD *SECTRACK_P; 
 
 hd_TRACK_MOD *vTrack_Simular;
 
-__device__ hd_wSHOWERS dg_wSHOWERS_[pilhaPart];
 
-// DECLARACOES PARA COPIA NA GPU
+//DECLARACOES PARA COPIA NA GPU
 __device__ hd_CEELDB dg_CEELDB_;
 hd_CEELDB *d_CEELDB;
 
@@ -1156,194 +1026,198 @@ __device__ hd_SECST dg_SECST_;
 hd_SECST *d_SECST;
 
 __device__ hd_PENGEOM_MOD dg_PENGEOM_mod_;
-hd_PENGEOM_MOD *d_PENGEOM_mod;
+hd_PENGEOM_MOD * d_PENGEOM_mod;
 
 __device__ hd_CGCONE dg_CGCONE_;
-hd_CGCONE *d_CGCONE;
+hd_CGCONE * d_CGCONE;
 
 __device__ hd_QSURF dg_QSURF_;
-hd_QSURF *d_QSURF;
+hd_QSURF* d_QSURF;
 
 __device__ hd_QTREE dg_QTREE_;
-hd_QTREE *d_QTREE;
+hd_QTREE* d_QTREE;
 
 __device__ hd_RSEED dg_RSEED_;
-hd_RSEED *d_RSEED;
+hd_RSEED* d_RSEED;
 
 __device__ hd_RSEED dg_RSEED2_[1000];
-hd_RSEED *d_RSEED2;
+hd_RSEED* d_RSEED2;
 hd_RSEED h_RSEED2_[1000];
 
 __device__ hd_CIMDET dg_CIMDET_;
-hd_CIMDET *d_CIMDET;
+hd_CIMDET* d_CIMDET;
 
 __device__ hd_CERSEC dg_CERSEC_;
-hd_CERSEC *d_CERSEC;
+hd_CERSEC* d_CERSEC;
 
 __device__ hd_CEGRID dg_CEGRID_;
-hd_CEGRID *d_CEGRID;
+hd_CEGRID* d_CEGRID;
 
 //__device__ hd_CJUMP1 dg_CJUMP1_;
 __device__ hd_CJUMP1 dg_CJUMP1_[pilhaPart];
-hd_CJUMP1 *d_CJUMP1;
+hd_CJUMP1* d_CJUMP1;
 
 __device__ hd_CEIMFP dg_CEIMFP_;
-hd_CEIMFP *d_CEIMFP;
+hd_CEIMFP* d_CEIMFP;
 
 __device__ hd_CPIMFP dg_CPIMFP_;
-hd_CPIMFP *d_CPIMFP;
+hd_CPIMFP* d_CPIMFP;
 
 //__device__ hd_CJUMP0 dg_CJUMP0_;
 __device__ hd_CJUMP0 dg_CJUMP0_[pilhaPart];
-hd_CJUMP0 *d_CJUMP0;
+hd_CJUMP0* d_CJUMP0;
 
 __device__ hd_CGIMFP dg_CGIMFP_;
-hd_CGIMFP *d_CGIMFP;
+hd_CGIMFP* d_CGIMFP;
 
 __device__ hd_CHIST dg_CHIST_;
-hd_CHIST *d_CHIST;
+hd_CHIST* d_CHIST;
 
 __device__ hd_COMPOS dg_COMPOS_;
-hd_COMPOS *d_COMPOS;
+hd_COMPOS* d_COMPOS;
 
 __device__ hd_CADATA dg_CADATA_;
-hd_CADATA *d_CADATA;
+hd_CADATA* d_CADATA;
 
 __device__ hd_CEIN dg_CEIN_;
-hd_CEIN *d_CEIN;
+hd_CEIN* d_CEIN;
 
 __device__ hd_CGCO dg_CGCO_;
-hd_CGCO *d_CGCO;
+hd_CGCO* d_CGCO;
 
 __device__ hd_CEBR dg_CEBR_;
-hd_CEBR *d_CEBR;
+hd_CEBR* d_CEBR;
 
 __device__ hd_CELSEP dg_CELSEP_;
-hd_CELSEP *d_CELSEP;
+hd_CELSEP* d_CELSEP;
 
 __device__ hd_CECUTR dg_CECUTR_;
-hd_CECUTR *d_CECUTR;
+hd_CECUTR* d_CECUTR;
 
 __device__ hd_CESIAC dg_CESIAC_;
-hd_CESIAC *d_CESIAC;
+hd_CESIAC* d_CESIAC;
 
 __device__ hd_CEINAC dg_CEINAC_;
-hd_CEINAC *d_CEINAC;
+hd_CEINAC* d_CEINAC;
 
 __device__ hd_CBRANG dg_CBRANG_;
-hd_CBRANG *d_CBRANG;
+hd_CBRANG* d_CBRANG;
 
 __device__ hd_CRELAX dg_CRELAX_;
-hd_CRELAX *d_CRELAX;
+hd_CRELAX* d_CRELAX;
 
 __device__ hd_CGRA01 dg_CGRA01_;
-hd_CGRA01 *d_CGRA01;
+hd_CGRA01* d_CGRA01;
 
 __device__ hd_CGRA03 dg_CGRA03_;
-hd_CGRA03 *d_CGRA03;
+hd_CGRA03* d_CGRA03;
 
 __device__ hd_CGPH00 dg_CGPH00_;
-hd_CGPH00 *d_CGPH00;
+hd_CGPH00* d_CGPH00;
 
 __device__ hd_CGPP00 dg_CGPP00_;
-hd_CGPP00 *d_CGPP00;
+hd_CGPP00* d_CGPP00;
 
 __device__ hd_CGPP01 dg_CGPP01_;
-hd_CGPP01 *d_CGPP01;
+hd_CGPP01* d_CGPP01;
 
 __device__ hd_CPELDB dg_CPELDB_;
-hd_CPELDB *d_CPELDB;
+hd_CPELDB* d_CPELDB;
 
 __device__ hd_CPSIAC dg_CPSIAC_;
-hd_CPSIAC *d_CPSIAC;
+hd_CPSIAC* d_CPSIAC;
 
 __device__ hd_CPINAC dg_CPINAC_;
-hd_CPINAC *d_CPINAC;
+hd_CPINAC* d_CPINAC;
 
 __device__ hd_CENANG dg_CENANG_;
-hd_CENANG *d_CENANG;
+hd_CENANG* d_CENANG;
 
 __device__ hd_CENDET dg_CENDET_;
-hd_CENDET *d_CENDET;
+hd_CENDET* d_CENDET;
 
 __device__ hd_PENELOPE_MOD dg_PENELOPE_mod_;
-hd_PENELOPE_MOD *d_PENELOPE_mod;
+hd_PENELOPE_MOD* d_PENELOPE_mod;
 
 /*__device__ hd_TRACK_MOD dg_TRACK_mod_;
 hd_TRACK_MOD* d_TRACK_mod;*/
 
 __device__ hd_TRACK_MOD dg_TRACK_mod_[pilhaPart];
 //__device__ hd_TRACK_MOD *dg_TRACK_mod_;
-hd_TRACK_MOD *d_TRACK_mod;
+hd_TRACK_MOD* d_TRACK_mod;
 
 __device__ hd_QBODY dg_QBODY_;
-hd_QBODY *d_QBODY;
+hd_QBODY* d_QBODY;
 
 __device__ hd_CDOSE1 dg_CDOSE1_;
-hd_CDOSE1 *d_CDOSE1;
+hd_CDOSE1* d_CDOSE1;
 
 __device__ hd_CDOSE2 dg_CDOSE2_;
-hd_CDOSE2 *d_CDOSE2;
+hd_CDOSE2* d_CDOSE2;
 
 __device__ hd_CDOSE3 dg_CDOSE3_;
-hd_CDOSE3 *d_CDOSE3;
+hd_CDOSE3* d_CDOSE3;
 
 __device__ hd_CDOSE4 dg_CDOSE4_;
-hd_CDOSE4 *d_CDOSE4;
+hd_CDOSE4* d_CDOSE4;
 
 __device__ hd_CRNDG3 dg_CRNDG3_;
-hd_CRNDG3 *d_CRNDG3;
+hd_CRNDG3* d_CRNDG3;
 
 __device__ hd_CNT0 dg_CNT0_;
-hd_CNT0 *d_CNT0;
+hd_CNT0* d_CNT0;
 hd_CNT0 h_CNT0_;
 
 __device__ hd_CNT1 dg_CNT1_;
-hd_CNT1 *d_CNT1;
+hd_CNT1* d_CNT1;
 hd_CNT1 h_CNT1_;
 
 __device__ hd_CNT3 dg_CNT3_;
-hd_CNT3 *d_CNT3;
+hd_CNT3* d_CNT3;
 hd_CNT3 h_CNT3_;
 
 __device__ hd_CNT4 dg_CNT4_;
-hd_CNT4 *d_CNT4;
+hd_CNT4* d_CNT4;
 
 __device__ hd_CNT5 dg_CNT5_;
-hd_CNT5 *d_CNT5;
+hd_CNT5* d_CNT5;
 
 __device__ hd_CNT6 dg_CNT6_;
-hd_CNT6 *d_CNT6;
+hd_CNT6* d_CNT6;
 
 __device__ hd_CNTRL dg_CNTRL_;
-hd_CNTRL *d_CNTRL;
+hd_CNTRL* d_CNTRL;
 
 __device__ hd_CXRSPL dg_CXRSPL_;
-hd_CXRSPL *d_CXRSPL;
+hd_CXRSPL* d_CXRSPL;
 
 __device__ hd_CSPGEO dg_CSPGEO_;
-hd_CSPGEO *d_CSPGEO;
+hd_CSPGEO* d_CSPGEO;
 
 __device__ hd_TRACK_MOD dg_PRITRACK_[pilhaPart];
-hd_TRACK_MOD *d_PRITRACK;
+hd_TRACK_MOD* d_PRITRACK;
 
 __device__ hd_TRACK_MOD dg_SECTRACK_G_[pilhaPart];
-hd_TRACK_MOD *d_SECTRACK_G;
+hd_TRACK_MOD* d_SECTRACK_G;
 
-__device__ hd_TRACK_MOD dg_SECTRACK_E_[pilhaPart * 100];
-hd_TRACK_MOD *d_SECTRACK_E;
+__device__ hd_TRACK_MOD dg_SECTRACK_E_[pilhaPart*100];
+hd_TRACK_MOD* d_SECTRACK_E;
 
 __device__ hd_TRACK_MOD dg_SECTRACK_P_[pilhaPart];
-hd_TRACK_MOD *d_SECTRACK_P;
+hd_TRACK_MOD* d_SECTRACK_P;
 
 __device__ hd_nTRACKS dg_nTRACKS_;
-hd_nTRACKS *d_nTRACKS;
+hd_nTRACKS* d_nTRACKS;
 
 __device__ int size;
-int *d_size;
+int * d_size;
 
-__device__ double d_S[pilhaPart][NS2M/100];
-__device__ int d_IS[pilhaPart][NS2M/100];
+//__device__ double d_S[NS2M];
+//__device__ int d_IS[NS2M];
 __device__ int d_wIPOLI = 0;
 
-__device__ int d_contStores = 0;
+
+
+
+
+

@@ -1,0 +1,5 @@
+27/05/2022
+- Reestruturacao 
+
+26/05/2022
+- Reestruturação dos structs HD_CNT1, HD_CNT3, HD_CNT5, HD_QTREE
