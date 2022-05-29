@@ -89,10 +89,19 @@ typedef struct {
 } TRACK_MOD;
 
 typedef struct {
-	double E, X, Y, Z, U, V, W, WGHT, SP1, SP2, SP3, PAGE;
-	int KPAR, IBODY, MAT, ILB[5], IPOL, INDEX, N;
-	bool LAGE;
+	double E[pilhaPart], X[pilhaPart], Y[pilhaPart], Z[pilhaPart], U[pilhaPart], V[pilhaPart], W[pilhaPart], WGHT[pilhaPart], SP1[pilhaPart], SP2[pilhaPart], SP3[pilhaPart], PAGE[pilhaPart];
+	int KPAR[pilhaPart], IBODY[pilhaPart], MAT[pilhaPart], ILB[5][pilhaPart], IPOL[pilhaPart], INDEX[pilhaPart], N[pilhaPart];
+	bool LAGE[pilhaPart];
 } hd_TRACK_MOD;
+
+static const int sec = 100;
+
+typedef struct {
+	double E[pilhaPart*sec], X[pilhaPart*sec], Y[pilhaPart*sec], Z[pilhaPart*sec], U[pilhaPart*sec], V[pilhaPart*sec], W[pilhaPart*sec], WGHT[pilhaPart*sec], SP1[pilhaPart*sec], SP2[pilhaPart*sec], SP3[pilhaPart*sec], PAGE[pilhaPart*sec];
+	int KPAR[pilhaPart*sec], IBODY[pilhaPart*sec], MAT[pilhaPart*sec], ILB[5][pilhaPart*sec], IPOL[pilhaPart*sec], INDEX[pilhaPart*sec], N[pilhaPart*sec];
+	bool LAGE[pilhaPart*sec];
+} hd_TRACK_MOD_SEC;
+
 
 typedef struct {
 	double(*EABS)[3], * C1, * C2, * WCC, * WCR, * DEN, * RDEN, * E0STEP, * DESOFT, * SSOFT;
@@ -1010,12 +1019,19 @@ CJUMP0 CJUMP0_;
 CHIST CHIST_;
 hd_nTRACKS nTRACKS_;
 
-hd_TRACK_MOD *PRITRACK; 
-hd_TRACK_MOD *SECTRACK_G; 
-hd_TRACK_MOD *SECTRACK_E;
-hd_TRACK_MOD *SECTRACK_P; 
+/*hd_TRACK_MOD *PRITRACK; 
+hd_TRACK_MOD_SEC *SECTRACK_G; 
+hd_TRACK_MOD_SEC *SECTRACK_E;
+hd_TRACK_MOD_SEC *SECTRACK_P; 
 
-hd_TRACK_MOD *vTrack_Simular;
+hd_TRACK_MOD_SEC *vTrack_Simular;*/
+
+hd_TRACK_MOD PRITRACK; 
+hd_TRACK_MOD_SEC SECTRACK_G; 
+hd_TRACK_MOD_SEC SECTRACK_E;
+hd_TRACK_MOD_SEC SECTRACK_P; 
+
+hd_TRACK_MOD vTrack_Simular;
 
 
 //DECLARACOES PARA COPIA NA GPU
@@ -1142,7 +1158,7 @@ hd_PENELOPE_MOD* d_PENELOPE_mod;
 /*__device__ hd_TRACK_MOD dg_TRACK_mod_;
 hd_TRACK_MOD* d_TRACK_mod;*/
 
-__device__ hd_TRACK_MOD dg_TRACK_mod_[pilhaPart];
+__device__ hd_TRACK_MOD dg_TRACK_mod_;
 //__device__ hd_TRACK_MOD *dg_TRACK_mod_;
 hd_TRACK_MOD* d_TRACK_mod;
 
@@ -1194,17 +1210,17 @@ hd_CXRSPL* d_CXRSPL;
 __device__ hd_CSPGEO dg_CSPGEO_;
 hd_CSPGEO* d_CSPGEO;
 
-__device__ hd_TRACK_MOD dg_PRITRACK_[pilhaPart];
+__device__ hd_TRACK_MOD dg_PRITRACK_;
 hd_TRACK_MOD* d_PRITRACK;
 
-__device__ hd_TRACK_MOD dg_SECTRACK_G_[pilhaPart];
-hd_TRACK_MOD* d_SECTRACK_G;
+__device__ hd_TRACK_MOD_SEC dg_SECTRACK_G_;
+hd_TRACK_MOD_SEC *d_SECTRACK_G;
 
-__device__ hd_TRACK_MOD dg_SECTRACK_E_[pilhaPart*100];
-hd_TRACK_MOD* d_SECTRACK_E;
+__device__ hd_TRACK_MOD_SEC dg_SECTRACK_E_;
+hd_TRACK_MOD_SEC *d_SECTRACK_E;
 
-__device__ hd_TRACK_MOD dg_SECTRACK_P_[pilhaPart];
-hd_TRACK_MOD* d_SECTRACK_P;
+__device__ hd_TRACK_MOD_SEC dg_SECTRACK_P_;
+hd_TRACK_MOD_SEC *d_SECTRACK_P;
 
 __device__ hd_nTRACKS dg_nTRACKS_;
 hd_nTRACKS* d_nTRACKS;

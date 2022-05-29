@@ -564,9 +564,9 @@ extern "C" {
 
 
 
-	void quickSort(hd_TRACK_MOD arr[], int start, int end);
+	//void quickSort(hd_TRACK_MOD arr[], int start, int end);
 
-	int partition(hd_TRACK_MOD arr[], int start, int end);
+	//int partition(hd_TRACK_MOD arr[], int start, int end);
 
 
 
@@ -18267,7 +18267,6 @@ void shower2_() {
 			K = int(RN); //Espectro contínuo. E amostrado pelo método de Walker.
 			RNF = RN - K;
 			if (RNF > CSOUR2_.FSRC[K - 1]) {
-
 				KEn = CSOUR2_.IASRC[K - 1];
 
 			}
@@ -18471,6 +18470,7 @@ L103:;
 			}
 			else {
 				IEXIT = 2; //Rotula partículas descendentes emergentes.
+				printf("Down index ibody %d KPAR: %d ILB[0] %d A particula cruzou fronteira e esta fora do recinto\n\n", *TRACK_mod_.IBODY, *TRACK_mod_.KPAR, TRACK_mod_.ILB[1-1]);
 			}
 			goto L104; //Saida
 		}
@@ -26303,7 +26303,7 @@ void transfCPU_to_GPU(){
 	//CJUMP1
 	
    // gpuErrchk(cudaMemcpy(d_CJUMP1, CJUMP1_, sizeof(hd_CJUMP1)*pilhaPart, cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpyToSymbol(dg_CJUMP1_, d_CJUMP1, sizeof(hd_CJUMP1)));
+    //gpuErrchk(cudaMemcpyToSymbol(dg_CJUMP1_, d_CJUMP1, sizeof(hd_CJUMP1)));
 
 	//CEIMFP
 	
@@ -26364,7 +26364,7 @@ void transfCPU_to_GPU(){
 	//CJUMP0
 	
    // gpuErrchk(cudaMemcpy(d_CJUMP1, CJUMP1_, sizeof(hd_CJUMP1)*pilhaPart, cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpyToSymbol(dg_CJUMP0_, d_CJUMP0, sizeof(hd_CJUMP0)));
+    //gpuErrchk(cudaMemcpyToSymbol(dg_CJUMP0_, d_CJUMP0, sizeof(hd_CJUMP0)));
 
 	//CGIMFP
 	
@@ -26961,7 +26961,7 @@ void transfGPU_to_CPU(){
 	gpuErrchk(cudaMemcpy(CJUMP1_.KDELTA,&d_CJUMP1->KDELTA, sizeof(int), cudaMemcpyDeviceToHost));*/
 
 	//CJUMP1
-	gpuErrchk(cudaMemcpyFromSymbol(d_CJUMP1, dg_CJUMP1_, sizeof(hd_CJUMP1)));
+	//gpuErrchk(cudaMemcpyFromSymbol(d_CJUMP1, dg_CJUMP1_, sizeof(hd_CJUMP1)));
 	//gpuErrchk(cudaMemcpy(CJUMP1_, d_CJUMP1,  sizeof(hd_CJUMP1)*pilhaPart, cudaMemcpyDeviceToHost));
 
 	//CEIMFP
@@ -27018,7 +27018,7 @@ void transfGPU_to_CPU(){
 	gpuErrchk(cudaMemcpy(CJUMP0_.T2,&d_CJUMP0->T2, sizeof(double), cudaMemcpyDeviceToHost));*/
 
 	//CJUMP0
-	gpuErrchk(cudaMemcpyFromSymbol(d_CJUMP0, dg_CJUMP0_, sizeof(hd_CJUMP0)));
+//	gpuErrchk(cudaMemcpyFromSymbol(d_CJUMP0, dg_CJUMP0_, sizeof(hd_CJUMP0)));
 	//gpuErrchk(cudaMemcpy(CJUMP0_, d_CJUMP0,  sizeof(hd_CJUMP0)*pilhaPart, cudaMemcpyDeviceToHost));
 
 
@@ -27405,10 +27405,10 @@ void memoryAllocGPU(){
     gpuErrchk(cudaMalloc((void **)&d_CIMDET, sizeof(hd_CIMDET)));
     gpuErrchk(cudaMalloc((void **)&d_CERSEC, sizeof(hd_CERSEC)));
     gpuErrchk(cudaMalloc((void **)&d_CEGRID, sizeof(hd_CEGRID)));
-	gpuErrchk(cudaMalloc((void **)&d_CJUMP1, sizeof(hd_CJUMP1)));
+	//gpuErrchk(cudaMalloc((void **)&d_CJUMP1, sizeof(hd_CJUMP1)));
 	gpuErrchk(cudaMalloc((void **)&d_CEIMFP, sizeof(hd_CEIMFP)));
 	gpuErrchk(cudaMalloc((void **)&d_CPIMFP, sizeof(hd_CPIMFP)));
-	gpuErrchk(cudaMalloc((void **)&d_CJUMP0, sizeof(hd_CJUMP0)));
+	//gpuErrchk(cudaMalloc((void **)&d_CJUMP0, sizeof(hd_CJUMP0)));
 	gpuErrchk(cudaMalloc((void **)&d_CGIMFP, sizeof(hd_CGIMFP)));
 	gpuErrchk(cudaMalloc((void **)&d_CHIST, sizeof(hd_CHIST)));
 	gpuErrchk(cudaMalloc((void **)&d_COMPOS, sizeof(hd_COMPOS)));
@@ -27449,17 +27449,17 @@ void memoryAllocGPU(){
 	gpuErrchk(cudaMalloc((void **)&d_CSPGEO, sizeof(hd_CSPGEO)));
 	gpuErrchk(cudaMalloc((void **)&d_CXRSPL, sizeof(hd_CXRSPL)));
 
-	gpuErrchk(cudaMalloc((void **)&d_SECTRACK_G, sizeof(hd_TRACK_MOD)*pilhaSec));
-	gpuErrchk(cudaMalloc((void **)&d_SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart*100));
-	gpuErrchk(cudaMalloc((void **)&d_SECTRACK_P, sizeof(hd_TRACK_MOD)*pilhaSec));
+	gpuErrchk(cudaMalloc((void **)&d_SECTRACK_G, sizeof(hd_TRACK_MOD_SEC)));
+	gpuErrchk(cudaMalloc((void **)&d_SECTRACK_E, sizeof(hd_TRACK_MOD_SEC)));
+	gpuErrchk(cudaMalloc((void **)&d_SECTRACK_P, sizeof(hd_TRACK_MOD_SEC)));
 	gpuErrchk(cudaMalloc((void **)&d_nTRACKS, sizeof(hd_nTRACKS)));
 
 
-	PRITRACK =  (hd_TRACK_MOD*)malloc(pilhaPart * sizeof(hd_TRACK_MOD)); //vetor de particulas primarias
-	SECTRACK_G = (hd_TRACK_MOD*)malloc(pilhaPart * sizeof(hd_TRACK_MOD)); //vetor de particulas secundarias de fotons
-	SECTRACK_E = (hd_TRACK_MOD*)malloc(100 * pilhaPart * sizeof(hd_TRACK_MOD)); //vetor de particulas secudarias de eletrons
-	SECTRACK_P = (hd_TRACK_MOD*)malloc(pilhaPart * sizeof(hd_TRACK_MOD)); //vetor de particulas secundarias de protons
-	vTrack_Simular = (hd_TRACK_MOD*)malloc(pilhaPart * sizeof(hd_TRACK_MOD));
+	//PRITRACK =  (hd_TRACK_MOD*)malloc(sizeof(hd_TRACK_MOD)); //vetor de particulas primarias
+//	SECTRACK_G = (hd_TRACK_MOD_SEC*)malloc(sizeof(hd_TRACK_MOD_SEC)); //vetor de particulas secundarias de fotons
+	//SECTRACK_E = (hd_TRACK_MOD_SEC*)malloc(sizeof(hd_TRACK_MOD_SEC)); //vetor de particulas secudarias de eletrons
+	//SECTRACK_P = (hd_TRACK_MOD_SEC*)malloc(sizeof(hd_TRACK_MOD_SEC)); //vetor de particulas secundarias de protons
+	//vTrack_Simular = (hd_TRACK_MOD_SEC*)malloc(sizeof(hd_TRACK_MOD_SEC));
 
 /*	h_CNT0_ =  (hd_CNT0*)malloc(sizeof(hd_CNT0)); //contador de resulatdos 0
 	h_CNT1_ =  (hd_CNT1*)malloc(sizeof(hd_CNT1)); //contador de resulatdos 1
@@ -27788,7 +27788,7 @@ void iniPRITRACK() {
 			*CNTRL_.SHN = *CNTRL_.SHN + 1.0e0;
 			*CNTRL_.N = *CNTRL_.N + 1;
 			//h_N++;
-			PRITRACK[I].N = *CNTRL_.N;
+			PRITRACK.N[I] = *CNTRL_.N;
 
 			//h_vetN[I] = h_N;
 
@@ -27798,51 +27798,61 @@ void iniPRITRACK() {
 			/*if (h_N > 2000000000)
 				h_N = h_N - 2000000000;*/
 
-			PRITRACK[I].KPAR = *CSOUR0_.KPARP;
-			PRITRACK[I].WGHT = 1.0e0;
+			PRITRACK.KPAR[I] = *CSOUR0_.KPARP;
+			PRITRACK.WGHT[I] = 1.0e0;
 
 			//Posição inicial da particula
 			if (*CSOUR3_.LEXSRC) {
 				if (*CSOUR3_.LEXBD) {
 					NTRIAL = 0;
 				L301:;
-					PRITRACK[I].X = *CSOUR3_.SX0 + (rand2_(1.0e0) - 0.5e0) * *CSOUR3_.SSX;
-					PRITRACK[I].Y = *CSOUR3_.SY0 + (rand2_(2.0e0) - 0.5e0) * *CSOUR3_.SSY;
-					PRITRACK[I].Z = *CSOUR3_.SZ0 + (rand2_(3.0e0) - 0.5e0) * *CSOUR3_.SSZ;
-					locate2_();
+					PRITRACK.X[I] = *CSOUR3_.SX0 + (rand2_(1.0e0) - 0.5e0) * *CSOUR3_.SSX;
+					PRITRACK.Y[I] = *CSOUR3_.SY0 + (rand2_(2.0e0) - 0.5e0) * *CSOUR3_.SSY;
+					PRITRACK.Z[I] = *CSOUR3_.SZ0 + (rand2_(3.0e0) - 0.5e0) * *CSOUR3_.SSZ;
+
+					locate2_();//Implementar um para o tipo de particula diferente
+					
+
 					NTRIAL = NTRIAL + 1;
 					if (NTRIAL > 200) {
 						printf("   WARNING: the sampling of initial positions may be very inefficient.");
 						//imrpimir em um arquivo tbm
 					}
 
-					if (CSOUR3_.IXSBOD[PRITRACK[I].IBODY - 1] == 0)
+					if (CSOUR3_.IXSBOD[PRITRACK.IBODY[I] - 1] == 0)
 						goto L301;
 				}
 				else {
-					PRITRACK[I].X = *CSOUR3_.SX0 + (rand2_(1.0e0) - 0.5e0) * *CSOUR3_.SSX;
-					PRITRACK[I].Y = *CSOUR3_.SY0 + (rand2_(2.0e0) - 0.5e0) * *CSOUR3_.SSY;
-					PRITRACK[I].Z = *CSOUR3_.SZ0 + (rand2_(3.0e0) - 0.5e0) * *CSOUR3_.SSZ;
+					PRITRACK.X[I] = *CSOUR3_.SX0 + (rand2_(1.0e0) - 0.5e0) * *CSOUR3_.SSX;
+					PRITRACK.Y[I] = *CSOUR3_.SY0 + (rand2_(2.0e0) - 0.5e0) * *CSOUR3_.SSY;
+					PRITRACK.Z[I] = *CSOUR3_.SZ0 + (rand2_(3.0e0) - 0.5e0) * *CSOUR3_.SSZ;
 				}
 			}
 			else {
-				PRITRACK[I].X = *CSOUR3_.SX0;
-				PRITRACK[I].Y = *CSOUR3_.SY0;
-				PRITRACK[I].Z = *CSOUR3_.SZ0;
+				PRITRACK.X[I] = *CSOUR3_.SX0;
+				PRITRACK.Y[I] = *CSOUR3_.SY0;
+				PRITRACK.Z[I]  = *CSOUR3_.SZ0;
 			}
+
+			PRITRACK.MAT[I] = 0;
+			PRITRACK.IBODY[I] = *QTREE_.NBODYS + 1;
+
+
+
 
 			//Direção Inicial
 			if (*CSOUR0_.LSCONE) {
-				gcone2_(PRITRACK[I].U, PRITRACK[I].V, PRITRACK[I].W); //Feixe Conico
 
+			
+				gcone2_(PRITRACK.U[I], PRITRACK.V[I], PRITRACK.W[I]); //Feixe Conico
 			}
 			else { //Feixe Retangular
 
-				PRITRACK[I].W = *CSOUR0_.CTHL + rand2_(4.0e0) * *CSOUR0_.DCTH;
-				UV = sqrt(1.0e0 - PRITRACK[I].W * PRITRACK[I].W);
+				PRITRACK.W[I] = *CSOUR0_.CTHL + rand2_(4.0e0) * *CSOUR0_.DCTH;
+				UV = sqrt(1.0e0 - PRITRACK.W[I] * PRITRACK.W[I]);
 				PHI = *CSOUR0_.PHIL + rand2_(5.0e0) * *CSOUR0_.DPHI;
-				PRITRACK[I].U = UV * cos(PHI);
-				PRITRACK[I].V = UV * sin(PHI);
+				PRITRACK.U[I] = UV * cos(PHI);
+				PRITRACK.V[I] = UV * sin(PHI);
 			}
 			//Energia Inicial
 			if (*CSOUR2_.LSPEC) {
@@ -27857,33 +27867,33 @@ void iniPRITRACK() {
 				else {
 					KEn = K;
 				}
-				PRITRACK[I].E = CSOUR2_.ESRC[KEn - 1] + rand2_(7.0e0) * (CSOUR2_.ESRC[KEn + 1 - 1] - CSOUR2_.ESRC[KEn - 1]);
+				PRITRACK.E[I] = CSOUR2_.ESRC[KEn - 1] + rand2_(7.0e0) * (CSOUR2_.ESRC[KEn + 1 - 1] - CSOUR2_.ESRC[KEn - 1]);
 				CNT2_.SHIST[KEn - 1] = CNT2_.SHIST[KEn - 1] + 1.0e0;
 			}
 			else {
-				PRITRACK[I].E = *CSOUR1_.E0; //Fonte MonoEnergetica.
+				PRITRACK.E[I] = *CSOUR1_.E0; //Fonte MonoEnergetica.
 				CNT2_.SHIST[1 - 1] = CNT2_.SHIST[1 - 1] + 1.0e0;
 			}
 
-			PRITRACK[I].ILB[1 - 1] = 1;  //Identifica partículas primárias.
-			PRITRACK[I].ILB[2 - 1] = 0;
-			PRITRACK[I].ILB[3 - 1] = 0;
-			PRITRACK[I].ILB[4 - 1] = 0;
-			PRITRACK[I].ILB[5 - 1] = 0;
+			PRITRACK.ILB[1 - 1][I] = 1;  //Identifica partículas primárias.
+			PRITRACK.ILB[2 - 1][I] = 0;
+			PRITRACK.ILB[3 - 1][I] = 0;
+			PRITRACK.ILB[4 - 1][I] = 0;
+			PRITRACK.ILB[5 - 1][I] = 0;
 
-			if (PRITRACK[I].KPAR == 2) {
+			if (PRITRACK.KPAR[I] == 2) {
 				if (*CSOUR0_.LGPOL) {
-					PRITRACK[I].IPOL = 1;  //Polarizacao de Fotons
-					PRITRACK[I].SP1 = *CSOUR1_.SP10;
-					PRITRACK[I].SP2 = *CSOUR1_.SP20;
-					PRITRACK[I].SP3 = *CSOUR1_.SP30;
+					PRITRACK.IPOL[I] = 1;  //Polarizacao de Fotons
+					PRITRACK.SP1[I] = *CSOUR1_.SP10;
+					PRITRACK.SP2[I] = *CSOUR1_.SP20;
+					PRITRACK.SP3[I] = *CSOUR1_.SP30;
 				}
 				else {
-					PRITRACK[I].IPOL = 0;
+					PRITRACK.IPOL[I] = 0;
 				}
 			}
 			else {
-				PRITRACK[I].IPOL = 0;
+				PRITRACK.IPOL[I] = 0;
 			}
 		}
 		transfCNTRL_CPU_to_GPU();
@@ -27908,18 +27918,18 @@ void transfSecTracksCPU_to_GPU(){
 
 	//SECTRACK_G
 
-    gpuErrchk(cudaMemcpy(d_SECTRACK_G, SECTRACK_G, sizeof(hd_TRACK_MOD)*pilhaPart, cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpyToSymbol(dg_SECTRACK_G_, d_SECTRACK_G, sizeof(hd_TRACK_MOD)*pilhaPart));
+    gpuErrchk(cudaMemcpy(d_SECTRACK_G, &SECTRACK_G, sizeof(hd_TRACK_MOD_SEC), cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpyToSymbol(dg_SECTRACK_G_, d_SECTRACK_G, sizeof(hd_TRACK_MOD_SEC)));
 
 	//SECTRACK_E
 	
-    gpuErrchk(cudaMemcpy(d_SECTRACK_E, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart*100, cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpyToSymbol(dg_SECTRACK_E_, d_SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart*100));
+    gpuErrchk(cudaMemcpy(d_SECTRACK_E, &SECTRACK_E, sizeof(hd_TRACK_MOD_SEC), cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpyToSymbol(dg_SECTRACK_E_, d_SECTRACK_E, sizeof(hd_TRACK_MOD_SEC)));
 
 	//SECTRACK_P
 	
-    gpuErrchk(cudaMemcpy(d_SECTRACK_P, SECTRACK_P, sizeof(hd_TRACK_MOD)*pilhaSec, cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpyToSymbol(dg_SECTRACK_P_, d_SECTRACK_P, sizeof(hd_TRACK_MOD)*pilhaSec));
+    gpuErrchk(cudaMemcpy(d_SECTRACK_P, &SECTRACK_P, sizeof(hd_TRACK_MOD_SEC), cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpyToSymbol(dg_SECTRACK_P_, d_SECTRACK_P, sizeof(hd_TRACK_MOD_SEC)));
 
 	//nTRACKS
 	
@@ -27944,16 +27954,16 @@ void transfSecTracksGPU_to_CPU(){
 	gpuErrchk(cudaMemcpy(PRITRACK, d_PRITRACK,  sizeof(hd_TRACK_MOD)*pilhaPart, cudaMemcpyDeviceToHost));*/
 	
 	//SECTRACK_G
-	gpuErrchk(cudaMemcpyFromSymbol(d_SECTRACK_G, dg_SECTRACK_G_, sizeof(hd_TRACK_MOD)*pilhaPart));
-	gpuErrchk(cudaMemcpy(SECTRACK_G, d_SECTRACK_G,  sizeof(hd_TRACK_MOD)*pilhaPart, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpyFromSymbol(d_SECTRACK_G, dg_SECTRACK_G_, sizeof(hd_TRACK_MOD_SEC)));
+	gpuErrchk(cudaMemcpy(&SECTRACK_G, d_SECTRACK_G,  sizeof(hd_TRACK_MOD_SEC), cudaMemcpyDeviceToHost));
 
 	//SECTRACK_E
-	gpuErrchk(cudaMemcpyFromSymbol(d_SECTRACK_E, dg_SECTRACK_E_, sizeof(hd_TRACK_MOD)*pilhaPart*100));
-	gpuErrchk(cudaMemcpy(SECTRACK_E, d_SECTRACK_E,  sizeof(hd_TRACK_MOD)*pilhaPart*100, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpyFromSymbol(d_SECTRACK_E, dg_SECTRACK_E_, sizeof(hd_TRACK_MOD_SEC)));
+	gpuErrchk(cudaMemcpy(&SECTRACK_E, d_SECTRACK_E,  sizeof(hd_TRACK_MOD_SEC), cudaMemcpyDeviceToHost));
 
 	//SECTRACK_P
-	gpuErrchk(cudaMemcpyFromSymbol(d_SECTRACK_P, dg_SECTRACK_P_, sizeof(hd_TRACK_MOD)*pilhaSec));
-	gpuErrchk(cudaMemcpy(SECTRACK_P, d_SECTRACK_P,  sizeof(hd_TRACK_MOD)*pilhaPart, cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpyFromSymbol(d_SECTRACK_P, dg_SECTRACK_P_, sizeof(hd_TRACK_MOD_SEC)));
+	gpuErrchk(cudaMemcpy(&SECTRACK_P, d_SECTRACK_P,  sizeof(hd_TRACK_MOD_SEC), cudaMemcpyDeviceToHost));
 
 	//nTRACKS
 	gpuErrchk(cudaMemcpyFromSymbol(d_nTRACKS, dg_nTRACKS_, sizeof(hd_nTRACKS)));
@@ -27983,7 +27993,7 @@ void simSecTrack_E(){
 
 		// memcpy(vTrack_Simular, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart);
 
-		gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, vTrack_Simular, sizeof(hd_TRACK_MOD) * pilhaPart, 0));
+		gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, &vTrack_Simular, sizeof(hd_TRACK_MOD), 0));
 
 		dim3 blockSec(blockSize);
 		dim3 gridSec(ceil(sizeTrack / blockSec.x)+1);
@@ -28030,7 +28040,7 @@ void simSecTrack_G(){
 
 	//	printf("tipo de particula[0]: ILB %d\n tipo de particula[1]: ILB %d\n", SECTRACK_G[0].ILB[0],  SECTRACK_G[1].ILB[0]);
 
-		gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, SECTRACK_G, sizeof(hd_TRACK_MOD) * pilhaPart, 0));
+		gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, &SECTRACK_G, sizeof(hd_TRACK_MOD), 0));
 
 		dim3 blockSec(blockSize);
 		dim3 gridSec(ceil(sizeTrack / blockSec.x)+1);
@@ -28071,7 +28081,7 @@ void simSecTrack_P(){
 
 		// memcpy(vTrack_Simular, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart);
 
-		gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, SECTRACK_P, sizeof(hd_TRACK_MOD) * pilhaPart, 0));
+		gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, &SECTRACK_P, sizeof(hd_TRACK_MOD), 0));
 
 		dim3 blockSec(blockSize);
 		dim3 gridSec(ceil(sizeTrack / blockSec.x)+1);
@@ -28095,18 +28105,57 @@ void simSecTrack_P(){
 
 }
 
-
-void cpyTracks_simular(int tipo, int tamPilha){
+void cpyTracks_simular(int tipo, int tamPilha)
+{
 	int J = 0;
-	if (tipo == 1){ //eletrons
-		for (int I = (nTRACKS_.nSECTRACK_E - 1); I >= (nTRACKS_.nSECTRACK_E - tamPilha); I--){
-			vTrack_Simular[J] = SECTRACK_E[I];
+	if (tipo == 1)
+	{ // eletrons
+		for (int I = (nTRACKS_.nSECTRACK_E - 1); I >= (nTRACKS_.nSECTRACK_E - tamPilha); I--)
+		{
+			vTrack_Simular.E[J] = SECTRACK_E.E[I];
+			vTrack_Simular.X[J] = SECTRACK_E.X[I];
+			vTrack_Simular.Y[J] = SECTRACK_E.Y[I];
+			vTrack_Simular.Z[J] = SECTRACK_E.Z[I];
+			vTrack_Simular.U[J] = SECTRACK_E.U[I];
+			vTrack_Simular.V[J] = SECTRACK_E.V[I];
+			vTrack_Simular.W[J] = SECTRACK_E.W[I];
+			vTrack_Simular.WGHT[J] = SECTRACK_E.WGHT[I];
+			vTrack_Simular.KPAR[J] = SECTRACK_E.KPAR[I];
+			vTrack_Simular.IBODY[J] = SECTRACK_E.IBODY[I];
+			vTrack_Simular.MAT[J] = SECTRACK_E.MAT[I];
+
+			vTrack_Simular.ILB[1 - 1][J] = SECTRACK_E.ILB[1 - 1][I];
+			vTrack_Simular.ILB[2 - 1][J] = SECTRACK_E.ILB[2 - 1][I];
+			vTrack_Simular.ILB[3 - 1][J] = SECTRACK_E.ILB[3 - 1][I];
+			vTrack_Simular.ILB[4 - 1][J] = SECTRACK_E.ILB[4 - 1][I];
+			vTrack_Simular.ILB[5 - 1][J] = SECTRACK_E.ILB[5 - 1][I];
+
+			vTrack_Simular.N[J] = SECTRACK_E.N[I];
+			vTrack_Simular.INDEX[J] = SECTRACK_E.INDEX[I];
+			//vTrack_Simular.IEXIT[J] = SECTRACK_E.IEXIT[I];
+			//vTrack_Simular.STEP[J] = SECTRACK_E.STEP[I];
+
+			if (wIPOLI == 1)
+			{
+				vTrack_Simular.SP1[J] = SECTRACK_E.SP1[I];
+				vTrack_Simular.SP2[J] = SECTRACK_E.SP2[I];
+				vTrack_Simular.SP3[J] = SECTRACK_E.SP3[I];
+				vTrack_Simular.IPOL[J] = SECTRACK_E.IPOL[I];
+			}
+			else
+			{
+				vTrack_Simular.SP1[J] = 0.0e0;
+				vTrack_Simular.SP2[J] = 0.0e0;
+				vTrack_Simular.SP3[J] = 0.0e0;
+				vTrack_Simular.IPOL[J] = 0;
+			}
+			vTrack_Simular.PAGE[J] = SECTRACK_E.PAGE[I];
+
 			J++;
 		}
-		nTRACKS_.nSECTRACK_E =  nTRACKS_.nSECTRACK_E - tamPilha;
+		nTRACKS_.nSECTRACK_E = nTRACKS_.nSECTRACK_E - tamPilha;
 	}
 }
-
 
 void transfCNT0_CPU_to_GPU(){
 
@@ -28210,7 +28259,7 @@ void transfCNTRL_GPU_to_CPU(){
 
 
 
-int partition(hd_TRACK_MOD arr[], int start, int end)
+/*int partition(hd_TRACK_MOD arr[], int start, int end)
 {
 	
  
@@ -28224,7 +28273,7 @@ int partition(hd_TRACK_MOD arr[], int start, int end)
         if (arr[i] <= pivot)
             count++;
     }*/
-	for (int i = start +1; i <= end; i++){
+/*	for (int i = start +1; i <= end; i++){
 		if (arr[i].E <= pivot)
 			count++;
 	}
@@ -28272,7 +28321,7 @@ void quickSort(hd_TRACK_MOD arr[], int start, int end)
  
     // Sorting the right part
     quickSort(arr, p + 1, end);
-}
+}*/
 
 
 

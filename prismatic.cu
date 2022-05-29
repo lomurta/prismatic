@@ -50,7 +50,7 @@ int main() {
 			
 			//criar vetor de particulas primarias inicial
 			iniPRITRACK(); 
-			quickSort(PRITRACK, 0, pilhaPart - 1);
+		//	quickSort(PRITRACK, 0, pilhaPart - 1);
 
 			//transferindo os structs da CPU para GPU
 			if (!btransfCPU_to_GPU){
@@ -67,7 +67,7 @@ int main() {
 			//gpuErrchk(cudaMalloc(&d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaPart));
     		//gpuErrchk(cudaMemcpy(d_TRACK_mod, PRITRACK, sizeof(hd_TRACK_MOD)*pilhaPart, cudaMemcpyHostToDevice));
     		//gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, d_TRACK_mod, sizeof(hd_TRACK_MOD*)*pilhaPart));
-			gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, PRITRACK, sizeof(hd_TRACK_MOD)*pilhaPart,0));
+			gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, &PRITRACK, sizeof(hd_TRACK_MOD)));
 			
 			//Quantidade de blocos no grid e de threads nos blocos
 			dim3 block(blockSize);
@@ -86,6 +86,8 @@ int main() {
 
 			//resgata o pacote de particulas primarias da gpu
 			transfSecTracksGPU_to_CPU();
+
+			//exit(0);
 			
 		
 			//printf("\nquantidade de parricula secundaria photon %d\n\n", nTRACKS_.nSECTRACK_G);
@@ -110,6 +112,10 @@ int main() {
 
 			//Zerando particulas segundarias
 			while ((nTRACKS_.nSECTRACK_E > 0) || (nTRACKS_.nSECTRACK_G > 0) || (nTRACKS_.nSECTRACK_P > 0)){
+
+				printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
+					printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
+					printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
 			if (nTRACKS_.nSECTRACK_E > 0)
 				simSecTrack_E();
 			if (nTRACKS_.nSECTRACK_G > 0)
