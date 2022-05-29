@@ -8,7 +8,9 @@ extern "C"{
 
 	__device__ void d_steplb2_(int& KB, int& IERR);
 
-	__device__ void d_stepsi2_(int& KB,double *S, int *IS,  int& NSC);
+	__device__ void d_stepsi2_(int& KB, int& NSC);
+
+	//__device__ void d_stepsi2_(int& KB,double *S, int *IS,  int& NSC);
 
 	__device__ void d_fsurf2_(int& KS, double& A, double& B, double& C);
 
@@ -368,7 +370,7 @@ L103:;
 			}
 			else {
 				IEXIT = 2; //Rotula partículas descendentes emergentes.
-				printf("Down index ibody %d KPAR: %d ILB[0] %d A particula cruzou fronteira e esta fora do recinto\n\n", dg_TRACK_mod_.IBODY[index], dg_TRACK_mod_.KPAR[index], dg_TRACK_mod_.ILB[1-1][index]);
+			//	printf("Down index ibody %d KPAR: %d ILB[0] %d A particula cruzou fronteira e esta fora do recinto\n\n", dg_TRACK_mod_.IBODY[index], dg_TRACK_mod_.KPAR[index], dg_TRACK_mod_.ILB[1-1][index]);
 			}
 			showers_step3(size, IEXIT); //Saida
 			return;
@@ -705,8 +707,8 @@ __device__ void d_step2_(double& DS, double& DSEF, int& NCROSS) {
 	//gpuErrchk(cudaMalloc(&d_S, sizeof(double)*NS2M));
 	//gpuErrchk(cudaMalloc(&d_IS, sizeof(int)*NS2M));
 
-	double *d_S = (double *)malloc(dg_QSURF_.NSURF*2*sizeof(double));
-	int *d_IS = (int *)malloc(dg_QSURF_.NSURF*2*sizeof(int));
+	//double *d_S = (double *)malloc(dg_QSURF_.NSURF*2*sizeof(double));
+	//int *d_IS = (int *)malloc(dg_QSURF_.NSURF*2*sizeof(int));
 
 
 /*	if (index == 0){
@@ -758,7 +760,7 @@ __device__ void d_step2_(double& DS, double& DSEF, int& NCROSS) {
 
 	if (dg_TRACK_mod_.IBODY[index] > dg_QTREE_.NBODYS) {
 		KB1 = dg_QTREE_.NBODYS;
-		d_stepsi2_(KB1, d_S, d_IS, NSC);
+		d_stepsi2_(KB1, NSC);
 		//d_stepsi2_(KB1, NSC);
 		if (NSC == 0)
 			goto L300;
@@ -767,13 +769,13 @@ __device__ void d_step2_(double& DS, double& DSEF, int& NCROSS) {
 
 		for (int KI = NSCT; KI >= 1; KI--) {
 			// a particula atravessa uma superficie
-			dg_PENGEOM_mod_.KSLAST[index] = d_IS[KI - 1];
+			dg_PENGEOM_mod_.KSLAST[index] = d_IS[KI - 1][index];
 			if (dg_QTREE_.KSP[dg_PENGEOM_mod_.KSLAST[index] - 1][index] == 1)
 				dg_QTREE_.KSP[dg_PENGEOM_mod_.KSLAST[index] - 1][index] = 2;
 			else
 				dg_QTREE_.KSP[dg_PENGEOM_mod_.KSLAST[index] - 1][index] = 1;
-
-			DSP = d_S[KI - 1];
+			
+			DSP = d_S[KI - 1][index];
 			DSEF = DSEF + DSP;
 			dg_PENGEOM_mod_.DSTOT[index] = dg_PENGEOM_mod_.DSTOT[index] + DSP;
 			dg_TRACK_mod_.X[index] = dg_TRACK_mod_.X[index] + DSP * dg_TRACK_mod_.U[index];
@@ -783,7 +785,7 @@ __device__ void d_step2_(double& DS, double& DSEF, int& NCROSS) {
 
 			if (NSC > 0) {
 				for (int I = 1; I <= NSC; I++) {
-					d_S[I - 1] = d_S[I - 1] - DSP;
+					d_S[I - 1][index] = d_S[I - 1][index] - DSP;
 				}
 			}
 
@@ -799,7 +801,7 @@ __device__ void d_step2_(double& DS, double& DSEF, int& NCROSS) {
 			// A partícula entra em um submódulo.
 			if (IERR == -1) {
 				KB1 = dg_TRACK_mod_.IBODY[index];
-				d_stepsi2_(KB1, d_S, d_IS, NSC);
+				d_stepsi2_(KB1, NSC);
 				//d_stepsi2_(KB1, NSC);
 				goto L100;
 			}
@@ -807,13 +809,13 @@ __device__ void d_step2_(double& DS, double& DSEF, int& NCROSS) {
 				//A particula entrou em um corpo material
 				if (dg_TRACK_mod_.MAT[index] != 0) {
 					NCROSS = 1;
-					free(d_S);
-					free(d_IS);
+				//	free(d_S);
+				//	free(d_IS);
 					return;
 				}
 				else {
 					KB1 = dg_TRACK_mod_.IBODY[index];
-					d_stepsi2_(KB1, d_S, d_IS, NSC);
+					d_stepsi2_(KB1, NSC);
 					//d_stepsi2_(KB1, NSC);
 					goto L200;
 				}
@@ -834,7 +836,7 @@ __device__ void d_step2_(double& DS, double& DSEF, int& NCROSS) {
 		NERR = 0;
 L102:;
 	KB1 = dg_TRACK_mod_.IBODY[index];
-	d_stepsi2_(KB1, d_S, d_IS, NSC);
+	d_stepsi2_(KB1, NSC);
 	//d_stepsi2_(KB1, NSC);
 	d_steplb2_(KB1, IERR);
 
@@ -842,8 +844,8 @@ L102:;
 	if (IERR != 0) {
 		if (NSC > 0) {
 			//Quando uma superfície está muito próxima, movemos a partícula além dela.
-			if (d_S[NSC - 1] < 1e-10) {
-				dg_PENGEOM_mod_.KSLAST[index] = d_IS[NSC - 1];
+			if (d_S[NSC - 1][index] < 1e-10) {
+				dg_PENGEOM_mod_.KSLAST[index] = d_IS[NSC - 1][index];
 				if (dg_QTREE_.KSP[dg_PENGEOM_mod_.KSLAST[index] - 1][index] == 1) {
 					dg_QTREE_.KSP[dg_PENGEOM_mod_.KSLAST[index] - 1][index] = 2;
 				}
@@ -851,7 +853,7 @@ L102:;
 					dg_QTREE_.KSP[dg_PENGEOM_mod_.KSLAST[index] - 1][index] = 1;
 				}
 
-				DSP = d_S[NSC - 1];
+				DSP = d_S[NSC - 1][index];
 				dg_TRACK_mod_.X[index] = dg_TRACK_mod_.X[index] + DSP * dg_TRACK_mod_.U[index];
 				dg_TRACK_mod_.Y[index] = dg_TRACK_mod_.Y[index] + DSP * dg_TRACK_mod_.V[index];
 				dg_TRACK_mod_.Z[index] = dg_TRACK_mod_.Z[index] + DSP * dg_TRACK_mod_.W[index];
@@ -879,8 +881,8 @@ L102:;
 					KFLO = dg_QTREE_.KFLAG[KSS - 1][KB1 - 1];
 					if (KFLO < 3) {
 						for (int KI = NSC; KI >= 1; KI--) {
-							if (KS == d_IS[KI - 1]) {
-								SW = d_S[KI - 1];
+							if (KS == d_IS[KI - 1][index]) {
+								SW = d_S[KI - 1][index];
 								goto L103;
 							}
 						}
@@ -908,22 +910,22 @@ L102:;
 	if ((dg_PENGEOM_mod_.KDET[dg_TRACK_mod_.IBODY[index] - 1] != dg_PENGEOM_mod_.KDET[IBODYL - 1]) || (dg_TRACK_mod_.MAT[index] != MAT0)) {
 		NCROSS = 1;
 		DSEF = 0.0e0;
-		free(d_S);
-		free(d_IS);
+	//	free(d_S);
+	//	free(d_IS);
 		return;
 	}
 
 	//A particula permanece no mesmo material
 
-	if ((dg_TRACK_mod_.MAT[index] != 0) && (DSRES < d_S[NSC - 1])) {
+	if ((dg_TRACK_mod_.MAT[index] != 0) && (DSRES < d_S[NSC - 1][index])) {
 		if (dg_TRACK_mod_.MAT[index] == MAT0)
 			DSEF = DSEF + DSRES;
 		dg_PENGEOM_mod_.DSTOT[index] = dg_PENGEOM_mod_.DSTOT[index] + DSRES;
 		dg_TRACK_mod_.X[index] = dg_TRACK_mod_.X[index] + DSRES * dg_TRACK_mod_.U[index];
 		dg_TRACK_mod_.Y[index] = dg_TRACK_mod_.Y[index] + DSRES * dg_TRACK_mod_.V[index];
 		dg_TRACK_mod_.Z[index] = dg_TRACK_mod_.Z[index] + DSRES * dg_TRACK_mod_.W[index];
-		free(d_S);
-		free(d_IS);
+	//	free(d_S);
+	//	free(d_IS);
 		return;
 	}
 
@@ -945,26 +947,26 @@ L200:;
 	IBODYL = dg_TRACK_mod_.IBODY[index];
 	for (int KI = NSCT; KI >= 1; KI--) {
 		//A etapa termina dentro do corpo
-		if (DSRES < d_S[KI - 1]) {
+		if (DSRES < d_S[KI - 1][index]) {
 			if (dg_TRACK_mod_.MAT[index] == MAT0)
 				DSEF = DSEF + DSRES;
 			dg_PENGEOM_mod_.DSTOT[index] = dg_PENGEOM_mod_.DSTOT[index] + DSRES;
 			dg_TRACK_mod_.X[index] = dg_TRACK_mod_.X[index] + DSRES * dg_TRACK_mod_.U[index];
 			dg_TRACK_mod_.Y[index] = dg_TRACK_mod_.Y[index] + DSRES * dg_TRACK_mod_.V[index];
 			dg_TRACK_mod_.Z[index] = dg_TRACK_mod_.Z[index] + DSRES * dg_TRACK_mod_.W[index];
-			free(d_S);
-			free(d_IS);
+		//	free(d_S);
+		//	free(d_IS);
 			return;
 		}
 
 		// A particula atravessa uma superfice
-		dg_PENGEOM_mod_.KSLAST[index] = d_IS[KI - 1];
+		dg_PENGEOM_mod_.KSLAST[index] = d_IS[KI - 1][index];
 		if (dg_QTREE_.KSP[dg_PENGEOM_mod_.KSLAST[index] - 1][index] == 1)
 			dg_QTREE_.KSP[dg_PENGEOM_mod_.KSLAST[index] - 1][index] = 2;
 		else
 			dg_QTREE_.KSP[dg_PENGEOM_mod_.KSLAST[index] - 1][index] = 1;
 
-		DSP = d_S[KI - 1];
+		DSP = d_S[KI - 1][index];
 		dg_TRACK_mod_.X[index] = dg_TRACK_mod_.X[index] + DSP * dg_TRACK_mod_.U[index];
 		dg_TRACK_mod_.Y[index] = dg_TRACK_mod_.Y[index] + DSP * dg_TRACK_mod_.V[index];
 		dg_TRACK_mod_.Z[index] = dg_TRACK_mod_.Z[index] + DSP * dg_TRACK_mod_.W[index];
@@ -976,7 +978,7 @@ L200:;
 		NSC = NSC - 1;
 		if (NSC > 0) {
 			for (int I = 1; I <= NSC; I++) {
-				d_S[I - 1] = d_S[I - 1] - DSP;
+				d_S[I - 1][index] = d_S[I - 1][index] - DSP;
 			}
 		}
 		d_steplb2_(KB1, IERR);
@@ -985,7 +987,7 @@ L200:;
 		KB1 = dg_TRACK_mod_.IBODY[index];
 		if (IERR == -1) {
 			// A particula entrou em um submodulo
-			d_stepsi2_(KB1, d_S, d_IS, NSC);
+			d_stepsi2_(KB1, NSC);
 			//d_stepsi2_(KB1, NSC);
 			d_steplb2_(KB1, IERR);
 			goto L201;
@@ -993,7 +995,7 @@ L200:;
 		else if (IERR == 1) {
 			//A partícula deixa o corpo ou módulo.
 			if (dg_TRACK_mod_.IBODY[index] <= dg_QTREE_.NBODYS) {
-				d_stepsi2_(KB1, d_S, d_IS, NSC);
+				d_stepsi2_(KB1, NSC);
 				//d_stepsi2_(KB1, NSC);
 				d_steplb2_(KB1, IERR);
 				goto L201;
@@ -1022,20 +1024,20 @@ L200:;
 			}
 			else {
 				NCROSS = NCROSS + 1;
-				free(d_S);
-				free(d_IS);
+				//free(d_S);
+				//free(d_IS);
 				return;
 			}
 			//.. e para quando penetra um novo corpo material ou umDetector
 		}
 		else {
 			NCROSS = NCROSS + 1;
-			free(d_S);
-			free(d_IS);
+			//free(d_S);
+			//free(d_IS);
 			return;
 		}
 	L202:;
-		d_stepsi2_(KB1, d_S, d_IS, NSC);
+		d_stepsi2_(KB1, NSC);
 		//d_stepsi2_(KB1, NSC);
 		goto L200;
 		//Neste ponto, o programa saiu do ciclo DO.	
@@ -1054,11 +1056,11 @@ L300:;
 	dg_TRACK_mod_.X[index] = dg_TRACK_mod_.X[index] + DSP * dg_TRACK_mod_.U[index];
 	dg_TRACK_mod_.Y[index] = dg_TRACK_mod_.Y[index] + DSP * dg_TRACK_mod_.V[index];
 	dg_TRACK_mod_.Z[index] = dg_TRACK_mod_.Z[index] + DSP * dg_TRACK_mod_.W[index];
-	free(d_S);
-	free(d_IS);
+	//free(d_S);
+	//free(d_IS);
 }
 
-__device__ void d_stepsi2_(int& KB, double *d_S, int *d_IS,  int& NSC) {
+__device__ void d_stepsi2_(int& KB, int& NSC) {
 	/*Calcula as interseções da trajetória com o limite
 		Superfícies do corpo KB. Os cruzamentos são adicionados à lista e
 		classificados em ordem decrescente.
@@ -1131,8 +1133,8 @@ __device__ void d_stepsi2_(int& KB, double *d_S, int *d_IS,  int& NSC) {
 				T1 = -C / B;
 				if (T1 > 0.0e0) {
 					NSC = NSC + 1;
-					d_IS[NSC - 1] = KS;
-					d_S[NSC - 1] = T1;
+					d_IS[NSC - 1][index] = KS;
+					d_S[NSC - 1][index] = T1;
 				}
 			}
 			else {
@@ -1177,14 +1179,14 @@ __device__ void d_stepsi2_(int& KB, double *d_S, int *d_IS,  int& NSC) {
 				T1 = SH - DELTA;
 				if (T1 > 0.0e0) {
 					NSC = NSC + 1;
-					d_IS[NSC - 1] = KS;
-					d_S[NSC - 1] = T1;
+					d_IS[NSC - 1][index] = KS;
+					d_S[NSC - 1][index] = T1;
 				}
 				T2 = SH + DELTA;
 				if (T2 > 0.0e0) {
 					NSC = NSC + 1;
-					d_IS[NSC - 1] = KS;
-					d_S[NSC - 1] = T2;
+					d_IS[NSC - 1][index] = KS;
+					d_S[NSC - 1][index] = T2;
 				}
 			}
 			else {
@@ -1194,8 +1196,8 @@ __device__ void d_stepsi2_(int& KB, double *d_S, int *d_IS,  int& NSC) {
 					SH = -B * R2A;
 					T2 = SH + DELTA;
 					NSC = NSC + 1;
-					d_IS[NSC - 1] = KS;
-					d_S[NSC - 1] = fmax(T2, 0.0e0);
+					d_IS[NSC - 1][index] = KS;
+					d_S[NSC - 1][index] = fmax(T2, 0.0e0);
 				}
 			}
 		}
@@ -1208,21 +1210,21 @@ __device__ void d_stepsi2_(int& KB, double *d_S, int *d_IS,  int& NSC) {
    // printf("\nNSC %d\n", NSC);
 	if (NSC > 1) {
 		for (int KI = 1; KI <= (NSC - 1); KI++) {
-			SMAX = d_S[KI - 1];
+			SMAX = d_S[KI - 1][index];
 			KMAX = KI;
 			for (int KJ = (KI + 1); KJ <= NSC; KJ++) {
-				if (d_S[KJ - 1] > SMAX) {
-					SMAX = d_S[KJ - 1];
+				if (d_S[KJ - 1][index] > SMAX) {
+					SMAX = d_S[KJ - 1][index];
 					KMAX = KJ;
 				}
 			}
 			if (KMAX != KI) {
-				SMAX = d_S[KI - 1];
-				d_S[KI - 1] = d_S[KMAX - 1];
-				d_S[KMAX - 1] = SMAX;
-				KKMAX = d_IS[KI - 1];
-				d_IS[KI - 1] = d_IS[KMAX - 1];
-				d_IS[KMAX - 1] = KKMAX;
+				SMAX = d_S[KI - 1][index];
+				d_S[KI - 1][index] = d_S[KMAX - 1][index];
+				d_S[KMAX - 1][index] = SMAX;
+				KKMAX = d_IS[KI - 1][index];
+				d_IS[KI - 1][index] = d_IS[KMAX - 1][index];
+				d_IS[KMAX - 1][index] = KKMAX;
 			}
 		}
 	}

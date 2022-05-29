@@ -1234,6 +1234,14 @@ __device__ int d_wIPOLI = 0;
 
 
 
+//__device__ double d_S[pilhaPart*NS2M/100];
+//__device__ int d_IS[pilhaPart*NS2M/100];
+
+__device__ double d_S[NS2M/100][pilhaPart];
+__device__ int d_IS[NS2M/100][pilhaPart];
+
+
+
 
 
 

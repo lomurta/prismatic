@@ -1,5 +1,6 @@
 29/05/2022
--Reestruturacao HD_Track_MOD 9h30
+- Retirado da Malloc para vetores D_IS e D_S da funcao step2
+- Reestruturacao HD_Track_MOD 9h30
 27/05/2022
 - Reestruturacao HD_CJUMP1 15:10
 - Reestruturacao HD_CJUMP0 14:55
