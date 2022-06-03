@@ -60,7 +60,30 @@ int h_vetN[pilhaPart];
 
 int blockSize = 128;
 
+
+__constant__ double d_PI = 3.1415926535897932e0;
+__constant__ double d_REV = 5.10998928e5;
+__constant__ double d_TREV = 2.0e0 * 5.10998928e5;
+__constant__ double d_RREV = 1.0e0 / 5.10998928e5;
+__constant__ double d_TWOPI = 2.0e0 * 3.1415926535897932e0;
+__constant__ double d_RTREV = 1.0e0 / (2.0e0 * 5.10998928e5);
+
+__constant__ double d_FUZZL = 1.0e-12;
+
+__constant__ int d_NS2M = 2 * NS;
+
+
 clock_t start, end;
+
+
+typedef struct
+{
+	int IEXIT[pilhaPart], KEn[pilhaPart], IBODYL[pilhaPart], NCROSS[pilhaPart], IDET[pilhaPart], MATL[pilhaPart], ICOL[pilhaPart], LEFT[pilhaPart];
+	double DSEF[pilhaPart], DS[pilhaPart], DSMAX[pilhaPart], DEP[pilhaPart], XL[pilhaPart], YL[pilhaPart], ZL[pilhaPart], DECSD[pilhaPart], DSEFR[pilhaPart], XD[pilhaPart], YD[pilhaPart], ZD[pilhaPart], DE[pilhaPart], WS[pilhaPart], US[pilhaPart], VS[pilhaPart], SDTS[pilhaPart], DF[pilhaPart];
+	bool LINTF[pilhaPart], CROSS[pilhaPart];
+} hd_wSHOWERS;
+
+
 
 typedef	struct {
 	double* AXX, * AXY, * AXZ, * AYY, * AYZ,
@@ -90,7 +113,7 @@ typedef struct {
 
 typedef struct {
 	double E[pilhaPart], X[pilhaPart], Y[pilhaPart], Z[pilhaPart], U[pilhaPart], V[pilhaPart], W[pilhaPart], WGHT[pilhaPart], SP1[pilhaPart], SP2[pilhaPart], SP3[pilhaPart], PAGE[pilhaPart];
-	int KPAR[pilhaPart], IBODY[pilhaPart], MAT[pilhaPart], ILB[5][pilhaPart], IPOL[pilhaPart], INDEX[pilhaPart], N[pilhaPart];
+	int KPAR[pilhaPart], IBODY[pilhaPart], MAT[pilhaPart], ILB[5][pilhaPart], IPOL[pilhaPart], INDEX[pilhaPart], N[pilhaPart], STEP[pilhaPart], IEXIT[pilhaPart];
 	bool LAGE[pilhaPart];
 } hd_TRACK_MOD;
 
@@ -98,7 +121,7 @@ static const int sec = 100;
 
 typedef struct {
 	double E[pilhaPart*sec], X[pilhaPart*sec], Y[pilhaPart*sec], Z[pilhaPart*sec], U[pilhaPart*sec], V[pilhaPart*sec], W[pilhaPart*sec], WGHT[pilhaPart*sec], SP1[pilhaPart*sec], SP2[pilhaPart*sec], SP3[pilhaPart*sec], PAGE[pilhaPart*sec];
-	int KPAR[pilhaPart*sec], IBODY[pilhaPart*sec], MAT[pilhaPart*sec], ILB[5][pilhaPart*sec], IPOL[pilhaPart*sec], INDEX[pilhaPart*sec], N[pilhaPart*sec];
+	int KPAR[pilhaPart*sec], IBODY[pilhaPart*sec], MAT[pilhaPart*sec], ILB[5][pilhaPart*sec], IPOL[pilhaPart*sec], INDEX[pilhaPart*sec], N[pilhaPart*sec], STEP[pilhaPart*sec], IEXIT[pilhaPart*sec];
 	bool LAGE[pilhaPart*sec];
 } hd_TRACK_MOD_SEC;
 
@@ -924,7 +947,7 @@ typedef struct {
 } hd_CHIST;
 
 typedef struct{
-	int nPRITRACK, nSECTRACK_E, nSECTRACK_G, nSECTRACK_P;
+	int nPRITRACK, nSECTRACK_E, nSECTRACK_G, nSECTRACK_P, nFINISH;
 } hd_nTRACKS;
 
 PENELOPE_MOD PENELOPE_mod_;
@@ -1032,6 +1055,8 @@ hd_TRACK_MOD_SEC SECTRACK_E;
 hd_TRACK_MOD_SEC SECTRACK_P; 
 
 hd_TRACK_MOD vTrack_Simular;
+
+__device__ hd_wSHOWERS dg_wSHOWERS_;
 
 
 //DECLARACOES PARA COPIA NA GPU
