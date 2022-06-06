@@ -28051,6 +28051,9 @@ void simSecTrack_E(){
 			g_showers_step4_G<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
 
+			g_showers_step5_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
 
 			g_showers_step18_G<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
@@ -28112,6 +28115,9 @@ void simSecTrack_G(){
 			gpuErrchk(cudaDeviceSynchronize());
 
 			g_showers_step4_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			g_showers_step5_G<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
 
 
@@ -28183,6 +28189,9 @@ void simSecTrack_P(){
 			gpuErrchk(cudaDeviceSynchronize());
 
 			g_showers_step4_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			g_showers_step5_G<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
 
 
@@ -28573,7 +28582,6 @@ void simPriTrack_G(){
 		g_showers_step1_G<<<grid, block>>>(sizeTrack);
 		gpuErrchk(cudaDeviceSynchronize());
 
-
 		g_showers_step2_G<<<grid, block>>>(sizeTrack);
 		gpuErrchk(cudaDeviceSynchronize());
 
@@ -28581,6 +28589,9 @@ void simPriTrack_G(){
 		gpuErrchk(cudaDeviceSynchronize());
 
 		g_showers_step4_G<<<grid, block>>>(sizeTrack);
+		gpuErrchk(cudaDeviceSynchronize());
+
+		g_showers_step5_G<<<grid, block>>>(sizeTrack);
 		gpuErrchk(cudaDeviceSynchronize());
 
 		g_showers_step18_G<<<grid, block>>>(sizeTrack);
