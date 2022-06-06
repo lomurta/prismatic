@@ -28039,7 +28039,7 @@ void simSecTrack_E(){
 		{
 
 			// chamada do kernel para simulacao das particulas primarias
-			g_showers_step11_G<<<grid, block>>>(sizeTrack);
+			g_showers_step20_G<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
 
 			g_showers_step2_G<<<grid, block>>>(sizeTrack);
@@ -28049,6 +28049,13 @@ void simSecTrack_E(){
 			gpuErrchk(cudaDeviceSynchronize());
 
 			g_showers_step4_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+
+			g_showers_step18_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			g_showers_step19_G<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
 
 			transfnTRACKSGPU_to_CPU();
@@ -28095,7 +28102,7 @@ void simSecTrack_G(){
 		printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
 
 			// chamada do kernel para simulacao das particulas primarias
-			g_showers_step11_G<<<grid, block>>>(sizeTrack);
+			g_showers_step20_G<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
 
 			g_showers_step2_G<<<grid, block>>>(sizeTrack);
@@ -28105,6 +28112,13 @@ void simSecTrack_G(){
 			gpuErrchk(cudaDeviceSynchronize());
 
 			g_showers_step4_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+
+			g_showers_step18_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			g_showers_step19_G<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
 
 			transfnTRACKSGPU_to_CPU();
@@ -28159,7 +28173,7 @@ void simSecTrack_P(){
 		printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
 
 			// chamada do kernel para simulacao das particulas primarias
-			g_showers_step11_G<<<grid, block>>>(sizeTrack);
+			g_showers_step20_G<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
 
 			g_showers_step2_G<<<grid, block>>>(sizeTrack);
@@ -28169,6 +28183,13 @@ void simSecTrack_P(){
 			gpuErrchk(cudaDeviceSynchronize());
 
 			g_showers_step4_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+
+			g_showers_step18_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			g_showers_step19_G<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
 
 			transfnTRACKSGPU_to_CPU();
@@ -28219,7 +28240,7 @@ void cpyTracks_simular(int tipo, int tamPilha)
 			vTrack_Simular.N[J] = SECTRACK_E.N[I];
 			vTrack_Simular.INDEX[J] = SECTRACK_E.INDEX[I];
 			vTrack_Simular.IEXIT[J] = 0;
-			vTrack_Simular.STEP[J] = 11;
+			vTrack_Simular.STEP[J] = 20;
 
 			if (wIPOLI == 1)
 			{
@@ -28265,7 +28286,7 @@ void cpyTracks_simular(int tipo, int tamPilha)
 			vTrack_Simular.N[J] = SECTRACK_G.N[I];
 			vTrack_Simular.INDEX[J] = SECTRACK_G.INDEX[I];
 			vTrack_Simular.IEXIT[J] = 0;
-			vTrack_Simular.STEP[J] = 11;
+			vTrack_Simular.STEP[J] = 20;
 
 			if (wIPOLI == 1)
 			{
@@ -28311,7 +28332,7 @@ void cpyTracks_simular(int tipo, int tamPilha)
 			vTrack_Simular.N[J] = SECTRACK_P.N[I];
 			vTrack_Simular.INDEX[J] = SECTRACK_P.INDEX[I];
 			vTrack_Simular.IEXIT[J] = 0;
-			vTrack_Simular.STEP[J] = 11;
+			vTrack_Simular.STEP[J] = 20;
 
 			if (wIPOLI == 1)
 			{
@@ -28560,6 +28581,12 @@ void simPriTrack_G(){
 		gpuErrchk(cudaDeviceSynchronize());
 
 		g_showers_step4_G<<<grid, block>>>(sizeTrack);
+		gpuErrchk(cudaDeviceSynchronize());
+
+		g_showers_step18_G<<<grid, block>>>(sizeTrack);
+		gpuErrchk(cudaDeviceSynchronize());
+
+		g_showers_step19_G<<<grid, block>>>(sizeTrack);
 		gpuErrchk(cudaDeviceSynchronize());
 
 		transfnTRACKSGPU_to_CPU();

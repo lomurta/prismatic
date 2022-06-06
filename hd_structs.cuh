@@ -45,6 +45,10 @@ static const int NDZM = 201;
 static const int pilhaPart = 4096; //64*64
 static const int pilhaSec = 4096; //64*64
 
+
+#define MAX_THREADS_PER_BLOCK 128
+#define MIN_BLOCKS_PER_MP 16
+
 char LINHA[200];
 char APOIO[200];
 char SPCDIO[NIDM][20];
