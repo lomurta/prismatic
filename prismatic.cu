@@ -72,18 +72,24 @@ int main() {
 		
 	
 			//Zerando particulas segundarias esssa é a parte correta
-		/*	while ((nTRACKS_.nSECTRACK_E > 0) || (nTRACKS_.nSECTRACK_G > 0) || (nTRACKS_.nSECTRACK_P > 0)){
+			while ((nTRACKS_.nSECTRACK_E > 0) || (nTRACKS_.nSECTRACK_G > 0) || (nTRACKS_.nSECTRACK_P > 0)){
 
 				printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
 					printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
 					printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
-			if (nTRACKS_.nSECTRACK_E > 0)
-				simSecTrack_E();
-			if (nTRACKS_.nSECTRACK_G > 0)
+			if (nTRACKS_.nSECTRACK_E > 0){
+				//simSecTrack_E();
+				nTRACKS_.nSECTRACK_E = 0;
+			}
+			if (nTRACKS_.nSECTRACK_G > 0){
 				simSecTrack_G();
-			if (nTRACKS_.nSECTRACK_P > 0)
+				//nTRACKS_.nSECTRACK_G = 0;
+			}
+			if (nTRACKS_.nSECTRACK_P > 0){
 				simSecTrack_P();
-			}*/
+				//nTRACKS_.nSECTRACK_P = 0;
+			}
+			}
 			gpuErrchk(cudaDeviceSynchronize());
 
 			sizeTrack = pilhaPart;

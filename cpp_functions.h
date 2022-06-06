@@ -27988,24 +27988,28 @@ void transfSecTracksGPU_to_CPU(){
 	gpuErrchk(cudaMemcpy(&SECTRACK_P, d_SECTRACK_P,  sizeof(hd_TRACK_MOD_SEC), cudaMemcpyDeviceToHost));
 
 	//nTRACKS
-	gpuErrchk(cudaMemcpyFromSymbol(d_nTRACKS, dg_nTRACKS_, sizeof(hd_nTRACKS)));
-	gpuErrchk(cudaMemcpy(&nTRACKS_, d_nTRACKS,  sizeof(hd_nTRACKS), cudaMemcpyDeviceToHost));
+	//gpuErrchk(cudaMemcpyFromSymbol(d_nTRACKS, dg_nTRACKS_, sizeof(hd_nTRACKS)));
+	//gpuErrchk(cudaMemcpy(&nTRACKS_, d_nTRACKS,  sizeof(hd_nTRACKS), cudaMemcpyDeviceToHost));
 
 }
 
 void simSecTrack_E(){
 
 	int sizeTrack = 0;
-//	while (nTRACKS_.nSECTRACK_E > 0){
+	while (nTRACKS_.nSECTRACK_E > 0){
 		if (nTRACKS_.nSECTRACK_E > pilhaPart)
 			sizeTrack = pilhaPart;
 		else sizeTrack = nTRACKS_.nSECTRACK_E;
+
+		transfSecTracksGPU_to_CPU();
 
 		//nTRACKS_.nSECTRACK_E = nTRACKS_.nSECTRACK_E - pilhaPart;
 		cpyTracks_simular(1, sizeTrack);
 
 		// transfere a pilha de particulas secundarias para GPU
-		transfSecTracksCPU_to_GPU();
+
+		nTRACKS_.nFINISH = sizeTrack;
+		//transfSecTracksCPU_to_GPU();
 
 		// transfere as particulas a serem simuladas para a GPU
 		//gpuErrchk(cudaMalloc(&d_TRACK_mod, sizeof(hd_TRACK_MOD) * pilhaSec));
@@ -28015,10 +28019,10 @@ void simSecTrack_E(){
 
 		// memcpy(vTrack_Simular, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart);
 
-		gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, &vTrack_Simular, sizeof(hd_TRACK_MOD), 0));
+		gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, &vTrack_Simular, sizeof(hd_TRACK_MOD)));
 
-		dim3 blockSec(blockSize);
-		dim3 gridSec(ceil(sizeTrack / blockSec.x)+1);
+		dim3 block(blockSize);
+		dim3 grid(ceil(sizeTrack / block.x)+1);
 
 		/*printf("[0]: %lf\n", SECTRACK_E[0].E);
 		printf("[1]: %lf\n", SECTRACK_E[1].E);
@@ -28030,100 +28034,160 @@ void simSecTrack_E(){
 		printf("[256]: %lf\n", vTrack_Simular[256].E);
 		printf("[4095]: %lf\n", vTrack_Simular[4095].E);
 		printf("[4096]: %lf\n", vTrack_Simular[4096].E);*/
+		transfnTRACKSCPU_to_GPU();
+		while (nTRACKS_.nFINISH > 0)
+		{
 
-		// chamada do kernel para simulacao das particulas primarias
-		showers_sec<<<gridSec, blockSec>>>(sizeTrack);
-		// Aguarda o termino da simulação das particulas primarias enviadas
-		gpuErrchk(cudaDeviceSynchronize());
-		// resgata o pacote de particulas primarias da gpu
-		//gpuErrchk(cudaFree(d_TRACK_mod));
+			// chamada do kernel para simulacao das particulas primarias
+			g_showers_step11_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
 
-		transfSecTracksGPU_to_CPU();
-//	}
+			g_showers_step2_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			g_showers_step3_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			g_showers_step4_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			transfnTRACKSGPU_to_CPU();
+		}
+
+		//transfSecTracksGPU_to_CPU();
+		printf("\nsimulacao de eletrons secundarios\n");
+		printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
+		printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
+		printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
+	}
 }
 
 void simSecTrack_G(){
 
-	int sizeTrack = 0;
-//	while (nTRACKS_.nSECTRACK_G > 0){
-		sizeTrack = nTRACKS_.nSECTRACK_G;
-		nTRACKS_.nSECTRACK_G = 0;
-
-		// transfere a pilha de particulas secundarias para GPU
-		transfSecTracksCPU_to_GPU();
-
-		// transfere as particulas a serem simuladas para a GPU
-		//gpuErrchk(cudaMalloc(&d_TRACK_mod, sizeof(hd_TRACK_MOD) * pilhaSec));
-		// PRITRACK = SECTRACK_E;
-		// gpuErrchk(cudaMemcpy(d_TRACK_mod, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaSec, cudaMemcpyHostToDevice));
-		// gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaSec));
-
-		// memcpy(vTrack_Simular, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart);
-
-	//	printf("tipo de particula[0]: ILB %d\n tipo de particula[1]: ILB %d\n", SECTRACK_G[0].ILB[0],  SECTRACK_G[1].ILB[0]);
-
-		gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, &SECTRACK_G, sizeof(hd_TRACK_MOD), 0));
-
-		dim3 blockSec(blockSize);
-		dim3 gridSec(ceil(sizeTrack / blockSec.x)+1);
-
-		/*printf("[0]: %lf\n", SECTRACK_E[0].E);
-		printf("[1]: %lf\n", SECTRACK_E[1].E);
-		printf("[256]: %lf\n", SECTRACK_E[256].E);
-		printf("[4095]: %lf\n", SECTRACK_E[4095].E);
-		printf("[4096]: %lf\n", SECTRACK_E[4096].E);*/
-
-		// chamada do kernel para simulacao das particulas primarias
-		showers_sec<<<gridSec, blockSec>>>(sizeTrack);
-		// Aguarda o termino da simulação das particulas primarias enviadas
-		gpuErrchk(cudaDeviceSynchronize());
-		// resgata o pacote de particulas primarias da gpu
-		//gpuErrchk(cudaFree(d_TRACK_mod));
+		int sizeTrack = 0;
+	while (nTRACKS_.nSECTRACK_G > 0){
+		if (nTRACKS_.nSECTRACK_G > pilhaPart)
+			sizeTrack = pilhaPart;
+		else sizeTrack = nTRACKS_.nSECTRACK_G;
 
 		transfSecTracksGPU_to_CPU();
-//	}
 
+		//nTRACKS_.nSECTRACK_E = nTRACKS_.nSECTRACK_E - pilhaPart;
+		cpyTracks_simular(2, sizeTrack);
+
+		// transfere a pilha de particulas secundarias para GPU
+
+		nTRACKS_.nFINISH = sizeTrack;
+
+
+		gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, &vTrack_Simular, sizeof(hd_TRACK_MOD)));
+
+		dim3 block(blockSize);
+		dim3 grid(ceil(sizeTrack / block.x)+1);
+
+
+		transfnTRACKSCPU_to_GPU();
+		while (nTRACKS_.nFINISH > 0)
+		{
+			printf("\nsimulacao de fotons secundarios\n");
+		printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
+		printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
+		printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
+
+			// chamada do kernel para simulacao das particulas primarias
+			g_showers_step11_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			g_showers_step2_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			g_showers_step3_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			g_showers_step4_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			transfnTRACKSGPU_to_CPU();
+
+			//transfSecTracksGPU_to_CPU();
+		printf("\nsimulacao de fotons secundarios\n");
+		printf("NFINISH: %d\n", nTRACKS_.nFINISH);
+		printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
+		printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
+		printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
+		//exit(0);
+
+
+		}
+
+
+	
+	
+	}
 }
 
 void simSecTrack_P(){
 
 	int sizeTrack = 0;
-//	while (nTRACKS_.nSECTRACK_P > 0){
-		sizeTrack = nTRACKS_.nSECTRACK_P;
-		nTRACKS_.nSECTRACK_P = 0;
-
-		// transfere a pilha de particulas secundarias para GPU
-		transfSecTracksCPU_to_GPU();
-
-		// transfere as particulas a serem simuladas para a GPU
-		//gpuErrchk(cudaMalloc(&d_TRACK_mod, sizeof(hd_TRACK_MOD) * pilhaSec));
-		// PRITRACK = SECTRACK_E;
-		// gpuErrchk(cudaMemcpy(d_TRACK_mod, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaSec, cudaMemcpyHostToDevice));
-		// gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, d_TRACK_mod, sizeof(hd_TRACK_MOD)*pilhaSec));
-
-		// memcpy(vTrack_Simular, SECTRACK_E, sizeof(hd_TRACK_MOD)*pilhaPart);
-
-		gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, &SECTRACK_P, sizeof(hd_TRACK_MOD), 0));
-
-		dim3 blockSec(blockSize);
-		dim3 gridSec(ceil(sizeTrack / blockSec.x)+1);
-
-		/*printf("[0]: %lf\n", SECTRACK_E[0].E);
-		printf("[1]: %lf\n", SECTRACK_E[1].E);
-		printf("[256]: %lf\n", SECTRACK_E[256].E);
-		printf("[4095]: %lf\n", SECTRACK_E[4095].E);
-		printf("[4096]: %lf\n", SECTRACK_E[4096].E);*/
-
-		// chamada do kernel para simulacao das particulas primarias
-		showers_sec<<<gridSec, blockSec>>>(sizeTrack);
-		// Aguarda o termino da simulação das particulas primarias enviadas
-		gpuErrchk(cudaDeviceSynchronize());
-		// resgata o pacote de particulas primarias da gpu
-		//gpuErrchk(cudaFree(d_TRACK_mod));
+	while (nTRACKS_.nSECTRACK_P > 0){
+		if (nTRACKS_.nSECTRACK_P > pilhaPart)
+			sizeTrack = pilhaPart;
+		else sizeTrack = nTRACKS_.nSECTRACK_P;
 
 		transfSecTracksGPU_to_CPU();
-//	}
 
+		//nTRACKS_.nSECTRACK_E = nTRACKS_.nSECTRACK_E - pilhaPart;
+		cpyTracks_simular(3, sizeTrack);
+
+		// transfere a pilha de particulas secundarias para GPU
+
+		nTRACKS_.nFINISH = sizeTrack;
+
+
+		gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, &vTrack_Simular, sizeof(hd_TRACK_MOD)));
+
+		dim3 block(blockSize);
+		dim3 grid(ceil(sizeTrack / block.x)+1);
+
+
+		transfnTRACKSCPU_to_GPU();
+		while (nTRACKS_.nFINISH > 0)
+		{
+			printf("\nsimulacao de positrons secundarios\n");
+		printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
+		printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
+		printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
+
+			// chamada do kernel para simulacao das particulas primarias
+			g_showers_step11_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			g_showers_step2_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			g_showers_step3_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			g_showers_step4_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			transfnTRACKSGPU_to_CPU();
+
+			//transfSecTracksGPU_to_CPU();
+		printf("\nsimulacao de positrons secundarios\n");
+		printf("NFINISH: %d\n", nTRACKS_.nFINISH);
+		printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
+		printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
+		printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
+		//exit(0);
+
+
+		}
+
+
+	
+	
+	}
 
 }
 
@@ -28154,8 +28218,8 @@ void cpyTracks_simular(int tipo, int tamPilha)
 
 			vTrack_Simular.N[J] = SECTRACK_E.N[I];
 			vTrack_Simular.INDEX[J] = SECTRACK_E.INDEX[I];
-			//vTrack_Simular.IEXIT[J] = SECTRACK_E.IEXIT[I];
-			//vTrack_Simular.STEP[J] = SECTRACK_E.STEP[I];
+			vTrack_Simular.IEXIT[J] = 0;
+			vTrack_Simular.STEP[J] = 11;
 
 			if (wIPOLI == 1)
 			{
@@ -28176,6 +28240,98 @@ void cpyTracks_simular(int tipo, int tamPilha)
 			J++;
 		}
 		nTRACKS_.nSECTRACK_E = nTRACKS_.nSECTRACK_E - tamPilha;
+	} else if (tipo == 2)
+	{ // fotons
+		for (int I = (nTRACKS_.nSECTRACK_G - 1); I >= (nTRACKS_.nSECTRACK_G - tamPilha); I--)
+		{
+			vTrack_Simular.E[J] = SECTRACK_G.E[I];
+			vTrack_Simular.X[J] = SECTRACK_G.X[I];
+			vTrack_Simular.Y[J] = SECTRACK_G.Y[I];
+			vTrack_Simular.Z[J] = SECTRACK_G.Z[I];
+			vTrack_Simular.U[J] = SECTRACK_G.U[I];
+			vTrack_Simular.V[J] = SECTRACK_G.V[I];
+			vTrack_Simular.W[J] = SECTRACK_G.W[I];
+			vTrack_Simular.WGHT[J] = SECTRACK_G.WGHT[I];
+			vTrack_Simular.KPAR[J] = SECTRACK_G.KPAR[I];
+			vTrack_Simular.IBODY[J] = SECTRACK_G.IBODY[I];
+			vTrack_Simular.MAT[J] = SECTRACK_G.MAT[I];
+
+			vTrack_Simular.ILB[1 - 1][J] = SECTRACK_G.ILB[1 - 1][I];
+			vTrack_Simular.ILB[2 - 1][J] = SECTRACK_G.ILB[2 - 1][I];
+			vTrack_Simular.ILB[3 - 1][J] = SECTRACK_G.ILB[3 - 1][I];
+			vTrack_Simular.ILB[4 - 1][J] = SECTRACK_G.ILB[4 - 1][I];
+			vTrack_Simular.ILB[5 - 1][J] = SECTRACK_G.ILB[5 - 1][I];
+
+			vTrack_Simular.N[J] = SECTRACK_G.N[I];
+			vTrack_Simular.INDEX[J] = SECTRACK_G.INDEX[I];
+			vTrack_Simular.IEXIT[J] = 0;
+			vTrack_Simular.STEP[J] = 11;
+
+			if (wIPOLI == 1)
+			{
+				vTrack_Simular.SP1[J] = SECTRACK_G.SP1[I];
+				vTrack_Simular.SP2[J] = SECTRACK_G.SP2[I];
+				vTrack_Simular.SP3[J] = SECTRACK_G.SP3[I];
+				vTrack_Simular.IPOL[J] = SECTRACK_G.IPOL[I];
+			}
+			else
+			{
+				vTrack_Simular.SP1[J] = 0.0e0;
+				vTrack_Simular.SP2[J] = 0.0e0;
+				vTrack_Simular.SP3[J] = 0.0e0;
+				vTrack_Simular.IPOL[J] = 0;
+			}
+			vTrack_Simular.PAGE[J] = SECTRACK_G.PAGE[I];
+
+			J++;
+		}
+		nTRACKS_.nSECTRACK_G = nTRACKS_.nSECTRACK_G - tamPilha;
+	}else if (tipo == 3)
+	{ // protons
+		for (int I = (nTRACKS_.nSECTRACK_P - 1); I >= (nTRACKS_.nSECTRACK_P - tamPilha); I--)
+		{
+			vTrack_Simular.E[J] = SECTRACK_P.E[I];
+			vTrack_Simular.X[J] = SECTRACK_P.X[I];
+			vTrack_Simular.Y[J] = SECTRACK_P.Y[I];
+			vTrack_Simular.Z[J] = SECTRACK_P.Z[I];
+			vTrack_Simular.U[J] = SECTRACK_P.U[I];
+			vTrack_Simular.V[J] = SECTRACK_P.V[I];
+			vTrack_Simular.W[J] = SECTRACK_P.W[I];
+			vTrack_Simular.WGHT[J] = SECTRACK_P.WGHT[I];
+			vTrack_Simular.KPAR[J] = SECTRACK_P.KPAR[I];
+			vTrack_Simular.IBODY[J] = SECTRACK_P.IBODY[I];
+			vTrack_Simular.MAT[J] = SECTRACK_P.MAT[I];
+
+			vTrack_Simular.ILB[1 - 1][J] = SECTRACK_P.ILB[1 - 1][I];
+			vTrack_Simular.ILB[2 - 1][J] = SECTRACK_P.ILB[2 - 1][I];
+			vTrack_Simular.ILB[3 - 1][J] = SECTRACK_P.ILB[3 - 1][I];
+			vTrack_Simular.ILB[4 - 1][J] = SECTRACK_P.ILB[4 - 1][I];
+			vTrack_Simular.ILB[5 - 1][J] = SECTRACK_P.ILB[5 - 1][I];
+
+			vTrack_Simular.N[J] = SECTRACK_P.N[I];
+			vTrack_Simular.INDEX[J] = SECTRACK_P.INDEX[I];
+			vTrack_Simular.IEXIT[J] = 0;
+			vTrack_Simular.STEP[J] = 11;
+
+			if (wIPOLI == 1)
+			{
+				vTrack_Simular.SP1[J] = SECTRACK_P.SP1[I];
+				vTrack_Simular.SP2[J] = SECTRACK_P.SP2[I];
+				vTrack_Simular.SP3[J] = SECTRACK_P.SP3[I];
+				vTrack_Simular.IPOL[J] = SECTRACK_P.IPOL[I];
+			}
+			else
+			{
+				vTrack_Simular.SP1[J] = 0.0e0;
+				vTrack_Simular.SP2[J] = 0.0e0;
+				vTrack_Simular.SP3[J] = 0.0e0;
+				vTrack_Simular.IPOL[J] = 0;
+			}
+			vTrack_Simular.PAGE[J] = SECTRACK_P.PAGE[I];
+
+			J++;
+		}
+		nTRACKS_.nSECTRACK_P = nTRACKS_.nSECTRACK_P - tamPilha;
 	}
 }
 

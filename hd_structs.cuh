@@ -145,9 +145,9 @@ typedef struct {
 } PENGEOM_MOD;
 
 typedef struct {
-	char BALIAS[NB][5];
+	int NBODY, MATER[NB], KDET[NB], KSLAST[pilhaPart];
 	double DSTOT[pilhaPart];
-	int MATER[NB], KDET[NB], KSLAST[pilhaPart], NBODY;
+	char BALIAS[NB][5];
 	bool LVERB;
 } hd_PENGEOM_MOD;
 

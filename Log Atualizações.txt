@@ -1,3 +1,6 @@
+06/06/2022
+- Versão com resultados corretos para simulação das particulas primarias e secundarias.
+
 03/06/2022
 - Versao quebrada em 5 kernels para aumentar a occupancy diminuindo o uso de registradores
 
