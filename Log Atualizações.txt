@@ -1,4 +1,6 @@
 07/06/2022
+- Criacao dos Step8 step9 e Step10
+-Criacao do step6 e step7 para funcoes jump e step
 
 06/06/2022
 - Versao resultados OK steps quebrados

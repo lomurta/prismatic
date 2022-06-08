@@ -72,6 +72,12 @@ __device__ void d_fimdes2_(int &N, int &ID, double &EI, double &DECSD, double &D
 
 __device__ void d_knock2_(double &DE, int &ICOL);
 
+__device__ void d_knock2_G(double &DE, int &ICOL);
+
+__device__ void d_knock2_E(double &DE, int &ICOL);
+
+__device__ void d_knock2_P(double &DE, int &ICOL);
+
 __device__ void d_eela2_(double &A, double &B, double &RNDC, double &RMU);
 
 __device__ void d_direct2_(double &CDT, double &DF, double &U, double &V, double &W);
@@ -329,7 +335,7 @@ __global__ void g_showers_step5_G(int size)
 {
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
 
-	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 5))//l102
+	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 5)) // l102
 	{
 		// Aniquiliação de positron quando a energia da particula é muito pequena
 
@@ -360,99 +366,58 @@ __global__ void g_showers_step5_G(int size)
 	}
 }
 
-__global__ void g_showers_step6_G(int size){
+__global__ void g_showers_step6_G(int size)
+{
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
 	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 6))
 	{
 
-	d_jump2_G(dg_CSPGEO_.DSMAX[dg_TRACK_mod_.IBODY[index] - 1], dg_wSHOWERS_.DS[index]);
-	dg_TRACK_mod_.STEP[index] = 7;
-	}
-
-}
-
-__global__ void g_showers_step6_E(int size){
-
-int index = blockDim.x * blockIdx.x + threadIdx.x;
-	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 6))
-	{
-	d_jump2_E(dg_CSPGEO_.DSMAX[dg_TRACK_mod_.IBODY[index] - 1], dg_wSHOWERS_.DS[index]);
-	dg_TRACK_mod_.STEP[index] = 7;
+		d_jump2_G(dg_CSPGEO_.DSMAX[dg_TRACK_mod_.IBODY[index] - 1], dg_wSHOWERS_.DS[index]);
+		dg_TRACK_mod_.STEP[index] = 7;
 	}
 }
 
-__global__ void g_showers_step6_P(int size){
-
-int index = blockDim.x * blockIdx.x + threadIdx.x;
-	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 6))
-	{
-	d_jump2_P(dg_CSPGEO_.DSMAX[dg_TRACK_mod_.IBODY[index] - 1], dg_wSHOWERS_.DS[index]);
-	dg_TRACK_mod_.STEP[index] = 7;
-	}
-}
-
-__global__ void g_showers_step7_G(int size){
-
-	int index = blockDim.x * blockIdx.x + threadIdx.x;
-	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 7)){
-		d_step2_(dg_wSHOWERS_.DS[index], dg_wSHOWERS_.DSEF[index], dg_wSHOWERS_.NCROSS[index]); 
-		dg_TRACK_mod_.STEP[index] = 18;
-
-
-	}
-
-
-
-
-}
-
-
-
-
-
-
-
-__global__ void g_showers_step18_G(int size)
+__global__ void g_showers_step6_E(int size)
 {
 
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
-	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 18))
+	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 6))
+	{
+		d_jump2_E(dg_CSPGEO_.DSMAX[dg_TRACK_mod_.IBODY[index] - 1], dg_wSHOWERS_.DS[index]);
+		dg_TRACK_mod_.STEP[index] = 7;
+	}
+}
+
+__global__ void g_showers_step6_P(int size)
+{
+
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 6))
+	{
+		d_jump2_P(dg_CSPGEO_.DSMAX[dg_TRACK_mod_.IBODY[index] - 1], dg_wSHOWERS_.DS[index]);
+		dg_TRACK_mod_.STEP[index] = 7;
+	}
+}
+
+__global__ void g_showers_step7_G(int size)
+{
+
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 7))
+	{
+		d_step2_(dg_wSHOWERS_.DS[index], dg_wSHOWERS_.DSEF[index], dg_wSHOWERS_.NCROSS[index]);
+		dg_TRACK_mod_.STEP[index] = 8;
+	}
+}
+
+__global__ void g_showers_step8_G(int size)
+{
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 8))
 	{
 
-		// Simulação da historia da particula inicia aqui.
+		dg_TRACK_mod_.STEP[index] = 9;
 
-		// Divisão de particulas e roleta russa . Apenas para particulas lidas de um arquivoco Phase-Space.
-		// Essa versão não irá implementar reduções de variancia e leitura de arquivo Phase-Space.
-
-	/*L102:;
-
-		if (dg_TRACK_mod_.E[index] < dg_CSPGEO_.EABSB[dg_TRACK_mod_.IBODY[index] - 1][dg_TRACK_mod_.KPAR[index] - 1])
-		{ // energia é muito baixa
-			dg_wSHOWERS_.DEP[index] = dg_TRACK_mod_.E[index] * dg_TRACK_mod_.WGHT[index];
-			if ((dg_TRACK_mod_.KPAR[index] == 3) && (dg_TRACK_mod_.E[index] > 1.0e-6))
-			{ // aniquilação de positrion
-				d_panar2_(dg_CSPGEO_.EABSB[dg_TRACK_mod_.IBODY[index] - 1][2 - 1]);
-				dg_wSHOWERS_.DEP[index] = dg_wSHOWERS_.DEP[index] + d_TREV * dg_TRACK_mod_.WGHT[index];
-			}
-			dg_TRACK_mod_.E[index] = 0.0e0;
-
-			// A energia é depositada localmente no material.
-			dg_CNT1_.DEBO[dg_TRACK_mod_.IBODY[index] - 1][index] = dg_CNT1_.DEBO[dg_TRACK_mod_.IBODY[index] - 1][index] + dg_wSHOWERS_.DEP[index];
-			if (dg_CNT6_.LDOSEM)
-			{ // Partícula dentro da caixa de dose.
-				d_sdose2_(dg_wSHOWERS_.DEP[index], dg_TRACK_mod_.X[index], dg_TRACK_mod_.Y[index], dg_TRACK_mod_.Z[index], dg_TRACK_mod_.MAT[index], dg_TRACK_mod_.N[index]);
-			}
-			dg_wSHOWERS_.IEXIT[index] = 3;
-			dg_TRACK_mod_.IEXIT[index] = dg_wSHOWERS_.IEXIT[index];
-			dg_TRACK_mod_.STEP[index] = 19; // Marca partículas absorvidas.
-			// showers_step3(size, IEXIT); // saida
-			return;
-		}
-
-		d_start2_();*/ // Inicia a simulação no meio atual.
-
-		// Comprimento do caminho livre para o próximo evento de interação.
-//	L103:;
 		dg_wSHOWERS_.IBODYL[index] = dg_TRACK_mod_.IBODY[index];
 		dg_wSHOWERS_.MATL[index] = dg_TRACK_mod_.MAT[index];
 		dg_wSHOWERS_.XL[index] = dg_TRACK_mod_.X[index];
@@ -468,10 +433,10 @@ __global__ void g_showers_step18_G(int size)
 			LINTF=false
 		}*/
 
-		//d_jump2_(dg_CSPGEO_.DSMAX[dg_TRACK_mod_.IBODY[index] - 1], dg_wSHOWERS_.DS[index]);
+		// d_jump2_(dg_CSPGEO_.DSMAX[dg_TRACK_mod_.IBODY[index] - 1], dg_wSHOWERS_.DS[index]);
 		dg_wSHOWERS_.LINTF[index] = false;
 
-	//	d_step2_(dg_wSHOWERS_.DS[index], dg_wSHOWERS_.DSEF[index], dg_wSHOWERS_.NCROSS[index]); // Determina a posição final do passo.
+		//	d_step2_(dg_wSHOWERS_.DS[index], dg_wSHOWERS_.DSEF[index], dg_wSHOWERS_.NCROSS[index]); // Determina a posição final do passo.
 
 		// Distribuição de energia de fluência.
 		dg_wSHOWERS_.IDET[index] = dg_PENGEOM_mod_.KDET[dg_wSHOWERS_.IBODYL[index] - 1];
@@ -500,9 +465,18 @@ __global__ void g_showers_step18_G(int size)
 				}
 			}
 		}
+	}
+}
+
+__global__ void g_showers_step9_G(int size)
+{
+
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 9))
+	{
+		dg_TRACK_mod_.STEP[index] = 10;
 
 		// A partícula cruzou uma interface.
-
 		if (dg_wSHOWERS_.NCROSS[index] > 0)
 		{
 			// Correção da perda de energia suave (CSDA).
@@ -578,21 +552,228 @@ __global__ void g_showers_step18_G(int size)
 					}
 				}
 			}
-			dg_TRACK_mod_.STEP[index] = 5; //L102
+			dg_TRACK_mod_.STEP[index] = 5; // L102
 			return;
 
-			//goto L102;
+			// goto L102;
 		}
+	}
+}
+
+__global__ void g_showers_step10_G(int size)
+{
+
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 10))
+	{
+
+		d_knock2_G(dg_wSHOWERS_.DE[index], dg_wSHOWERS_.ICOL[index]);
+		dg_TRACK_mod_.STEP[index] = 18;
+	}
+}
+
+__global__ void g_showers_step10_E(int size)
+{
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 10))
+	{
+		d_knock2_E(dg_wSHOWERS_.DE[index], dg_wSHOWERS_.ICOL[index]);
+		dg_TRACK_mod_.STEP[index] = 18;
+	}
+}
+
+__global__ void g_showers_step10_P(int size)
+{
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 10))
+	{
+		d_knock2_P(dg_wSHOWERS_.DE[index], dg_wSHOWERS_.ICOL[index]);
+		dg_TRACK_mod_.STEP[index] = 18;
+	}
+}
+
+__global__ void g_showers_step18_G(int size)
+{
+
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 18))
+	{
+
+		// Simulação da historia da particula inicia aqui.
+
+		// Divisão de particulas e roleta russa . Apenas para particulas lidas de um arquivoco Phase-Space.
+		// Essa versão não irá implementar reduções de variancia e leitura de arquivo Phase-Space.
+
+		/*L102:;
+
+			if (dg_TRACK_mod_.E[index] < dg_CSPGEO_.EABSB[dg_TRACK_mod_.IBODY[index] - 1][dg_TRACK_mod_.KPAR[index] - 1])
+			{ // energia é muito baixa
+				dg_wSHOWERS_.DEP[index] = dg_TRACK_mod_.E[index] * dg_TRACK_mod_.WGHT[index];
+				if ((dg_TRACK_mod_.KPAR[index] == 3) && (dg_TRACK_mod_.E[index] > 1.0e-6))
+				{ // aniquilação de positrion
+					d_panar2_(dg_CSPGEO_.EABSB[dg_TRACK_mod_.IBODY[index] - 1][2 - 1]);
+					dg_wSHOWERS_.DEP[index] = dg_wSHOWERS_.DEP[index] + d_TREV * dg_TRACK_mod_.WGHT[index];
+				}
+				dg_TRACK_mod_.E[index] = 0.0e0;
+
+				// A energia é depositada localmente no material.
+				dg_CNT1_.DEBO[dg_TRACK_mod_.IBODY[index] - 1][index] = dg_CNT1_.DEBO[dg_TRACK_mod_.IBODY[index] - 1][index] + dg_wSHOWERS_.DEP[index];
+				if (dg_CNT6_.LDOSEM)
+				{ // Partícula dentro da caixa de dose.
+					d_sdose2_(dg_wSHOWERS_.DEP[index], dg_TRACK_mod_.X[index], dg_TRACK_mod_.Y[index], dg_TRACK_mod_.Z[index], dg_TRACK_mod_.MAT[index], dg_TRACK_mod_.N[index]);
+				}
+				dg_wSHOWERS_.IEXIT[index] = 3;
+				dg_TRACK_mod_.IEXIT[index] = dg_wSHOWERS_.IEXIT[index];
+				dg_TRACK_mod_.STEP[index] = 19; // Marca partículas absorvidas.
+				// showers_step3(size, IEXIT); // saida
+				return;
+			}
+
+			d_start2_();*/
+		// Inicia a simulação no meio atual.
+
+		// Comprimento do caminho livre para o próximo evento de interação.
+		//	L103:;
+		/*	dg_wSHOWERS_.IBODYL[index] = dg_TRACK_mod_.IBODY[index];
+			dg_wSHOWERS_.MATL[index] = dg_TRACK_mod_.MAT[index];
+			dg_wSHOWERS_.XL[index] = dg_TRACK_mod_.X[index];
+			dg_wSHOWERS_.YL[index] = dg_TRACK_mod_.Y[index];
+			dg_wSHOWERS_.ZL[index] = dg_TRACK_mod_.Z[index];*/
+
+		/*if ((CFORCI_.LFORCE[KPAR-1][IBODY-1]) && ((WGHT > WLOW[KPAR-1][IBODY-1]) && (WGHT < WHIG[KPAR-1][IBODY-1]))){
+			//JUMPF(DSMAX(IBODY),DS)  //Força de Interação
+			//LINTF=true;
+			//Esse trecho nao sera implementado pois a versão nao irá tratar redução de variancia.
+		}else`{
+			jumtp2(DSMAX(IBODY),DS)  ! Analogue simulation.
+			LINTF=false
+		}*/
+
+		// d_jump2_(dg_CSPGEO_.DSMAX[dg_TRACK_mod_.IBODY[index] - 1], dg_wSHOWERS_.DS[index]);
+		// dg_wSHOWERS_.LINTF[index] = false;
+
+		//	d_step2_(dg_wSHOWERS_.DS[index], dg_wSHOWERS_.DSEF[index], dg_wSHOWERS_.NCROSS[index]); // Determina a posição final do passo.
+
+		// Distribuição de energia de fluência.
+		/*	dg_wSHOWERS_.IDET[index] = dg_PENGEOM_mod_.KDET[dg_wSHOWERS_.IBODYL[index] - 1];
+			if (dg_wSHOWERS_.IDET[index] != 0)
+			{
+				if (dg_CNT4_.IDCUT[dg_wSHOWERS_.IDET[index] - 1] == 2)
+				{
+					if (dg_CNT4_.KKDI[dg_TRACK_mod_.KPAR[index] - 1][dg_wSHOWERS_.IDET[index] - 1] == 1)
+					{
+						if (dg_TRACK_mod_.KPAR[index] == 2)
+						{
+							d_fimdet2_(dg_TRACK_mod_.N[index], dg_wSHOWERS_.IDET[index], dg_wSHOWERS_.DSEF[index]);
+						}
+						else
+						{
+							dg_wSHOWERS_.DECSD[index] = dg_PENELOPE_mod_.SSOFT[index] * dg_wSHOWERS_.DSEF[index];
+							if (dg_wSHOWERS_.DECSD[index] > 1.0e-12)
+							{																																					   // A distribuição pode se estender
+								d_fimdes2_(dg_TRACK_mod_.N[index], dg_wSHOWERS_.IDET[index], dg_PENELOPE_mod_.E0STEP[index], dg_wSHOWERS_.DECSD[index], dg_wSHOWERS_.DSEF[index]); // abaixo do EABS.
+							}
+							else
+							{
+								d_fimdet2_(dg_TRACK_mod_.N[index], dg_wSHOWERS_.IDET[index], dg_wSHOWERS_.DSEF[index]);
+							}
+						}
+					}
+				}
+			}*/
+
+		// A partícula cruzou uma interface.
+
+		/*	if (dg_wSHOWERS_.NCROSS[index] > 0)
+			{
+				// Correção da perda de energia suave (CSDA).
+				if (dg_TRACK_mod_.KPAR[index] != 2)
+				{
+					dg_TRACK_mod_.E[index] = dg_PENELOPE_mod_.E0STEP[index] - dg_PENELOPE_mod_.SSOFT[index] * dg_wSHOWERS_.DSEF[index];
+					if (dg_CJUMP1_.MHINGE[index] == 0)
+					{
+						dg_wSHOWERS_.DEP[index] = dg_PENELOPE_mod_.SSOFT[index] * dg_wSHOWERS_.DSEF[index] * dg_TRACK_mod_.WGHT[index];
+						if (dg_CNT6_.LDOSEM)
+						{
+							dg_wSHOWERS_.DSEFR[index] = d_rand2_(8.0e0) * dg_wSHOWERS_.DSEF[index];
+							dg_wSHOWERS_.XD[index] = dg_wSHOWERS_.ZL[index] + dg_TRACK_mod_.U[index] * dg_wSHOWERS_.DSEFR[index];
+							dg_wSHOWERS_.YD[index] = dg_wSHOWERS_.YL[index] + dg_TRACK_mod_.V[index] * dg_wSHOWERS_.DSEFR[index];
+							dg_wSHOWERS_.ZD[index] = dg_wSHOWERS_.ZL[index] + dg_TRACK_mod_.W[index] * dg_wSHOWERS_.DSEFR[index];
+							d_sdose2_(dg_wSHOWERS_.DEP[index], dg_wSHOWERS_.XD[index], dg_wSHOWERS_.YD[index], dg_wSHOWERS_.ZD[index], dg_wSHOWERS_.MATL[index], dg_TRACK_mod_.N[index]);
+						}
+					}
+					else
+					{
+						dg_wSHOWERS_.DEP[index] = -dg_PENELOPE_mod_.SSOFT[index] * (dg_wSHOWERS_.DS[index] - dg_wSHOWERS_.DSEF[index]) * dg_TRACK_mod_.WGHT[index];
+						if (dg_CNT6_.LDOSEM)
+						{
+							d_sdose2_(dg_wSHOWERS_.DEP[index], dg_wSHOWERS_.XL[index], dg_wSHOWERS_.YL[index], dg_wSHOWERS_.ZL[index], dg_wSHOWERS_.MATL[index], dg_TRACK_mod_.N[index]);
+						}
+					}
+					dg_CNT1_.DEBO[dg_wSHOWERS_.IBODYL[index] - 1][index] = dg_CNT1_.DEBO[dg_wSHOWERS_.IBODYL[index] - 1][index] + dg_wSHOWERS_.DEP[index];
+				}
+				// Verifique se a partícula está fora do invólucro.
+				if (dg_TRACK_mod_.MAT[index] == 0)
+				{ // A partícula está fora do recinto.
+
+					if (dg_TRACK_mod_.W[index] > 0.0e0)
+					{
+						dg_wSHOWERS_.IEXIT[index] = 1; // Marca partículas ascendentes emergentes.
+					}
+					else
+					{
+						dg_wSHOWERS_.IEXIT[index] = 2; // Rotula partículas descendentes emergentes.
+													   //	printf("Down index ibody %d KPAR: %d ILB[0] %d A particula cruzou fronteira e esta fora do recinto\n\n", dg_TRACK_mod_.IBODY[index], dg_TRACK_mod_.KPAR[index], dg_TRACK_mod_.ILB[1-1][index]);
+					}
+					dg_TRACK_mod_.IEXIT[index] = dg_wSHOWERS_.IEXIT[index];
+					dg_TRACK_mod_.STEP[index] = 19;
+
+					// showers_step3(size, IEXIT); // Saida
+					return;
+				}
+
+				// Detectores de Impacto
+
+				dg_wSHOWERS_.IDET[index] = dg_PENGEOM_mod_.KDET[dg_TRACK_mod_.IBODY[index] - 1];
+				if (dg_wSHOWERS_.IDET[index] != 0)
+				{
+					if ((dg_PENGEOM_mod_.KDET[dg_wSHOWERS_.IBODYL[index] - 1] != dg_wSHOWERS_.IDET[index]) && (dg_CNT4_.KKDI[dg_TRACK_mod_.KPAR[index] - 1][dg_wSHOWERS_.IDET[index] - 1] == 1))
+					{
+						// Esse trecho faz gravação no arquivo Phase-Space que não será implementado nesta versao
+						/*if (dg_CNT4_.IPSF[IDET-1] == 1){
+							NSHJ=dg_CNTRL_.SHN - dg_CNT4_.RLAST;
+							wrpsf2_(dg_CNT4_.IPSFO,NSHJ,0);
+							dg_CNT4_.RWRITE=dg_CNT4_.RWRITE+1.0e0;
+							dg_CNT4_.RLAST=dg_CNTRL_.SHN;*/
+
+		/*					d_simdet2_(dg_TRACK_mod_.N[index], dg_wSHOWERS_.IDET[index]);
+
+							if (dg_CNT4_.IDCUT[dg_wSHOWERS_.IDET[index] - 1] == 0)
+							{
+								dg_CNT1_.DEBO[dg_TRACK_mod_.IBODY[index] - 1][index] = dg_CNT1_.DEBO[dg_TRACK_mod_.IBODY[index] - 1][index] + dg_TRACK_mod_.E[index] * dg_TRACK_mod_.WGHT[index];
+								dg_wSHOWERS_.IEXIT[index] = 3;
+								dg_TRACK_mod_.IEXIT[index] = dg_wSHOWERS_.IEXIT[index];
+								dg_TRACK_mod_.STEP[index] = 19;
+								// showers_step3(size, IEXIT);
+								return;
+							}
+						}
+					}
+					dg_TRACK_mod_.STEP[index] = 5; //L102
+					return;
+
+					//goto L102;
+				}*/
 
 		// Simulação dos eventos de interação da particula com a materia.
-		if (dg_wSHOWERS_.LINTF[index])
-		{
-			// knockf(DE, ICOL) // Não será implementado redução de variancia nesta versão
-		}
-		else
-		{
-			d_knock2_(dg_wSHOWERS_.DE[index], dg_wSHOWERS_.ICOL[index]);
-		}
+		/*	if (dg_wSHOWERS_.LINTF[index])
+			{
+				// knockf(DE, ICOL) // Não será implementado redução de variancia nesta versão
+			}
+			else
+			{
+				d_knock2_(dg_wSHOWERS_.DE[index], dg_wSHOWERS_.ICOL[index]);
+			}*/
 
 		if (dg_TRACK_mod_.E[index] < dg_CSPGEO_.EABSB[dg_TRACK_mod_.IBODY[index] - 1][dg_TRACK_mod_.KPAR[index] - 1])
 		{ // A partícula foi absorvida.
@@ -620,10 +801,9 @@ __global__ void g_showers_step18_G(int size)
 			return;
 		}
 
-		//goto L103;
+		// goto L103;
 		dg_TRACK_mod_.STEP[index] = 6;
 		return;
-
 
 		// A simulação da particula termina aqui.
 	}
@@ -6242,6 +6422,874 @@ L3800:;
 	return;
 }
 
+__device__ void d_knock2_G(double &DE, int &ICOL)
+{
+
+	/*
+	Simulação de dobradiças aleatórias e eventos de interação difícil.
+
+	Argumentos de saída:
+	DE ..... energia depositada pela partícula no material. Isto é
+	geralmente igual à diferença entre as energias
+	antes e depois da interação.
+	ICOL ... tipo de interação sofrida pela partícula.
+	*/
+
+	/*	if (imprimiu==0){
+			printf("\n\nKNOCK2\n\n");
+			imprimiu++;
+		}*/
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+
+	double CDT, DF,  STS, SS, ES, EP, CDTS;
+	double DFS, US, VS, WS, ECDT, CONS, EE, CDTE, CDTP;
+	int  IZA, ISA, IEFF;
+
+	// Fotons KPAR=2
+//
+//L2000:;
+
+	STS = dg_CJUMP0_.ST[index] * d_rand2_(1.0e0);
+	SS = dg_CJUMP0_.P[1 - 1][index];
+	if (SS > STS)
+		goto L2100;
+
+	SS = SS + dg_CJUMP0_.P[2 - 1][index];
+	if (SS > STS)
+		goto L2200;
+
+	SS = SS + dg_CJUMP0_.P[3 - 1][index];
+	if (SS > STS)
+		goto L2300;
+
+	SS = SS + dg_CJUMP0_.P[4 - 1][index];
+	if (SS > STS)
+		goto L2400;
+
+	SS = SS + dg_CJUMP0_.P[8 - 1][index];
+	if (SS > STS)
+		goto L2800;
+
+	// Espalhamento Rayleigh ICOL=1
+
+L2100:;
+	DE = 0.0e0;
+	d_graa2_(dg_TRACK_mod_.E[index], CDT, IEFF, dg_TRACK_mod_.MAT[index]);
+
+	/*
+	Interação delta. Introduzido para corrigir o uso de um
+	limite superior do coeficiente de atenuação de Rayleigh.
+	*/
+
+	if (IEFF == 0)
+	{
+		ICOL = 7;
+		return;
+	}
+	ICOL = 1;
+	if (dg_TRACK_mod_.IPOL[index] == 1)
+	{
+		double wCONS = 0.0e0;
+		d_dirpol2_(CDT, DF, wCONS, dg_TRACK_mod_.SP1[index], dg_TRACK_mod_.SP2[index], dg_TRACK_mod_.SP3[index], dg_TRACK_mod_.U[index], dg_TRACK_mod_.V[index], dg_TRACK_mod_.W[index]);
+	}
+	else
+	{
+		DF = d_TWOPI * d_rand2_(2.0e0);
+		d_direct2_(CDT, DF, dg_TRACK_mod_.U[index], dg_TRACK_mod_.V[index], dg_TRACK_mod_.W[index]);
+	}
+
+	dg_TRACK_mod_.ILB[1 - 1][index] = dg_TRACK_mod_.ILB[1 - 1][index] + 1;
+	dg_TRACK_mod_.ILB[2 - 1][index] = dg_TRACK_mod_.KPAR[index];
+	dg_TRACK_mod_.ILB[3 - 1][index] = ICOL;
+	return;
+
+	// Espalhamento Compton ICOL=2
+
+L2200:;
+	ICOL = 2;
+	d_gcoa2_(dg_TRACK_mod_.E[index], DE, EP, CDT, ES, CDTS, dg_TRACK_mod_.MAT[index], IZA, ISA);
+	US = dg_TRACK_mod_.U[index];
+	VS = dg_TRACK_mod_.V[index];
+	WS = dg_TRACK_mod_.W[index];
+	DF = -1.0e0;
+	if ((IZA > 0) && (ISA < 17))
+	{
+		dg_CHIST_.ILBA[index][3 - 1] = ICOL;
+		d_relax2_(IZA, ISA);
+	}
+
+	// Nova direção e energia
+	if (EP > dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][2 - 1])
+	{
+		if (dg_TRACK_mod_.IPOL[index] == 1)
+		{
+			ECDT = dg_TRACK_mod_.E[index] * d_RREV * (1.0e0 - CDT);
+			CONS = ECDT * ECDT / (1.0e0 + ECDT);
+			d_dirpol2_(CDT, DF, CONS, dg_TRACK_mod_.SP1[index], dg_TRACK_mod_.SP2[index], dg_TRACK_mod_.SP3[index], dg_TRACK_mod_.U[index], dg_TRACK_mod_.V[index], dg_TRACK_mod_.W[index]);
+		}
+		else
+		{
+			DF = d_TWOPI * d_rand2_(3.0e0);
+			d_direct2_(CDT, DF, dg_TRACK_mod_.U[index], dg_TRACK_mod_.V[index], dg_TRACK_mod_.W[index]);
+		}
+		dg_TRACK_mod_.E[index] = EP;
+	}
+	else
+	{
+		DE = dg_TRACK_mod_.E[index];
+		dg_TRACK_mod_.E[index] = 0.0e0;
+	}
+
+	// Electron Compton - particula secundaria
+	if (ES > dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][1 - 1])
+	{
+		if (DF < -0.5e0)
+			DF = d_TWOPI * d_rand2_(4.0e0);
+		DFS = DF + d_PI;
+		d_direct2_(CDTS, DFS, US, VS, WS);
+		dg_CHIST_.ILBA[index][1 - 1] = dg_TRACK_mod_.ILB[1 - 1][index] + 1;
+		dg_CHIST_.ILBA[index][2 - 1] = dg_TRACK_mod_.KPAR[index];
+		dg_CHIST_.ILBA[index][3 - 1] = ICOL;
+		dg_CHIST_.ILBA[index][4 - 1] = 0;
+		dg_CHIST_.ILBA[index][5 - 1] = dg_TRACK_mod_.ILB[5 - 1][index];
+		int wKPARP = 1;
+		d_stores2_(ES, dg_TRACK_mod_.X[index], dg_TRACK_mod_.Y[index], dg_TRACK_mod_.Z[index], US, VS, WS, dg_TRACK_mod_.WGHT[index], wKPARP, dg_CHIST_.ILBA[index], d_wIPOLI);
+	}
+	dg_TRACK_mod_.ILB[1 - 1][index] = dg_TRACK_mod_.ILB[1 - 1][index] + 1;
+	dg_TRACK_mod_.ILB[2 - 1][index] = dg_TRACK_mod_.KPAR[index];
+	dg_TRACK_mod_.ILB[3 - 1][index] = ICOL;
+	return;
+
+	// Absorção Fotoeletrica ICOL=3
+
+L2300:;
+	ICOL = 3;
+	d_gpha2_(ES, IZA, ISA);
+	/*
+	Interação delta. Introduzido para corrigir o uso de um
+	limite superior do coeficiente de atenuação fotoelétrica.
+	*/
+
+	if (IZA == 0)
+	{
+		ICOL = 7;
+		DE = 0.0e0;
+		return;
+	}
+
+	if (ES > dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][1 - 1])
+	{
+		d_sauter2_(ES, CDTS);
+		DFS = d_TWOPI * d_rand2_(5.0e0);
+		US = dg_TRACK_mod_.U[index];
+		VS = dg_TRACK_mod_.V[index];
+		WS = dg_TRACK_mod_.W[index];
+		d_direct2_(CDTS, DFS, US, VS, WS);
+		dg_CHIST_.ILBA[index][1 - 1] = dg_TRACK_mod_.ILB[1 - 1][index] + 1;
+		dg_CHIST_.ILBA[index][2 - 1] = dg_TRACK_mod_.KPAR[index];
+		dg_CHIST_.ILBA[index][3 - 1] = ICOL;
+		dg_CHIST_.ILBA[index][4 - 1] = 0;
+		dg_CHIST_.ILBA[index][5 - 1] = dg_TRACK_mod_.ILB[5 - 1][index];
+		int wKPARP = 1;
+		d_stores2_(ES, dg_TRACK_mod_.X[index], dg_TRACK_mod_.Y[index], dg_TRACK_mod_.Z[index], US, VS, WS, dg_TRACK_mod_.WGHT[index], wKPARP, dg_CHIST_.ILBA[index], d_wIPOLI);
+	}
+	if (ISA < 17)
+	{
+		dg_CHIST_.ILBA[index][3 - 1] = ICOL;
+		d_relax2_(IZA, ISA);
+	}
+	DE = dg_TRACK_mod_.E[index];
+	dg_TRACK_mod_.E[index] = 0.0e0;
+	return;
+
+	// Produção de pares eletron-positron ICOL=4
+
+L2400:;
+
+	ICOL = 4;
+	d_gppa2_(EE, CDTE, EP, CDTP, IZA, ISA);
+	DE = dg_TRACK_mod_.E[index];
+	// Eletron
+	if (EE > dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][1 - 1])
+	{
+		DF = d_TWOPI * d_rand2_(6.0e0);
+		US = dg_TRACK_mod_.U[index];
+		VS = dg_TRACK_mod_.V[index];
+		WS = dg_TRACK_mod_.W[index];
+		d_direct2_(CDTE, DF, US, VS, WS);
+		dg_CHIST_.ILBA[index][1 - 1] = dg_TRACK_mod_.ILB[1 - 1][index] + 1;
+		dg_CHIST_.ILBA[index][2 - 1] = dg_TRACK_mod_.KPAR[index];
+		dg_CHIST_.ILBA[index][3 - 1] = ICOL;
+		dg_CHIST_.ILBA[index][4 - 1] = 0;
+		dg_CHIST_.ILBA[index][5 - 1] = dg_TRACK_mod_.ILB[5 - 1][index];
+		int wKPARP = 1;
+		d_stores2_(EE, dg_TRACK_mod_.X[index], dg_TRACK_mod_.Y[index], dg_TRACK_mod_.Z[index], US, VS, WS, dg_TRACK_mod_.WGHT[index], wKPARP, dg_CHIST_.ILBA[index], d_wIPOLI);
+	}
+	// Positron
+	if (EP > dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][3 - 1])
+	{
+		DF = d_TWOPI * d_rand2_(7.0e0);
+		US = dg_TRACK_mod_.U[index];
+		VS = dg_TRACK_mod_.V[index];
+		WS = dg_TRACK_mod_.W[index];
+		d_direct2_(CDTP, DF, US, VS, WS);
+		dg_CHIST_.ILBA[index][1 - 1] = dg_TRACK_mod_.ILB[1 - 1][index] + 1;
+		dg_CHIST_.ILBA[index][2 - 1] = dg_TRACK_mod_.KPAR[index];
+		dg_CHIST_.ILBA[index][3 - 1] = ICOL;
+		dg_CHIST_.ILBA[index][4 - 1] = 0;
+		dg_CHIST_.ILBA[index][5 - 1] = dg_TRACK_mod_.ILB[5 - 1][index];
+		int wKPARP = 3;
+		d_stores2_(EP, dg_TRACK_mod_.X[index], dg_TRACK_mod_.Y[index], dg_TRACK_mod_.Z[index], US, VS, WS, dg_TRACK_mod_.WGHT[index], wKPARP, dg_CHIST_.ILBA[index], d_wIPOLI);
+		// O pósitron carrega uma energia 'latente' de 1022 keV.
+		DE = DE - d_TREV;
+	}
+	else
+	{
+		d_panar2_(dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][2 - 1]);
+	}
+	dg_TRACK_mod_.E[index] = 0.0e0;
+
+	// Relaxamento atômico após a produção de tripletos.
+	if (ISA < 17)
+	{
+		dg_CHIST_.ILBA[index][3 - 1] = ICOL;
+		d_relax2_(IZA, ISA);
+	}
+	return;
+
+	// Mecanismo fictício auxiliar (ICOL=8).
+
+L2800:;
+
+	ICOL = 8;
+	DE = 0.0e0;
+	d_gaux2_();
+	return;
+}
+
+__device__ void d_knock2_E(double &DE, int &ICOL)
+{
+
+	/*
+	Simulação de dobradiças aleatórias e eventos de interação difícil.
+
+	Argumentos de saída:
+	DE ..... energia depositada pela partícula no material. Isto é
+	geralmente igual à diferença entre as energias
+	antes e depois da interação.
+	ICOL ... tipo de interação sofrida pela partícula.
+	*/
+
+	/*	if (imprimiu==0){
+			printf("\n\nKNOCK2\n\n");
+			imprimiu++;
+		}*/
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+
+	double EMU1, EMU2, PNUM, PDEN, PMU0, PA, RND, CDT, DF, STNOW, STS, SS, TRNDC, TA, TB, RMU, DELTA, ES, EP, CDTS;
+	double DFS, US, VS, WS;
+	int IOSC, IZA, ISA;
+
+//L1000:;
+	if (dg_CJUMP1_.MHINGE[index] == 1)
+		goto L1100;
+
+	// Eletrons
+	// Dobradiça, evento suave artificial (ICOL=1).
+
+	ICOL = 1;
+	dg_CJUMP1_.MHINGE[index] = 1;
+
+	// Perda de Energia
+
+	if (dg_CJUMP1_.KSOFTI[index] == 1)
+	{
+		DE = dg_PENELOPE_mod_.DESOFT[index];
+		dg_TRACK_mod_.E[index] = dg_TRACK_mod_.E[index] - DE;
+		if (dg_TRACK_mod_.E[index] < dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][1 - 1])
+		{
+			DE = dg_PENELOPE_mod_.E0STEP[index];
+			dg_TRACK_mod_.E[index] = 0.0e0;
+			return;
+		}
+		dg_PENELOPE_mod_.E0STEP[index] = dg_PENELOPE_mod_.E0STEP[index] - dg_PENELOPE_mod_.SSOFT[index] * (dg_CJUMP0_.DST[index] - dg_CJUMP0_.DSR[index]);
+		if (dg_CJUMP1_.KSOFTE[index] == 0)
+			return;
+		dg_CEGRID_.XEL[index] = log(dg_PENELOPE_mod_.E0STEP[index]);
+		dg_CEGRID_.XE[index] = 1.0e0 + (dg_CEGRID_.XEL[index] - dg_CEGRID_.DLEMP1) * dg_CEGRID_.DLFC;
+		dg_CEGRID_.KE[index] = (int)dg_CEGRID_.XE[index];
+		dg_CEGRID_.XEK[index] = dg_CEGRID_.XE[index] - dg_CEGRID_.KE[index];
+	}
+	else
+	{
+		DE = 0.0e0;
+	}
+
+	// Deflexão Angular
+	if (dg_CEIMFP_.T1E[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_.MAT[index] - 1] > -78.3e0)
+	{
+		dg_CJUMP0_.T1[index] = exp(dg_CEIMFP_.T1E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] + (dg_CEIMFP_.T1E[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_.MAT[index] - 1] - dg_CEIMFP_.T1E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1]) * dg_CEGRID_.XEK[index]);
+		dg_CJUMP0_.T2[index] = exp(dg_CEIMFP_.T2E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] + (dg_CEIMFP_.T2E[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_.MAT[index] - 1] - dg_CEIMFP_.T2E[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1]) * dg_CEGRID_.XEK[index]);
+	}
+	else
+	{
+		dg_CJUMP0_.T1[index] = 0.0e0;
+		dg_CJUMP0_.T2[index] = 0.0e0;
+	}
+	if (dg_CJUMP0_.T1[index] < 1.0e-20)
+		return;
+	// 1º e 2º momentos da distribuição angular.
+	EMU1 = 0.5e0 * (1.0e0 - exp(-dg_CJUMP0_.DST[index] * dg_CJUMP0_.T1[index]));
+	EMU2 = EMU1 - (1.0e0 - exp(-dg_CJUMP0_.DST[index] * dg_CJUMP0_.T2[index])) / 6.0e0;
+	// Amostragem de um histograma de duas barras com esses momentos.
+	PNUM = 2.0e0 * EMU1 - 3.0e0 * EMU2;
+	PDEN = 1.0e0 - 2.0e0 * EMU1;
+	PMU0 = PNUM / PDEN;
+	PA = PDEN + PMU0;
+	RND = d_rand2_(2.0e0);
+
+	if (RND < PA)
+	{
+		CDT = 1.0e0 - 2.0e0 * PMU0 * (RND / PA);
+	}
+	else
+	{
+		CDT = 1.0e0 - 2.0e0 * (PMU0 + (1.0e0 - PMU0) * ((RND - PA) / (1.0e0 - PA)));
+	}
+	DF = d_TWOPI * d_rand2_(3.0e0);
+	d_direct2_(CDT, DF, dg_TRACK_mod_.U[index], dg_TRACK_mod_.V[index], dg_TRACK_mod_.W[index]);
+	return;
+
+	// Evento duro
+
+L1100:;
+
+	dg_CJUMP1_.MHINGE[index] = 0;
+	// Uma interação delta (ICOL=7) ocorre quando o máximo comprimento de passo permitido é excedido.
+	if (dg_CJUMP1_.KDELTA[index] == 1)
+	{
+		ICOL = 7;
+		DE = 0.0e0;
+		return;
+	}
+
+	// Amostragem aleatória do tipo de interação.
+	STNOW = dg_CJUMP0_.P[2 - 1][index] + dg_CJUMP0_.P[3 - 1][index] + dg_CJUMP0_.P[4 - 1][index] + dg_CJUMP0_.P[5 - 1][index] + dg_CJUMP0_.P[8 - 1][index];
+	STS = fmax(STNOW, dg_CJUMP0_.ST[index]) * d_rand2_(4.0e0);
+	SS = dg_CJUMP0_.P[2 - 1][index];
+	if (SS > STS)
+		goto L1200;
+
+	SS = SS + dg_CJUMP0_.P[3 - 1][index];
+	if (SS > STS)
+		goto L1300;
+
+	SS = SS + dg_CJUMP0_.P[4 - 1][index];
+	if (SS > STS)
+		goto L1400;
+
+	SS = SS + dg_CJUMP0_.P[5 - 1][index];
+	if (SS > STS)
+		goto L1500;
+
+	SS = SS + dg_CJUMP0_.P[8 - 1][index];
+	if (SS > STS)
+		goto L1800;
+
+	/*
+	Uma interação delta (ICOL=7) pode ocorrer quando o total
+	A probabilidade de interação por unidade de comprimento do caminho, ST, é maior que STNOW.
+	*/
+
+	ICOL = 7;
+	DE = 0.0e0;
+	return;
+
+	// Colisão Elastica Dura ICOL=2
+
+L1200:;
+	ICOL = 2;
+	if (dg_TRACK_mod_.E[index] >= dg_CELSEP_.EELMAX[dg_TRACK_mod_.MAT[index] - 1])
+	{
+		TRNDC = dg_CEIMFP_.RNDCE[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] + (dg_CEIMFP_.RNDCE[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_.MAT[index] - 1] - dg_CEIMFP_.RNDCE[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1]) * dg_CEGRID_.XEK[index];
+		TA = exp(dg_CEIMFP_.AE[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] + (dg_CEIMFP_.AE[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_.MAT[index] - 1] - dg_CEIMFP_.AE[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1]) * dg_CEGRID_.XEK[index]);
+		TB = dg_CEIMFP_.BE[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] + (dg_CEIMFP_.BE[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_.MAT[index] - 1] - dg_CEIMFP_.BE[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1]) * dg_CEGRID_.XEK[index];
+		d_eela2_(TA, TB, TRNDC, RMU);
+	}
+	else
+	{
+		// Implementacao do modelo alternativo utilzando  ELSEPA database
+		TRNDC = dg_CELSEP_.RNDCED[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] + (dg_CELSEP_.RNDCED[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_.MAT[index] - 1] - dg_CELSEP_.RNDCED[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1]) * dg_CEGRID_.XEK[index];
+		d_eeld2_(TRNDC, RMU);
+	}
+
+	CDT = 1.0e0 - (RMU + RMU);
+	DF = d_TWOPI * d_rand2_(5.0e0);
+	d_direct2_(CDT, DF, dg_TRACK_mod_.U[index], dg_TRACK_mod_.V[index], dg_TRACK_mod_.W[index]);
+	DE = 0.0e0;
+	return;
+
+	// Colisão Dura inelastica (ICOL=3)
+
+L1300:;
+	ICOL = 3;
+	DELTA = dg_CEIMFP_.DEL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] + (dg_CEIMFP_.DEL[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_.MAT[index] - 1] - dg_CEIMFP_.DEL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1]) * dg_CEGRID_.XEK[index];
+	d_eina2_(dg_TRACK_mod_.E[index], DELTA, DE, EP, CDT, ES, CDTS, dg_TRACK_mod_.MAT[index], IOSC);
+
+	//Ângulos de espalhamento (elétron primário).
+	DF = d_TWOPI * d_rand2_(6.0e0);
+	// Raio Delta
+	if (ES > dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][1 - 1])
+	{
+		DFS = DF + d_PI;
+		US = dg_TRACK_mod_.U[index];
+		VS = dg_TRACK_mod_.V[index];
+		WS = dg_TRACK_mod_.W[index];
+		d_direct2_(CDTS, DFS, US, VS, WS);
+		dg_CHIST_.ILBA[index][1 - 1] = dg_TRACK_mod_.ILB[1 - 1][index] + 1;
+		dg_CHIST_.ILBA[index][2 - 1] = dg_TRACK_mod_.KPAR[index];
+		dg_CHIST_.ILBA[index][3 - 1] = ICOL;
+		dg_CHIST_.ILBA[index][4 - 1] = 0;
+		dg_CHIST_.ILBA[index][5 - 1] = dg_TRACK_mod_.ILB[5 - 1][index];
+		int wvar = 1;
+		d_stores2_(ES, dg_TRACK_mod_.X[index], dg_TRACK_mod_.Y[index], dg_TRACK_mod_.Z[index], US, VS, WS, dg_TRACK_mod_.WGHT[index], wvar, dg_CHIST_.ILBA[index], d_wIPOLI);
+	}
+	// Nova energia e direção.
+	if (EP > dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][1 - 1])
+	{
+		dg_TRACK_mod_.E[index] = EP;
+		d_direct2_(CDT, DF, dg_TRACK_mod_.U[index], dg_TRACK_mod_.V[index], dg_TRACK_mod_.W[index]);
+	}
+	else
+	{
+		DE = dg_TRACK_mod_.E[index];
+		dg_TRACK_mod_.E[index] = 0.0e0;
+	}
+
+	return;
+
+	// Emissão bremsstrahlung dura (ICOL=4).
+L1400:;
+	ICOL = 4;
+	d_ebra2_(dg_TRACK_mod_.E[index], DE, dg_TRACK_mod_.MAT[index]);
+
+	// fóton de Bremsstrahlung.
+
+	if (DE > dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][2 - 1])
+	{
+		d_ebraa2_(dg_TRACK_mod_.E[index], DE, CDTS, dg_TRACK_mod_.MAT[index]);
+		DFS = d_TWOPI * d_rand2_(7.0e0);
+		US = dg_TRACK_mod_.U[index];
+		VS = dg_TRACK_mod_.V[index];
+		WS = dg_TRACK_mod_.W[index];
+		d_direct2_(CDTS, DFS, US, VS, WS);
+		dg_CHIST_.ILBA[index][1 - 1] = dg_TRACK_mod_.ILB[1 - 1][index] + 1;
+		dg_CHIST_.ILBA[index][2 - 1] = dg_TRACK_mod_.KPAR[index];
+		dg_CHIST_.ILBA[index][3 - 1] = ICOL;
+		dg_CHIST_.ILBA[index][4 - 1] = 0;
+		dg_CHIST_.ILBA[index][5 - 1] = dg_TRACK_mod_.ILB[5 - 1][index];
+		int wvar = 2;
+		d_stores2_(DE, dg_TRACK_mod_.X[index], dg_TRACK_mod_.Y[index], dg_TRACK_mod_.Z[index], US, VS, WS, dg_TRACK_mod_.WGHT[index], wvar, dg_CHIST_.ILBA[index], d_wIPOLI);
+	}
+	// Nova energia
+	dg_TRACK_mod_.E[index] = dg_TRACK_mod_.E[index] - DE;
+	if (dg_TRACK_mod_.E[index] < dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][1 - 1])
+	{
+		DE = dg_TRACK_mod_.E[index] + DE;
+		dg_TRACK_mod_.E[index] = 0.0e0;
+	}
+	return;
+
+	// Ionização de uma casca interna (ICOL=5).
+
+L1500:;
+	ICOL = 5;
+	DELTA = dg_CEIMFP_.DEL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] + (dg_CEIMFP_.DEL[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_.MAT[index] - 1] - dg_CEIMFP_.DEL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1]) * dg_CEGRID_.XEK[index];
+	d_esia2_(dg_TRACK_mod_.E[index], DELTA, DE, EP, CDT, ES, CDTS, dg_TRACK_mod_.MAT[index], IZA, ISA);
+	// relaxamento atomico
+	if (IZA > 2)
+	{
+		dg_CHIST_.ILBA[index][3 - 1] = ICOL;
+		d_relax2_(IZA, ISA);
+	}
+
+	//Ângulos de espalhamento (elétron primário).
+	DF = d_TWOPI * d_rand2_(8.0e0);
+	// raio delta
+	if (ES > dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][1 - 1])
+	{
+		DFS = DF + d_PI;
+		US = dg_TRACK_mod_.U[index];
+		VS = dg_TRACK_mod_.V[index];
+		WS = dg_TRACK_mod_.W[index];
+		d_direct2_(CDTS, DFS, US, VS, WS);
+		dg_CHIST_.ILBA[index][1 - 1] = dg_TRACK_mod_.ILB[1 - 1][index] + 1;
+		dg_CHIST_.ILBA[index][2 - 1] = dg_TRACK_mod_.KPAR[index];
+		dg_CHIST_.ILBA[index][3 - 1] = ICOL;
+		dg_CHIST_.ILBA[index][4 - 1] = 0;
+		dg_CHIST_.ILBA[index][5 - 1] = dg_TRACK_mod_.ILB[5 - 1][index];
+		int wvar = 1;
+		d_stores2_(ES, dg_TRACK_mod_.X[index], dg_TRACK_mod_.Y[index], dg_TRACK_mod_.Z[index], US, VS, WS, dg_TRACK_mod_.WGHT[index], wvar, dg_CHIST_.ILBA[index], d_wIPOLI);
+	}
+
+	// Nova energia e direção
+	if (EP > dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][1 - 1])
+	{
+		dg_TRACK_mod_.E[index] = EP;
+		d_direct2_(CDT, DF, dg_TRACK_mod_.U[index], dg_TRACK_mod_.V[index], dg_TRACK_mod_.W[index]);
+	}
+	else
+	{
+		DE = dg_TRACK_mod_.E[index];
+		dg_TRACK_mod_.E[index] = 0.0e0;
+	}
+	return;
+
+	// Mecanismo fictício auxiliar (ICOL=8).
+
+L1800:;
+	ICOL = 8;
+	DE = 0.0e0;
+	d_eaux2_();
+	return;
+}
+
+__device__ void d_knock2_P(double &DE, int &ICOL)
+{
+
+	/*
+	Simulação de dobradiças aleatórias e eventos de interação difícil.
+
+	Argumentos de saída:
+	DE ..... energia depositada pela partícula no material. Isto é
+	geralmente igual à diferença entre as energias
+	antes e depois da interação.
+	ICOL ... tipo de interação sofrida pela partícula.
+	*/
+
+	/*	if (imprimiu==0){
+			printf("\n\nKNOCK2\n\n");
+			imprimiu++;
+		}*/
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+
+	double EMU1, EMU2, PNUM, PDEN, PMU0, PA, RND, CDT, DF, STNOW, STS, SS, TRNDC, TA, TB, RMU, DELTA, ES, EP, CDTS;
+	double DFS, US, VS, WS, E1, CDT1, E2, CDT2;
+	int IOSC, IZA, ISA;
+
+	// Positrons KPAR=3
+
+//L3000:;
+
+	if (dg_CJUMP1_.MHINGE[index] == 1)
+		goto L3100;
+
+	// Dobradiça, evento suave artificial (ICOL=1).
+
+	ICOL = 1;
+	dg_CJUMP1_.MHINGE[index] = 1;
+
+	// Perda de Energia
+
+	if (dg_CJUMP1_.KSOFTI[index] == 1)
+	{
+		DE = dg_PENELOPE_mod_.DESOFT[index];
+		dg_TRACK_mod_.E[index] = dg_TRACK_mod_.E[index] - DE;
+		if (dg_TRACK_mod_.E[index] < dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][3 - 1])
+		{
+			d_panar2_(dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][2 - 1]); // Aniquilação em repouso.
+			DE = dg_PENELOPE_mod_.E0STEP[index] + d_TREV;
+			dg_TRACK_mod_.E[index] = 0.0e0;
+			return;
+		}
+		dg_PENELOPE_mod_.E0STEP[index] = dg_PENELOPE_mod_.E0STEP[index] - dg_PENELOPE_mod_.SSOFT[index] * (dg_CJUMP0_.DST[index] - dg_CJUMP0_.DSR[index]);
+		if (dg_CJUMP1_.KSOFTE[index] == 0)
+			return;
+
+		dg_CEGRID_.XEL[index] = log(dg_PENELOPE_mod_.E0STEP[index]);
+		dg_CEGRID_.XE[index] = 1.0e0 + (dg_CEGRID_.XEL[index] - dg_CEGRID_.DLEMP1) * dg_CEGRID_.DLFC;
+		dg_CEGRID_.KE[index] = (int)dg_CEGRID_.XE[index];
+		dg_CEGRID_.XEK[index] = dg_CEGRID_.XE[index] - dg_CEGRID_.KE[index];
+	}
+	else
+	{
+		DE = 0.0e0;
+	}
+
+	// Deflexão Angular
+	if (dg_CPIMFP_.T1P[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_.MAT[index] - 1] > -78.3e0)
+	{
+		dg_CJUMP0_.T1[index] = exp(dg_CPIMFP_.T1P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] + (dg_CPIMFP_.T1P[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_.MAT[index] - 1] - dg_CPIMFP_.T1P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1]) * dg_CEGRID_.XEK[index]);
+		dg_CJUMP0_.T2[index] = exp(dg_CPIMFP_.T2P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] + (dg_CPIMFP_.T2P[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_.MAT[index] - 1] - dg_CPIMFP_.T2P[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1]) * dg_CEGRID_.XEK[index]);
+	}
+	else
+	{
+		dg_CJUMP0_.T1[index] = 0.0e0;
+		dg_CJUMP0_.T2[index] = 0.0e0;
+	}
+	if (dg_CJUMP0_.T1[index] < 1.0e-20)
+		return;
+	// 1º e 2º momentos da distribuição angular.
+	EMU1 = 0.5e0 * (1.0e0 - exp(-dg_CJUMP0_.DST[index] * dg_CJUMP0_.T1[index]));
+	EMU2 = EMU1 - (1.0e0 - exp(-dg_CJUMP0_.DST[index] * dg_CJUMP0_.T2[index])) / 6.0e0;
+	// Amostragem de um histograma de duas barras com esses momentos.
+	PNUM = 2.0e0 * EMU1 - 3.0e0 * EMU2;
+	PDEN = 1.0e0 - 2.0e0 * EMU1;
+	PMU0 = PNUM / PDEN;
+	PA = PDEN + PMU0;
+	RND = d_rand2_(2.0e0);
+
+	if (RND < PA)
+	{
+		CDT = 1.0e0 - 2.0e0 * PMU0 * (RND / PA);
+	}
+	else
+	{
+		CDT = 1.0e0 - 2.0e0 * (PMU0 + (1.0e0 - PMU0) * ((RND - PA) / (1.0e0 - PA)));
+	}
+	DF = d_TWOPI * d_rand2_(3.0e0);
+	d_direct2_(CDT, DF, dg_TRACK_mod_.U[index], dg_TRACK_mod_.V[index], dg_TRACK_mod_.W[index]);
+	return;
+
+	// Evento duro
+
+L3100:;
+
+	dg_CJUMP1_.MHINGE[index] = 0;
+	// Uma interação delta (ICOL=7) ocorre quando o máximo comprimento de passo permitido é excedido.
+	if (dg_CJUMP1_.KDELTA[index] == 1)
+	{
+		ICOL = 7;
+		DE = 0.0e0;
+		return;
+	}
+
+	// Amostragem aleatória do tipo de interação.
+	STNOW = dg_CJUMP0_.P[2 - 1][index] + dg_CJUMP0_.P[3 - 1][index] + dg_CJUMP0_.P[4 - 1][index] + dg_CJUMP0_.P[5 - 1][index] + dg_CJUMP0_.P[6 - 1][index] + dg_CJUMP0_.P[8 - 1][index];
+	STS = fmax(STNOW, dg_CJUMP0_.ST[index]) * d_rand2_(4.0e0);
+	SS = dg_CJUMP0_.P[2 - 1][index];
+	if (SS > STS)
+		goto L3200;
+
+	SS = SS + dg_CJUMP0_.P[3 - 1][index];
+	if (SS > STS)
+		goto L3300;
+
+	SS = SS + dg_CJUMP0_.P[4 - 1][index];
+	if (SS > STS)
+		goto L3400;
+
+	SS = SS + dg_CJUMP0_.P[5 - 1][index];
+	if (SS > STS)
+		goto L3500;
+
+	SS = SS + dg_CJUMP0_.P[6 - 1][index];
+	if (SS > STS)
+		goto L3600;
+
+	SS = SS + dg_CJUMP0_.P[8 - 1][index];
+	if (SS > STS)
+		goto L3800;
+
+	/*
+	Uma interação delta (ICOL=7) pode ocorrer quando o total
+	A probabilidade de interação por unidade de comprimento do caminho, ST, é maior que STNOW.
+	*/
+
+	ICOL = 7;
+	DE = 0.0e0;
+	return;
+
+	// Colisão Elastica Dura ICOL=2
+
+L3200:;
+	ICOL = 2;
+	if (dg_TRACK_mod_.E[index] >= dg_CELSEP_.PELMAX[dg_TRACK_mod_.MAT[index] - 1])
+	{
+		TRNDC = dg_CPIMFP_.RNDCP[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] + (dg_CPIMFP_.RNDCP[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_.MAT[index] - 1] - dg_CPIMFP_.RNDCP[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1]) * dg_CEGRID_.XEK[index];
+		TA = exp(dg_CPIMFP_.AP[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] + (dg_CPIMFP_.AP[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_.MAT[index] - 1] - dg_CPIMFP_.AP[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1]) * dg_CEGRID_.XEK[index]);
+		TB = dg_CPIMFP_.BP[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] + (dg_CPIMFP_.BP[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_.MAT[index] - 1] - dg_CPIMFP_.BP[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1]) * dg_CEGRID_.XEK[index];
+		d_eela2_(TA, TB, TRNDC, RMU);
+	}
+	else
+	{
+		// Implementacao do modelo alternativo utilzando  ELSEPA database
+		TRNDC = dg_CELSEP_.RNDCPD[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] + (dg_CELSEP_.RNDCPD[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_.MAT[index] - 1] - dg_CELSEP_.RNDCPD[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1]) * dg_CEGRID_.XEK[index];
+		d_peld2_(TRNDC, RMU);
+	}
+
+	CDT = 1.0e0 - (RMU + RMU);
+	DF = d_TWOPI * d_rand2_(5.0e0);
+	d_direct2_(CDT, DF, dg_TRACK_mod_.U[index], dg_TRACK_mod_.V[index], dg_TRACK_mod_.W[index]);
+	DE = 0.0e0;
+	return;
+
+	// Colisão Dura inelastica (ICOL=3)
+
+L3300:;
+	ICOL = 3;
+	DELTA = dg_CEIMFP_.DEL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] + (dg_CEIMFP_.DEL[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_.MAT[index] - 1] - dg_CEIMFP_.DEL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1]) * dg_CEGRID_.XEK[index];
+	d_pina2_(dg_TRACK_mod_.E[index], DELTA, DE, EP, CDT, ES, CDTS, dg_TRACK_mod_.MAT[index], IOSC);
+
+	//Ângulos de espalhamento (positron primário).
+	DF = d_TWOPI * d_rand2_(6.0e0);
+	// Raio Delta
+	if (ES > dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][1 - 1])
+	{
+		DFS = DF + d_PI;
+		US = dg_TRACK_mod_.U[index];
+		VS = dg_TRACK_mod_.V[index];
+		WS = dg_TRACK_mod_.W[index];
+		d_direct2_(CDTS, DFS, US, VS, WS);
+		dg_CHIST_.ILBA[index][1 - 1] = dg_TRACK_mod_.ILB[1 - 1][index] + 1;
+		dg_CHIST_.ILBA[index][2 - 1] = dg_TRACK_mod_.KPAR[index];
+		dg_CHIST_.ILBA[index][3 - 1] = ICOL;
+		dg_CHIST_.ILBA[index][4 - 1] = 0;
+		dg_CHIST_.ILBA[index][5 - 1] = dg_TRACK_mod_.ILB[5 - 1][index];
+		int wvar = 1;
+		d_stores2_(ES, dg_TRACK_mod_.X[index], dg_TRACK_mod_.Y[index], dg_TRACK_mod_.Z[index], US, VS, WS, dg_TRACK_mod_.WGHT[index], wvar, dg_CHIST_.ILBA[index], d_wIPOLI);
+	}
+	// Nova energia e direção.
+	if (EP > dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][3 - 1])
+	{
+		dg_TRACK_mod_.E[index] = EP;
+		d_direct2_(CDT, DF, dg_TRACK_mod_.U[index], dg_TRACK_mod_.V[index], dg_TRACK_mod_.W[index]);
+	}
+	else
+	{
+		d_panar2_(dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][2 - 1]);
+		DE = dg_TRACK_mod_.E[index] + d_TREV;
+		dg_TRACK_mod_.E[index] = 0.0e0;
+	}
+
+	return;
+
+	// Emissão bremsstrahlung dura (ICOL=4).
+L3400:;
+	ICOL = 4;
+	d_ebra2_(dg_TRACK_mod_.E[index], DE, dg_TRACK_mod_.MAT[index]);
+
+	// fóton de Bremsstrahlung.
+
+	if (DE > dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][2 - 1])
+	{
+		d_ebraa2_(dg_TRACK_mod_.E[index], DE, CDTS, dg_TRACK_mod_.MAT[index]);
+		DFS = d_TWOPI * d_rand2_(7.0e0);
+		US = dg_TRACK_mod_.U[index];
+		VS = dg_TRACK_mod_.V[index];
+		WS = dg_TRACK_mod_.W[index];
+		d_direct2_(CDTS, DFS, US, VS, WS);
+		dg_CHIST_.ILBA[index][1 - 1] = dg_TRACK_mod_.ILB[1 - 1][index] + 1;
+		dg_CHIST_.ILBA[index][2 - 1] = dg_TRACK_mod_.KPAR[index];
+		dg_CHIST_.ILBA[index][3 - 1] = ICOL;
+		dg_CHIST_.ILBA[index][4 - 1] = 0;
+		dg_CHIST_.ILBA[index][5 - 1] = dg_TRACK_mod_.ILB[5 - 1][index];
+		int wvar = 2;
+		d_stores2_(DE, dg_TRACK_mod_.X[index], dg_TRACK_mod_.Y[index], dg_TRACK_mod_.Z[index], US, VS, WS, dg_TRACK_mod_.WGHT[index], wvar, dg_CHIST_.ILBA[index], d_wIPOLI);
+	}
+	// Nova energia
+	dg_TRACK_mod_.E[index] = dg_TRACK_mod_.E[index] - DE;
+	if (dg_TRACK_mod_.E[index] < dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][3 - 1])
+	{
+		d_panar2_(dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][2 - 1]); // Aniquilação em repouso.
+		DE = dg_TRACK_mod_.E[index] + DE + d_TREV;
+		dg_TRACK_mod_.E[index] = 0.0e0;
+	}
+	return;
+
+	// Ionização de uma casca interna (ICOL=5).
+
+L3500:;
+	ICOL = 5;
+	DELTA = dg_CEIMFP_.DEL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] + (dg_CEIMFP_.DEL[dg_CEGRID_.KE[index] + 1 - 1][dg_TRACK_mod_.MAT[index] - 1] - dg_CEIMFP_.DEL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1]) * dg_CEGRID_.XEK[index];
+	d_psia2_(dg_TRACK_mod_.E[index], DELTA, DE, EP, CDT, ES, CDTS, dg_TRACK_mod_.MAT[index], IZA, ISA);
+	// relaxamento atomico
+	if (IZA > 2)
+	{
+		dg_CHIST_.ILBA[index][3 - 1] = ICOL;
+		d_relax2_(IZA, ISA);
+	}
+
+	//Ângulos de espalhamento (elétron primário).
+	DF = d_TWOPI * d_rand2_(8.0e0);
+	// raio delta
+	if (ES > dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][1 - 1])
+	{
+		DFS = DF + d_PI;
+		US = dg_TRACK_mod_.U[index];
+		VS = dg_TRACK_mod_.V[index];
+		WS = dg_TRACK_mod_.W[index];
+		d_direct2_(CDTS, DFS, US, VS, WS);
+		dg_CHIST_.ILBA[index][1 - 1] = dg_TRACK_mod_.ILB[1 - 1][index] + 1;
+		dg_CHIST_.ILBA[index][2 - 1] = dg_TRACK_mod_.KPAR[index];
+		dg_CHIST_.ILBA[index][3 - 1] = ICOL;
+		dg_CHIST_.ILBA[index][4 - 1] = 0;
+		dg_CHIST_.ILBA[index][5 - 1] = dg_TRACK_mod_.ILB[5 - 1][index];
+		int wvar = 1;
+		d_stores2_(ES, dg_TRACK_mod_.X[index], dg_TRACK_mod_.Y[index], dg_TRACK_mod_.Z[index], US, VS, WS, dg_TRACK_mod_.WGHT[index], wvar, dg_CHIST_.ILBA[index], d_wIPOLI);
+	}
+
+	// Nova energia e direção
+	if (EP > dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][3 - 1])
+	{
+		dg_TRACK_mod_.E[index] = EP;
+		d_direct2_(CDT, DF, dg_TRACK_mod_.U[index], dg_TRACK_mod_.V[index], dg_TRACK_mod_.W[index]);
+	}
+	else
+	{
+		d_panar2_(dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][2 - 1]);
+		DE = dg_TRACK_mod_.E[index] + d_TREV;
+		dg_TRACK_mod_.E[index] = 0.0e0;
+	}
+	return;
+
+L3600:; // Aniquilação de positron em voo
+
+	ICOL = 6;
+	d_pana2_(dg_TRACK_mod_.E[index], E1, CDT1, E2, CDT2, dg_TRACK_mod_.MAT[index]);
+	DF = d_TWOPI * d_rand2_(9.0e0);
+	if (E1 > dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][2 - 1])
+	{
+		US = dg_TRACK_mod_.U[index];
+		VS = dg_TRACK_mod_.V[index];
+		WS = dg_TRACK_mod_.W[index];
+		d_direct2_(CDT1, DF, US, VS, WS);
+		dg_CHIST_.ILBA[index][1 - 1] = dg_TRACK_mod_.ILB[1 - 1][index] + 1;
+		dg_CHIST_.ILBA[index][2 - 1] = dg_TRACK_mod_.KPAR[index];
+		dg_CHIST_.ILBA[index][3 - 1] = ICOL;
+		dg_CHIST_.ILBA[index][4 - 1] = 0;
+		dg_CHIST_.ILBA[index][5 - 1] = dg_TRACK_mod_.ILB[5 - 1][index];
+		int wvar = 2;
+		d_stores2_(E1, dg_TRACK_mod_.X[index], dg_TRACK_mod_.Y[index], dg_TRACK_mod_.Z[index], US, VS, WS, dg_TRACK_mod_.WGHT[index], wvar, dg_CHIST_.ILBA[index], d_wIPOLI);
+	}
+	if (E2 > dg_PENELOPE_mod_.EABS[dg_TRACK_mod_.MAT[index] - 1][2 - 1])
+	{
+		DF = DF + d_PI;
+		US = dg_TRACK_mod_.U[index];
+		VS = dg_TRACK_mod_.V[index];
+		WS = dg_TRACK_mod_.W[index];
+		d_direct2_(CDT2, DF, US, VS, WS);
+		dg_CHIST_.ILBA[index][1 - 1] = dg_TRACK_mod_.ILB[1 - 1][index] + 1;
+		dg_CHIST_.ILBA[index][2 - 1] = dg_TRACK_mod_.KPAR[index];
+		dg_CHIST_.ILBA[index][3 - 1] = ICOL;
+		dg_CHIST_.ILBA[index][4 - 1] = 0;
+		dg_CHIST_.ILBA[index][5 - 1] = dg_TRACK_mod_.ILB[5 - 1][index];
+		int wvar = 2;
+		d_stores2_(E2, dg_TRACK_mod_.X[index], dg_TRACK_mod_.Y[index], dg_TRACK_mod_.Z[index], US, VS, WS, dg_TRACK_mod_.WGHT[index], wvar, dg_CHIST_.ILBA[index], d_wIPOLI);
+	}
+	DE = dg_TRACK_mod_.E[index] + d_TREV;
+	dg_TRACK_mod_.E[index] = 0.0e0;
+	return;
+
+	// Mecanismo fictício auxiliar (ICOL=8).
+
+L3800:;
+	ICOL = 8;
+	DE = 0.0e0;
+	d_paux2_();
+	return;
+}
+
 __device__ void d_eela2_(double &A, double &B, double &RNDC, double &RMU)
 {
 
@@ -7057,20 +8105,18 @@ __device__ void d_jump2_G(double &DSMAX, double &DS)
 	}*/
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
 
+	if (dg_TRACK_mod_.E[index] < dg_CJUMP1_.ELAST1[index])
+	{
+		dg_CEGRID_.XEL[index] = log(dg_TRACK_mod_.E[index]);
+		dg_CEGRID_.XE[index] = 1.0e0 + (dg_CEGRID_.XEL[index] - dg_CEGRID_.DLEMP1) * dg_CEGRID_.DLFC;
+		dg_CEGRID_.KE[index] = (int)dg_CEGRID_.XE[index];
+		dg_CEGRID_.XEK[index] = dg_CEGRID_.XE[index] - dg_CEGRID_.KE[index];
+		d_gimfp2_();
+		dg_CJUMP1_.ELAST1[index] = dg_TRACK_mod_.E[index];
+		dg_CJUMP0_.ST[index] = dg_CJUMP0_.P[1 - 1][index] + dg_CJUMP0_.P[2 - 1][index] + dg_CJUMP0_.P[3 - 1][index] + dg_CJUMP0_.P[4 - 1][index] + dg_CJUMP0_.P[8 - 1][index];
+	}
 
-		if (dg_TRACK_mod_.E[index] < dg_CJUMP1_.ELAST1[index])
-		{
-			dg_CEGRID_.XEL[index] = log(dg_TRACK_mod_.E[index]);
-			dg_CEGRID_.XE[index] = 1.0e0 + (dg_CEGRID_.XEL[index] - dg_CEGRID_.DLEMP1) * dg_CEGRID_.DLFC;
-			dg_CEGRID_.KE[index] = (int)dg_CEGRID_.XE[index];
-			dg_CEGRID_.XEK[index] = dg_CEGRID_.XE[index] - dg_CEGRID_.KE[index];
-			d_gimfp2_();
-			dg_CJUMP1_.ELAST1[index] = dg_TRACK_mod_.E[index];
-			dg_CJUMP0_.ST[index] = dg_CJUMP0_.P[1 - 1][index] + dg_CJUMP0_.P[2 - 1][index] + dg_CJUMP0_.P[3 - 1][index] + dg_CJUMP0_.P[4 - 1][index] + dg_CJUMP0_.P[8 - 1][index];
-		}
-
-		DS = -log(d_rand2_(1.0e0)) / dg_CJUMP0_.ST[index];
-
+	DS = -log(d_rand2_(1.0e0)) / dg_CJUMP0_.ST[index];
 }
 
 __device__ void d_jump2_E(double &DSMAX, double &DS)
@@ -7305,21 +8351,21 @@ __device__ void d_jump2_E(double &DSMAX, double &DS)
 
 __device__ void d_jump2_P(double &DSMAX, double &DS)
 {
-/*
-	Cálculo do caminho livre do ponto de partida até a posição
-	do próximo evento e das probabilidades de ocorrência de diferentes
-	eventos .
+	/*
+		Cálculo do caminho livre do ponto de partida até a posição
+		do próximo evento e das probabilidades de ocorrência de diferentes
+		eventos .
 
-	Argumentos :
-	DSMAX .... comprimento máximo permitido do passo (entrada),
-	DS ....... comprimento do segmento (saída).
+		Argumentos :
+		DSMAX .... comprimento máximo permitido do passo (entrada),
+		DS ....... comprimento do segmento (saída).
 
-	Saída , através do módulo PENELOPE_mod:
-	E0STEP ... energia no início do segmento,
-	DESOFT ... perda de energia devido a interações suaves ao longo da etapa,
-	SSOFT .... poder de parada devido a interações suaves,
-	= DESOFT/passo_comprimento.
-	*/
+		Saída , através do módulo PENELOPE_mod:
+		E0STEP ... energia no início do segmento,
+		DESOFT ... perda de energia devido a interações suaves ao longo da etapa,
+		SSOFT .... poder de parada devido a interações suaves,
+		= DESOFT/passo_comprimento.
+		*/
 
 	/*	if (imprimiu==0){
 		printf("\n\nJUMP2\n\n");
@@ -7330,7 +8376,7 @@ __device__ void d_jump2_P(double &DSMAX, double &DS)
 	double RU, EDE2, VDE3, PNULL;
 	int KE1;
 
-	 if (dg_TRACK_mod_.KPAR[index] == 3)
+	if (dg_TRACK_mod_.KPAR[index] == 3)
 	{ // Positrons
 
 		if (dg_CJUMP1_.MHINGE[index] == 1)
@@ -7533,12 +8579,7 @@ __device__ void d_jump2_P(double &DSMAX, double &DS)
 		}
 		return;
 	}
-
 }
-
-
-
-
 
 __device__ double d_rndg32_()
 {
