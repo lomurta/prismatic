@@ -88,6 +88,12 @@ __device__ void d_start2_();
 
 __device__ void d_jump2_(double &DSMAX, double &DS);
 
+__device__ void d_jump2_G(double &DSMAX, double &DS);
+
+__device__ void d_jump2_E(double &DSMAX, double &DS);
+
+__device__ void d_jump2_P(double &DSMAX, double &DS);
+
 __device__ double d_rndg32_();
 
 __device__ void d_gcone2_(double &UF, double &VF, double &WF);
@@ -323,7 +329,7 @@ __global__ void g_showers_step5_G(int size)
 {
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
 
-	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 5))
+	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 5))//l102
 	{
 		// Aniquiliação de positron quando a energia da particula é muito pequena
 
@@ -348,10 +354,63 @@ __global__ void g_showers_step5_G(int size)
 			// showers_step3(size, IEXIT);
 			return;
 		}
+		d_start2_();
 
-		dg_TRACK_mod_.STEP[index] = 18;
+		dg_TRACK_mod_.STEP[index] = 6;
 	}
 }
+
+__global__ void g_showers_step6_G(int size){
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 6))
+	{
+
+	d_jump2_G(dg_CSPGEO_.DSMAX[dg_TRACK_mod_.IBODY[index] - 1], dg_wSHOWERS_.DS[index]);
+	dg_TRACK_mod_.STEP[index] = 7;
+	}
+
+}
+
+__global__ void g_showers_step6_E(int size){
+
+int index = blockDim.x * blockIdx.x + threadIdx.x;
+	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 6))
+	{
+	d_jump2_E(dg_CSPGEO_.DSMAX[dg_TRACK_mod_.IBODY[index] - 1], dg_wSHOWERS_.DS[index]);
+	dg_TRACK_mod_.STEP[index] = 7;
+	}
+}
+
+__global__ void g_showers_step6_P(int size){
+
+int index = blockDim.x * blockIdx.x + threadIdx.x;
+	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 6))
+	{
+	d_jump2_P(dg_CSPGEO_.DSMAX[dg_TRACK_mod_.IBODY[index] - 1], dg_wSHOWERS_.DS[index]);
+	dg_TRACK_mod_.STEP[index] = 7;
+	}
+}
+
+__global__ void g_showers_step7_G(int size){
+
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 7)){
+		d_step2_(dg_wSHOWERS_.DS[index], dg_wSHOWERS_.DSEF[index], dg_wSHOWERS_.NCROSS[index]); 
+		dg_TRACK_mod_.STEP[index] = 18;
+
+
+	}
+
+
+
+
+}
+
+
+
+
+
+
 
 __global__ void g_showers_step18_G(int size)
 {
@@ -365,7 +424,7 @@ __global__ void g_showers_step18_G(int size)
 		// Divisão de particulas e roleta russa . Apenas para particulas lidas de um arquivoco Phase-Space.
 		// Essa versão não irá implementar reduções de variancia e leitura de arquivo Phase-Space.
 
-	L102:;
+	/*L102:;
 
 		if (dg_TRACK_mod_.E[index] < dg_CSPGEO_.EABSB[dg_TRACK_mod_.IBODY[index] - 1][dg_TRACK_mod_.KPAR[index] - 1])
 		{ // energia é muito baixa
@@ -390,10 +449,10 @@ __global__ void g_showers_step18_G(int size)
 			return;
 		}
 
-		d_start2_(); // Inicia a simulação no meio atual.
+		d_start2_();*/ // Inicia a simulação no meio atual.
 
 		// Comprimento do caminho livre para o próximo evento de interação.
-	L103:;
+//	L103:;
 		dg_wSHOWERS_.IBODYL[index] = dg_TRACK_mod_.IBODY[index];
 		dg_wSHOWERS_.MATL[index] = dg_TRACK_mod_.MAT[index];
 		dg_wSHOWERS_.XL[index] = dg_TRACK_mod_.X[index];
@@ -409,10 +468,10 @@ __global__ void g_showers_step18_G(int size)
 			LINTF=false
 		}*/
 
-		d_jump2_(dg_CSPGEO_.DSMAX[dg_TRACK_mod_.IBODY[index] - 1], dg_wSHOWERS_.DS[index]);
+		//d_jump2_(dg_CSPGEO_.DSMAX[dg_TRACK_mod_.IBODY[index] - 1], dg_wSHOWERS_.DS[index]);
 		dg_wSHOWERS_.LINTF[index] = false;
 
-		d_step2_(dg_wSHOWERS_.DS[index], dg_wSHOWERS_.DSEF[index], dg_wSHOWERS_.NCROSS[index]); // Determina a posição final do passo.
+	//	d_step2_(dg_wSHOWERS_.DS[index], dg_wSHOWERS_.DSEF[index], dg_wSHOWERS_.NCROSS[index]); // Determina a posição final do passo.
 
 		// Distribuição de energia de fluência.
 		dg_wSHOWERS_.IDET[index] = dg_PENGEOM_mod_.KDET[dg_wSHOWERS_.IBODYL[index] - 1];
@@ -519,7 +578,10 @@ __global__ void g_showers_step18_G(int size)
 					}
 				}
 			}
-			goto L102;
+			dg_TRACK_mod_.STEP[index] = 5; //L102
+			return;
+
+			//goto L102;
 		}
 
 		// Simulação dos eventos de interação da particula com a materia.
@@ -558,7 +620,10 @@ __global__ void g_showers_step18_G(int size)
 			return;
 		}
 
-		goto L103;
+		//goto L103;
+		dg_TRACK_mod_.STEP[index] = 6;
+		return;
+
 
 		// A simulação da particula termina aqui.
 	}
@@ -691,7 +756,7 @@ __global__ void g_showers_step20_G(int size)
 
 		// goto L102;
 		// printf("passou aqui e chamou step2\n");
-		dg_TRACK_mod_.STEP[index] = 18;
+		dg_TRACK_mod_.STEP[index] = 5;
 		return;
 		// showers_step2(size);
 		//  chmar showers_step 4 para contabilizar os depositos de dose apos todas as particulas secundasrias terem sido simuladas.
@@ -6967,6 +7032,513 @@ __device__ void d_jump2_(double &DSMAX, double &DS)
 			imprimiu++;
 		}*/
 }
+
+__device__ void d_jump2_G(double &DSMAX, double &DS)
+{
+	/*
+	Cálculo do caminho livre do ponto de partida até a posição
+	do próximo evento e das probabilidades de ocorrência de diferentes
+	eventos .
+
+	Argumentos :
+	DSMAX .... comprimento máximo permitido do passo (entrada),
+	DS ....... comprimento do segmento (saída).
+
+	Saída , através do módulo PENELOPE_mod:
+	E0STEP ... energia no início do segmento,
+	DESOFT ... perda de energia devido a interações suaves ao longo da etapa,
+	SSOFT .... poder de parada devido a interações suaves,
+	= DESOFT/passo_comprimento.
+	*/
+
+	/*	if (imprimiu==0){
+		printf("\n\nJUMP2\n\n");
+		imprimiu++;
+	}*/
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+
+
+		if (dg_TRACK_mod_.E[index] < dg_CJUMP1_.ELAST1[index])
+		{
+			dg_CEGRID_.XEL[index] = log(dg_TRACK_mod_.E[index]);
+			dg_CEGRID_.XE[index] = 1.0e0 + (dg_CEGRID_.XEL[index] - dg_CEGRID_.DLEMP1) * dg_CEGRID_.DLFC;
+			dg_CEGRID_.KE[index] = (int)dg_CEGRID_.XE[index];
+			dg_CEGRID_.XEK[index] = dg_CEGRID_.XE[index] - dg_CEGRID_.KE[index];
+			d_gimfp2_();
+			dg_CJUMP1_.ELAST1[index] = dg_TRACK_mod_.E[index];
+			dg_CJUMP0_.ST[index] = dg_CJUMP0_.P[1 - 1][index] + dg_CJUMP0_.P[2 - 1][index] + dg_CJUMP0_.P[3 - 1][index] + dg_CJUMP0_.P[4 - 1][index] + dg_CJUMP0_.P[8 - 1][index];
+		}
+
+		DS = -log(d_rand2_(1.0e0)) / dg_CJUMP0_.ST[index];
+
+}
+
+__device__ void d_jump2_E(double &DSMAX, double &DS)
+{
+	/*
+	Cálculo do caminho livre do ponto de partida até a posição
+	do próximo evento e das probabilidades de ocorrência de diferentes
+	eventos .
+
+	Argumentos :
+	DSMAX .... comprimento máximo permitido do passo (entrada),
+	DS ....... comprimento do segmento (saída).
+
+	Saída , através do módulo PENELOPE_mod:
+	E0STEP ... energia no início do segmento,
+	DESOFT ... perda de energia devido a interações suaves ao longo da etapa,
+	SSOFT .... poder de parada devido a interações suaves,
+	= DESOFT/passo_comprimento.
+	*/
+
+	/*	if (imprimiu==0){
+		printf("\n\nJUMP2\n\n");
+		imprimiu++;
+	}*/
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+	double DSMAXP, DSMC, EDE0, VDE0, FSEDE, FSVDE, EDEM, VDEM, W21, ELOWER, XE1, XEK1, STLWR, EDE, VDE, SIGMA;
+	double RU, EDE2, VDE3, PNULL;
+	int KE1;
+
+	if (dg_TRACK_mod_.KPAR[index] == 1)
+	{ // eletrons
+		if (dg_CJUMP1_.MHINGE[index] == 1)
+		{
+			if (dg_TRACK_mod_.E[index] < dg_CJUMP1_.ELAST1[index])
+			{
+				dg_CEGRID_.XEL[index] = log(dg_TRACK_mod_.E[index]);
+				dg_CEGRID_.XE[index] = 1.0e0 + (dg_CEGRID_.XEL[index] - dg_CEGRID_.DLEMP1) * dg_CEGRID_.DLFC;
+				dg_CEGRID_.KE[index] = (int)dg_CEGRID_.XE[index];
+				dg_CEGRID_.XEK[index] = dg_CEGRID_.XE[index] - dg_CEGRID_.KE[index];
+				int wvar = 1;
+				d_eimfp2_(wvar);
+				dg_CJUMP1_.ELAST1[index] = dg_TRACK_mod_.E[index];
+			}
+			DS = dg_CJUMP0_.DSR[index];
+			return;
+		}
+		dg_PENELOPE_mod_.E0STEP[index] = dg_TRACK_mod_.E[index];
+		if (dg_TRACK_mod_.E[index] < dg_CJUMP1_.ELAST2[index])
+		{
+			dg_CEGRID_.XEL[index] = log(dg_TRACK_mod_.E[index]);
+			dg_CEGRID_.XE[index] = 1.0e0 + (dg_CEGRID_.XEL[index] - dg_CEGRID_.DLEMP1) * dg_CEGRID_.DLFC;
+			dg_CEGRID_.KE[index] = (int)dg_CEGRID_.XE[index];
+			dg_CEGRID_.XEK[index] = dg_CEGRID_.XE[index] - dg_CEGRID_.KE[index];
+			int wvar = 2;
+			d_eimfp2_(wvar);
+			dg_CJUMP1_.ELAST2[index] = dg_TRACK_mod_.E[index];
+			dg_CJUMP1_.ELAST1[index] = dg_TRACK_mod_.E[index];
+		}
+
+		// Caminho livre médio rígido inverso (probabilidade de interação por unidade comprimento do caminho).
+		dg_CJUMP0_.ST[index] = dg_CJUMP0_.P[2 - 1][index] + dg_CJUMP0_.P[3 - 1][index] + dg_CJUMP0_.P[4 - 1][index] + dg_CJUMP0_.P[5 - 1][index] + dg_CJUMP0_.P[8 - 1][index];
+		DSMAXP = DSMAX;
+
+		/*
+		Interações de parada suave.
+		KSOFTI=1, parada suave está ativa,
+		KSOFTI=0, a parada suave não está ativa.
+		*/
+
+		if (dg_CJUMP0_.W1[index] > 1.0e-20)
+		{
+			dg_CJUMP1_.KSOFTI[index] = 1;
+			/*
+			O comprimento máximo do passo, DSMAXP, é determinado em termos do
+			valor DSMAX de entrada (que é especificado pelo usuário) e a média
+			caminho livre para interações difíceis (1/ST).
+			*/
+			DSMC = 4.0e0 / dg_CJUMP0_.ST[index];
+			if (DSMAXP > DSMC)
+			{
+				DSMAXP = DSMC;
+			}
+			else if (DSMAXP < 1.0e-8)
+			{
+				DSMAXP = DSMC;
+			}
+
+			// O valor de DSMAXP é randomizado para eliminar artefatos de dose no final da primeira etapa.
+			DSMAXP = (0.5e0 + d_rand2_(1.0e0) * 0.5e0) * DSMAXP;
+
+			// Limite superior para a probabilidade de interação ao longo da etapa (incluindo straggling de energia suave).
+
+			EDE0 = dg_CJUMP0_.W1[index] * DSMAXP;
+			VDE0 = dg_CJUMP0_.W2[index] * DSMAXP;
+			FSEDE = fmax(1.0e0 - dg_CEIMFP_.DW1EL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] * EDE0, 0.75e0);
+			FSVDE = fmax(1.0e0 - dg_CEIMFP_.DW2EL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] * EDE0, 0.75e0);
+			EDEM = EDE0 * FSEDE;
+			VDEM = VDE0 * FSVDE;
+			W21 = VDEM / EDEM;
+
+			if (EDEM > 9.0e0 * W21)
+			{
+				ELOWER = fmax(dg_TRACK_mod_.E[index] - (EDEM + 3.0e0 * sqrt(VDEM)), dg_CEGRID_.EMIN);
+			}
+			else if (EDEM > 3.0e0 * W21)
+			{
+				ELOWER = fmax(dg_TRACK_mod_.E[index] - (EDEM + sqrt(3.0e0 * VDEM)), dg_CEGRID_.EMIN);
+			}
+			else
+			{
+				ELOWER = fmax(dg_TRACK_mod_.E[index] - 1.5e0 * (EDEM + W21), dg_CEGRID_.EMIN);
+			}
+
+			XE1 = 1.0e0 + (log(ELOWER) - dg_CEGRID_.DLEMP1) * dg_CEGRID_.DLFC;
+			KE1 = (int)XE1;
+			XEK1 = XE1 - KE1;
+			STLWR = exp(dg_CEIMFP_.SETOT[KE1 - 1][dg_TRACK_mod_.MAT[index] - 1] + (dg_CEIMFP_.SETOT[KE1 + 1 - 1][dg_TRACK_mod_.MAT[index] - 1] - dg_CEIMFP_.SETOT[KE1 - 1][dg_TRACK_mod_.MAT[index] - 1]) * XEK1);
+			dg_CJUMP0_.ST[index] = fmax(dg_CJUMP0_.ST[index], STLWR);
+		}
+		else
+		{
+			dg_CJUMP1_.KSOFTI[index] = 0;
+			dg_PENELOPE_mod_.DESOFT[index] = 0.0e0;
+			dg_PENELOPE_mod_.SSOFT[index] = 0.0e0;
+		}
+
+		/*
+		Dispersão elástica suave.
+		KSOFTE=1, dispersão suave está ativa,
+		KSOFTE=0, dispersão suave não está ativa.
+		*/
+
+		if (dg_CJUMP0_.T1[index] > 1.0e-20)
+		{
+			dg_CJUMP1_.KSOFTE[index] = 1;
+		}
+		else
+		{
+			dg_CJUMP1_.KSOFTE[index] = 0;
+		}
+
+		/*
+		Interações delta.
+		KDELTA=0, segue-se uma interação difícil,
+		KDELTA=1, segue-se uma interação delta.
+		*/
+
+		dg_CJUMP0_.DST[index] = -log(d_rand2_(2.0e0)) / dg_CJUMP0_.ST[index];
+		if (dg_CJUMP0_.DST[index] < DSMAXP)
+		{
+			dg_CJUMP1_.KDELTA[index] = 0;
+		}
+		else
+		{
+			dg_CJUMP0_.DST[index] = DSMAXP;
+			dg_CJUMP1_.KDELTA[index] = 1;
+		}
+
+		if (dg_CJUMP1_.KSOFTE[index] + dg_CJUMP1_.KSOFTI[index] == 0)
+		{
+			dg_CJUMP1_.MHINGE[index] = 1;
+			DS = dg_CJUMP0_.DST[index];
+		}
+		else
+		{
+			DS = dg_CJUMP0_.DST[index] * d_rand2_(3.0e0);
+			dg_CJUMP0_.DSR[index] = dg_CJUMP0_.DST[index] - DS;
+			if (dg_CJUMP1_.KSOFTI[index] == 1)
+			{
+				if (dg_CJUMP0_.DST[index] < 1.0e-8)
+				{
+					dg_PENELOPE_mod_.SSOFT[index] = dg_CJUMP0_.W1[index];
+					dg_PENELOPE_mod_.DESOFT[index] = dg_PENELOPE_mod_.SSOFT[index] * dg_CJUMP0_.DST[index];
+				}
+				else
+				{
+					EDE0 = dg_CJUMP0_.W1[index] * dg_CJUMP0_.DST[index];
+					VDE0 = dg_CJUMP0_.W2[index] * dg_CJUMP0_.DST[index];
+					FSEDE = fmax(1.0e0 - dg_CEIMFP_.DW1EL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] * EDE0, 0.75e0);
+					FSVDE = fmax(1.0e0 - dg_CEIMFP_.DW2EL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] * EDE0, 0.75e0);
+					EDE = EDE0 * FSEDE;
+					VDE = VDE0 * FSVDE;
+
+					// Geração de valores aleatórios DE com média EDE e variância VDE.
+					SIGMA = sqrt(VDE);
+					if (SIGMA < 0.333333333e0 * EDE)
+					{
+						// Distribuição gaussiana truncada.
+						dg_PENELOPE_mod_.DESOFT[index] = EDE + d_rndg32_() * SIGMA;
+					}
+					else
+					{
+						RU = d_rand2_(4.0e0);
+						EDE2 = EDE * EDE;
+						VDE3 = 3.0e0 * VDE;
+						if (EDE2 < VDE3)
+						{
+							PNULL = (VDE3 - EDE2) / (VDE3 + 3.0e0 * EDE2);
+							if (RU < PNULL)
+							{
+								dg_PENELOPE_mod_.DESOFT[index] = 0.0e0;
+								dg_PENELOPE_mod_.SSOFT[index] = 0.0e0;
+								if (dg_CJUMP1_.KSOFTE[index] == 0)
+								{
+									dg_CJUMP1_.MHINGE[index] = 1;
+									DS = dg_CJUMP0_.DST[index];
+								}
+								else
+								{
+									dg_CJUMP1_.KSOFTI[index] = 0;
+								}
+								return;
+							}
+							else
+							{
+								// Distribuição Uniforme
+								dg_PENELOPE_mod_.DESOFT[index] = 1.5e0 * (EDE + VDE / EDE) * (RU - PNULL) / (1.0e0 - PNULL);
+							}
+						}
+						else
+						{
+							dg_PENELOPE_mod_.DESOFT[index] = EDE + (2.0e0 * RU - 1.0e0) * sqrt(VDE3);
+						}
+					}
+					dg_PENELOPE_mod_.SSOFT[index] = dg_PENELOPE_mod_.DESOFT[index] / dg_CJUMP0_.DST[index];
+				}
+			}
+		}
+		return;
+	}
+}
+
+__device__ void d_jump2_P(double &DSMAX, double &DS)
+{
+/*
+	Cálculo do caminho livre do ponto de partida até a posição
+	do próximo evento e das probabilidades de ocorrência de diferentes
+	eventos .
+
+	Argumentos :
+	DSMAX .... comprimento máximo permitido do passo (entrada),
+	DS ....... comprimento do segmento (saída).
+
+	Saída , através do módulo PENELOPE_mod:
+	E0STEP ... energia no início do segmento,
+	DESOFT ... perda de energia devido a interações suaves ao longo da etapa,
+	SSOFT .... poder de parada devido a interações suaves,
+	= DESOFT/passo_comprimento.
+	*/
+
+	/*	if (imprimiu==0){
+		printf("\n\nJUMP2\n\n");
+		imprimiu++;
+	}*/
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+	double DSMAXP, DSMC, EDE0, VDE0, FSEDE, FSVDE, EDEM, VDEM, W21, ELOWER, XE1, XEK1, STLWR, EDE, VDE, SIGMA;
+	double RU, EDE2, VDE3, PNULL;
+	int KE1;
+
+	 if (dg_TRACK_mod_.KPAR[index] == 3)
+	{ // Positrons
+
+		if (dg_CJUMP1_.MHINGE[index] == 1)
+		{
+			if (dg_TRACK_mod_.E[index] < dg_CJUMP1_.ELAST1[index])
+			{
+				dg_CEGRID_.XEL[index] = log(dg_TRACK_mod_.E[index]);
+				dg_CEGRID_.XE[index] = 1.0e0 + (dg_CEGRID_.XEL[index] - dg_CEGRID_.DLEMP1) * dg_CEGRID_.DLFC;
+				dg_CEGRID_.KE[index] = (int)(dg_CEGRID_.XE[index]);
+				dg_CEGRID_.XEK[index] = dg_CEGRID_.XE[index] - dg_CEGRID_.KE[index];
+				int wvar = 1;
+				d_pimfp2_(wvar);
+				dg_CJUMP1_.ELAST1[index] = dg_TRACK_mod_.E[index];
+			}
+			DS = dg_CJUMP0_.DSR[index];
+			return;
+		}
+
+		dg_PENELOPE_mod_.E0STEP[index] = dg_TRACK_mod_.E[index];
+		if (dg_TRACK_mod_.E[index] < dg_CJUMP1_.ELAST2[index])
+		{
+			dg_CEGRID_.XEL[index] = log(dg_TRACK_mod_.E[index]);
+			dg_CEGRID_.XE[index] = 1.0e0 + (dg_CEGRID_.XEL[index] - dg_CEGRID_.DLEMP1) * dg_CEGRID_.DLFC;
+			dg_CEGRID_.KE[index] = (int)dg_CEGRID_.XE[index];
+			dg_CEGRID_.XEK[index] = dg_CEGRID_.XE[index] - dg_CEGRID_.KE[index];
+			int wvar = 2;
+			d_pimfp2_(wvar);
+			dg_CJUMP1_.ELAST2[index] = dg_TRACK_mod_.E[index];
+			dg_CJUMP1_.ELAST1[index] = dg_TRACK_mod_.E[index];
+		}
+
+		// Caminho livre médio rígido inverso (probabilidade de interação por unidade comprimento do caminho).
+		dg_CJUMP0_.ST[index] = dg_CJUMP0_.P[2 - 1][index] + dg_CJUMP0_.P[3 - 1][index] + dg_CJUMP0_.P[4 - 1][index] + dg_CJUMP0_.P[5 - 1][index] + dg_CJUMP0_.P[6 - 1][index] + dg_CJUMP0_.P[8 - 1][index];
+		DSMAXP = DSMAX;
+
+		/*
+		Interações de parada suave.
+		KSOFTI=1, parada suave está ativa,
+		KSOFTI=0, a parada suave não está ativa.
+		*/
+
+		if (dg_CJUMP0_.W1[index] > 1.0e-20)
+		{
+			dg_CJUMP1_.KSOFTI[index] = 1;
+			/*
+			O comprimento máximo do passo, DSMAXP, é determinado em termos do
+			valor DSMAX de entrada (que é especificado pelo usuário) e a média
+			caminho livre para interações difíceis (1/ST).
+			*/
+			DSMC = 4.0e0 / dg_CJUMP0_.ST[index];
+			if (DSMAXP > DSMC)
+			{
+				DSMAXP = DSMC;
+			}
+			else if (DSMAXP < 1.0e-8)
+			{
+				DSMAXP = DSMC;
+			}
+
+			// O valor de DSMAXP é randomizado para eliminar artefatos de dose no final da primeira etapa.
+			DSMAXP = (0.5e0 + d_rand2_(1.0e0) * 0.5e0) * DSMAXP;
+
+			// Limite superior para a probabilidade de interação ao longo da etapa (incluindo straggling de energia suave).
+
+			EDE0 = dg_CJUMP0_.W1[index] * DSMAXP;
+			VDE0 = dg_CJUMP0_.W2[index] * DSMAXP;
+			FSEDE = fmax(1.0e0 - dg_CPIMFP_.DW1PL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] * EDE0, 0.75e0);
+			FSVDE = fmax(1.0e0 - dg_CPIMFP_.DW2PL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] * EDE0, 0.75e0);
+			EDEM = EDE0 * FSEDE;
+			VDEM = VDE0 * FSVDE;
+			W21 = VDEM / EDEM;
+
+			if (EDEM > 9.0e0 * W21)
+			{
+				ELOWER = fmax(dg_TRACK_mod_.E[index] - (EDEM + 3.0e0 * sqrt(VDEM)), dg_CEGRID_.EMIN);
+			}
+			else if (EDEM > 3.0e0 * W21)
+			{
+				ELOWER = fmax(dg_TRACK_mod_.E[index] - (EDEM + sqrt(3.0e0 * VDEM)), dg_CEGRID_.EMIN);
+			}
+			else
+			{
+				ELOWER = fmax(dg_TRACK_mod_.E[index] - 1.5e0 * (EDEM + W21), dg_CEGRID_.EMIN);
+			}
+
+			XE1 = 1.0e0 + (log(ELOWER) - dg_CEGRID_.DLEMP1) * dg_CEGRID_.DLFC;
+			KE1 = (int)XE1;
+			XEK1 = XE1 - KE1;
+			STLWR = exp(dg_CPIMFP_.SPTOT[KE1 - 1][dg_TRACK_mod_.MAT[index] - 1] + (dg_CPIMFP_.SPTOT[KE1 + 1 - 1][dg_TRACK_mod_.MAT[index] - 1] - dg_CPIMFP_.SPTOT[KE1 - 1][dg_TRACK_mod_.MAT[index] - 1]) * XEK1);
+			dg_CJUMP0_.ST[index] = fmax(dg_CJUMP0_.ST[index], STLWR);
+		}
+		else
+		{
+			dg_CJUMP1_.KSOFTI[index] = 0;
+			dg_PENELOPE_mod_.DESOFT[index] = 0.0e0;
+			dg_PENELOPE_mod_.SSOFT[index] = 0.0e0;
+		}
+
+		/*
+		Dispersão elástica suave.
+		KSOFTE=1, dispersão suave está ativa,
+		KSOFTE=0, dispersão suave não está ativa.
+		*/
+
+		if (dg_CJUMP0_.T1[index] > 1.0e-20)
+		{
+			dg_CJUMP1_.KSOFTE[index] = 1;
+		}
+		else
+		{
+			dg_CJUMP1_.KSOFTE[index] = 0;
+		}
+
+		/*
+		Interações delta.
+		KDELTA=0, segue-se uma interação difícil,
+		KDELTA=1, segue-se uma interação delta.
+		*/
+
+		dg_CJUMP0_.DST[index] = -log(d_rand2_(2.0e0)) / dg_CJUMP0_.ST[index];
+		if (dg_CJUMP0_.DST[index] < DSMAXP)
+		{
+			dg_CJUMP1_.KDELTA[index] = 0;
+		}
+		else
+		{
+			dg_CJUMP0_.DST[index] = DSMAXP;
+			dg_CJUMP1_.KDELTA[index] = 1;
+		}
+
+		if (dg_CJUMP1_.KSOFTE[index] + dg_CJUMP1_.KSOFTI[index] == 0)
+		{
+			dg_CJUMP1_.MHINGE[index] = 1;
+			DS = dg_CJUMP0_.DST[index];
+		}
+		else
+		{
+			DS = dg_CJUMP0_.DST[index] * d_rand2_(3.0e0);
+			dg_CJUMP0_.DSR[index] = dg_CJUMP0_.DST[index] - DS;
+			if (dg_CJUMP1_.KSOFTI[index] == 1)
+			{
+				if (dg_CJUMP0_.DST[index] < 1.0e-8)
+				{
+					dg_PENELOPE_mod_.SSOFT[index] = dg_CJUMP0_.W1[index];
+					dg_PENELOPE_mod_.DESOFT[index] = dg_PENELOPE_mod_.SSOFT[index] * dg_CJUMP0_.DST[index];
+				}
+				else
+				{
+					EDE0 = dg_CJUMP0_.W1[index] * dg_CJUMP0_.DST[index];
+					VDE0 = dg_CJUMP0_.W2[index] * dg_CJUMP0_.DST[index];
+					FSEDE = fmax(1.0e0 - dg_CPIMFP_.DW1PL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] * EDE0, 0.75e0);
+					FSVDE = fmax(1.0e0 - dg_CPIMFP_.DW2PL[dg_CEGRID_.KE[index] - 1][dg_TRACK_mod_.MAT[index] - 1] * EDE0, 0.75e0);
+					EDE = EDE0 * FSEDE;
+					VDE = VDE0 * FSVDE;
+
+					// Geração de valores aleatórios DE com média EDE e variância VDE.
+					SIGMA = sqrt(VDE);
+					if (SIGMA < 0.333333333e0 * EDE)
+					{
+						// Distribuição gaussiana truncada.
+						dg_PENELOPE_mod_.DESOFT[index] = EDE + d_rndg32_() * SIGMA;
+					}
+					else
+					{
+						RU = d_rand2_(4.0e0);
+						EDE2 = EDE * EDE;
+						VDE3 = 3.0e0 * VDE;
+						if (EDE2 < VDE3)
+						{
+							PNULL = (VDE3 - EDE2) / (VDE3 + 3.0e0 * EDE2);
+							if (RU < PNULL)
+							{
+								dg_PENELOPE_mod_.DESOFT[index] = 0.0e0;
+								dg_PENELOPE_mod_.SSOFT[index] = 0.0e0;
+								if (dg_CJUMP1_.KSOFTE[index] == 0)
+								{
+									dg_CJUMP1_.MHINGE[index] = 1;
+									DS = dg_CJUMP0_.DST[index];
+								}
+								else
+								{
+									dg_CJUMP1_.KSOFTI[index] = 0;
+								}
+								return;
+							}
+							else
+							{
+								// Distribuição Uniforme
+								dg_PENELOPE_mod_.DESOFT[index] = 1.5e0 * (EDE + VDE / EDE) * (RU - PNULL) / (1.0e0 - PNULL);
+							}
+						}
+						else
+						{
+							dg_PENELOPE_mod_.DESOFT[index] = EDE + (2.0e0 * RU - 1.0e0) * sqrt(VDE3);
+						}
+					}
+					dg_PENELOPE_mod_.SSOFT[index] = dg_PENELOPE_mod_.DESOFT[index] / dg_CJUMP0_.DST[index];
+				}
+			}
+		}
+		return;
+	}
+
+}
+
+
+
+
 
 __device__ double d_rndg32_()
 {

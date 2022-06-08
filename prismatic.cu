@@ -86,8 +86,8 @@ int main() {
 				//nTRACKS_.nSECTRACK_G = 0;
 			}
 			if (nTRACKS_.nSECTRACK_P > 0){
-				simSecTrack_P();
-				//nTRACKS_.nSECTRACK_P = 0;
+				//simSecTrack_P();
+				nTRACKS_.nSECTRACK_P = 0;
 			}
 			}
 			gpuErrchk(cudaDeviceSynchronize());

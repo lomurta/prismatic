@@ -28054,6 +28054,12 @@ void simSecTrack_E(){
 			g_showers_step5_G<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
 
+			g_showers_step6_E<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			g_showers_step7_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
 
 			g_showers_step18_G<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
@@ -28062,13 +28068,16 @@ void simSecTrack_E(){
 			gpuErrchk(cudaDeviceSynchronize());
 
 			transfnTRACKSGPU_to_CPU();
-		}
 
-		//transfSecTracksGPU_to_CPU();
-		printf("\nsimulacao de eletrons secundarios\n");
+				//transfSecTracksGPU_to_CPU();
+	
+		}
+			printf("\nsimulacao de eletrons secundarios\n");
 		printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
 		printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
 		printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
+
+	
 	}
 }
 
@@ -28099,11 +28108,7 @@ void simSecTrack_G(){
 		transfnTRACKSCPU_to_GPU();
 		while (nTRACKS_.nFINISH > 0)
 		{
-			printf("\nsimulacao de fotons secundarios\n");
-		printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
-		printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
-		printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
-
+	
 			// chamada do kernel para simulacao das particulas primarias
 			g_showers_step20_G<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
@@ -28119,6 +28124,12 @@ void simSecTrack_G(){
 
 			g_showers_step5_G<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
+			
+			g_showers_step6_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			g_showers_step7_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
 
 
 			g_showers_step18_G<<<grid, block>>>(sizeTrack);
@@ -28130,15 +28141,16 @@ void simSecTrack_G(){
 			transfnTRACKSGPU_to_CPU();
 
 			//transfSecTracksGPU_to_CPU();
-		printf("\nsimulacao de fotons secundarios\n");
-		printf("NFINISH: %d\n", nTRACKS_.nFINISH);
-		printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
-		printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
-		printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
+	
 		//exit(0);
 
 
 		}
+			printf("\nsimulacao de fotons secundarios\n");
+		printf("NFINISH: %d\n", nTRACKS_.nFINISH);
+		printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
+		printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
+		printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
 
 
 	
@@ -28173,10 +28185,7 @@ void simSecTrack_P(){
 		transfnTRACKSCPU_to_GPU();
 		while (nTRACKS_.nFINISH > 0)
 		{
-			printf("\nsimulacao de positrons secundarios\n");
-		printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
-		printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
-		printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
+	
 
 			// chamada do kernel para simulacao das particulas primarias
 			g_showers_step20_G<<<grid, block>>>(sizeTrack);
@@ -28194,6 +28203,12 @@ void simSecTrack_P(){
 			g_showers_step5_G<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
 
+			g_showers_step6_P<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			g_showers_step7_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
 
 			g_showers_step18_G<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
@@ -28203,6 +28218,10 @@ void simSecTrack_P(){
 
 			transfnTRACKSGPU_to_CPU();
 
+		
+
+
+		}
 			//transfSecTracksGPU_to_CPU();
 		printf("\nsimulacao de positrons secundarios\n");
 		printf("NFINISH: %d\n", nTRACKS_.nFINISH);
@@ -28210,9 +28229,6 @@ void simSecTrack_P(){
 		printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
 		printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
 		//exit(0);
-
-
-		}
 
 
 	
@@ -28592,6 +28608,12 @@ void simPriTrack_G(){
 		gpuErrchk(cudaDeviceSynchronize());
 
 		g_showers_step5_G<<<grid, block>>>(sizeTrack);
+		gpuErrchk(cudaDeviceSynchronize());
+
+		g_showers_step6_G<<<grid, block>>>(sizeTrack);
+		gpuErrchk(cudaDeviceSynchronize());
+
+		g_showers_step7_G<<<grid, block>>>(sizeTrack);
 		gpuErrchk(cudaDeviceSynchronize());
 
 		g_showers_step18_G<<<grid, block>>>(sizeTrack);
