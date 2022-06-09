@@ -951,7 +951,7 @@ typedef struct {
 } hd_CHIST;
 
 typedef struct{
-	int nPRITRACK, nSECTRACK_E, nSECTRACK_G, nSECTRACK_P, nFINISH;
+	int nPRITRACK, nSECTRACK_E, nSECTRACK_G, nSECTRACK_P, nFINISH, TIPO;
 } hd_nTRACKS;
 
 PENELOPE_MOD PENELOPE_mod_;

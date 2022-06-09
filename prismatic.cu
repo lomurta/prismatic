@@ -68,7 +68,7 @@ int main() {
 			dim3 grid(ceil(sizeTrack / block.x)+1);
 
 	
-			
+			transfnTRACKSGPU_to_CPU();
 		
 	
 			//Zerando particulas segundarias esssa é a parte correta

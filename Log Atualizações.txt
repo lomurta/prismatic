@@ -1,3 +1,6 @@
+09/08/2022
+- Reaproveitamento dos threads para execucao de particulas secundarias.
+
 07/06/2022
 - Criacao dos Step8 step9 e Step10
 -Criacao do step6 e step7 para funcoes jump e step

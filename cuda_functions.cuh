@@ -134,6 +134,9 @@ __global__ void g_showers_step19_G(int size); // L104
 
 __global__ void g_showers_step20_G(int size); // particulas secundarias
 
+__device__ void d_cpySecTrack(int size, int KPAR);
+
+
 __global__ void g_showers_step1_G(int size)
 {
 
@@ -142,6 +145,7 @@ __global__ void g_showers_step1_G(int size)
 	{
 		dg_TRACK_mod_.INDEX[index] = index;
 		dg_TRACK_mod_.STEP[index] = 2; // showers_step2_G
+		
 	}
 }
 
@@ -152,6 +156,9 @@ __global__ void g_showers_step2_G(int size)
 
 	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 2))
 	{
+
+		if (dg_TRACK_mod_.ILB[1 - 1][index] != 1)
+			printf("ILB %d index %d\n\n", dg_TRACK_mod_.ILB[1 - 1][index] , index);
 
 		//  Verifique se a trajetória cruza o sistema de materiais.
 		// L302:;
@@ -817,7 +824,7 @@ __global__ void g_showers_step19_G(int size)
 	{
 		int IEXIT = dg_TRACK_mod_.IEXIT[index];
 		dg_TRACK_mod_.STEP[index] = 99;
-		atomicAdd2(&dg_nTRACKS_.nFINISH, -1);
+		
 
 		// Incrementar contadores de partículas.
 		if (dg_TRACK_mod_.ILB[1 - 1][index] == 1)
@@ -846,6 +853,16 @@ __global__ void g_showers_step19_G(int size)
 		{
 			d_tenang2_(IEXIT, dg_TRACK_mod_.N[index]); // Energia e distribuições angulares.
 		}
+		
+		//preenche a particula secundaria que possui step 99
+		if (dg_nTRACKS_.TIPO == 1){
+			atomicAdd2(&dg_nTRACKS_.nFINISH, -1);
+		}else{
+			//printf("\n\nNAOOO È ILB 1 index %d\n\n", index);
+			d_cpySecTrack(size, dg_TRACK_mod_.KPAR[index]);
+
+		}
+	
 	}
 }
 
@@ -853,6 +870,8 @@ __global__ void g_showers_step20_G(int size)
 { // simulacao de particulas secundarias
 
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
+
+
 
 	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 20))
 	{
@@ -862,6 +881,8 @@ __global__ void g_showers_step20_G(int size)
 
 		int KEn;
 		double DEP, WS, US, VS, SDTS, DF;
+
+		 
 
 		// Particulas Secundarias
 
@@ -8882,4 +8903,175 @@ __device__ void d_cleans2_()
 	dg_nTRACKS_.nSECTRACK_E = 0;
 	dg_nTRACKS_.nSECTRACK_G = 0;
 	dg_nTRACKS_.nSECTRACK_P = 0;
+}
+
+__global__ void g_cpySecTrack(int size, int KPAR){
+
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+	if (index < size){
+		d_cpySecTrack(size, KPAR);
+	}
+
+}
+
+
+
+__device__ void d_cpySecTrack(int size, int KPAR)
+{
+
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+	
+
+	if ((KPAR == 1) && (dg_TRACK_mod_.STEP[index] == 99))
+	{
+		int i = atomicAdd2(&dg_nTRACKS_.nSECTRACK_E, -1);
+		if (i > 0)
+		{
+			//atomicAdd2(&dg_nTRACKS_.nFINISH, 1);
+			dg_TRACK_mod_.E[index] = dg_SECTRACK_E_.E[i];
+			dg_TRACK_mod_.X[index] = dg_SECTRACK_E_.X[i];
+			dg_TRACK_mod_.Y[index] = dg_SECTRACK_E_.Y[i];
+			dg_TRACK_mod_.Z[index] = dg_SECTRACK_E_.Z[i];
+			dg_TRACK_mod_.U[index] = dg_SECTRACK_E_.U[i];
+			dg_TRACK_mod_.V[index] = dg_SECTRACK_E_.V[i];
+			dg_TRACK_mod_.W[index] = dg_SECTRACK_E_.W[i];
+			dg_TRACK_mod_.WGHT[index] = dg_SECTRACK_E_.WGHT[i];
+			dg_TRACK_mod_.KPAR[index] = dg_SECTRACK_E_.KPAR[i];
+			dg_TRACK_mod_.IBODY[index] = dg_SECTRACK_E_.IBODY[i];
+			dg_TRACK_mod_.MAT[index] = dg_SECTRACK_E_.MAT[i];
+
+			dg_TRACK_mod_.ILB[1 - 1][index] = dg_SECTRACK_E_.ILB[1 - 1][i];
+			dg_TRACK_mod_.ILB[2 - 1][index] = dg_SECTRACK_E_.ILB[2 - 1][i];
+			dg_TRACK_mod_.ILB[3 - 1][index] = dg_SECTRACK_E_.ILB[3 - 1][i];
+			dg_TRACK_mod_.ILB[4 - 1][index] = dg_SECTRACK_E_.ILB[4 - 1][i];
+			dg_TRACK_mod_.ILB[5 - 1][index] = dg_SECTRACK_E_.ILB[5 - 1][i];
+
+			dg_TRACK_mod_.N[index] = dg_SECTRACK_E_.N[i];
+			dg_TRACK_mod_.INDEX[index] = dg_SECTRACK_E_.INDEX[i];
+			dg_TRACK_mod_.IEXIT[index] = dg_SECTRACK_E_.IEXIT[i];
+			dg_TRACK_mod_.STEP[index] = dg_SECTRACK_E_.STEP[i];
+
+			if (d_wIPOLI == 1)
+			{
+				dg_TRACK_mod_.SP1[index] = dg_SECTRACK_E_.SP1[i];
+				dg_TRACK_mod_.SP2[index] = dg_SECTRACK_E_.SP2[i];
+				dg_TRACK_mod_.SP3[index] = dg_SECTRACK_E_.SP3[i];
+				dg_TRACK_mod_.IPOL[index] = dg_SECTRACK_E_.IPOL[i];
+			}
+			else
+			{
+				dg_TRACK_mod_.SP1[index] = 0.0e0;
+				dg_TRACK_mod_.SP2[index] = 0.0e0;
+				dg_TRACK_mod_.SP3[index] = 0.0e0;
+				dg_TRACK_mod_.IPOL[index] = 0;
+			}
+			dg_TRACK_mod_.PAGE[index] = dg_SECTRACK_E_.PAGE[i];
+		}
+		else
+		{
+			atomicAdd2(&dg_nTRACKS_.nFINISH, -1);
+			atomicAdd2(&dg_nTRACKS_.nSECTRACK_E, 1);
+		}
+	} else if ((KPAR == 3) && (dg_TRACK_mod_.STEP[index] == 99))
+	{
+		int i = atomicAdd2(&dg_nTRACKS_.nSECTRACK_P, -1);
+		if (i > 0)
+		{
+			//atomicAdd2(&dg_nTRACKS_.nFINISH, 1);
+			dg_TRACK_mod_.E[index] = dg_SECTRACK_P_.E[i];
+			dg_TRACK_mod_.X[index] = dg_SECTRACK_P_.X[i];
+			dg_TRACK_mod_.Y[index] = dg_SECTRACK_P_.Y[i];
+			dg_TRACK_mod_.Z[index] = dg_SECTRACK_P_.Z[i];
+			dg_TRACK_mod_.U[index] = dg_SECTRACK_P_.U[i];
+			dg_TRACK_mod_.V[index] = dg_SECTRACK_P_.V[i];
+			dg_TRACK_mod_.W[index] = dg_SECTRACK_P_.W[i];
+			dg_TRACK_mod_.WGHT[index] = dg_SECTRACK_P_.WGHT[i];
+			dg_TRACK_mod_.KPAR[index] = dg_SECTRACK_P_.KPAR[i];
+			dg_TRACK_mod_.IBODY[index] = dg_SECTRACK_P_.IBODY[i];
+			dg_TRACK_mod_.MAT[index] = dg_SECTRACK_P_.MAT[i];
+
+			dg_TRACK_mod_.ILB[1 - 1][index] = dg_SECTRACK_P_.ILB[1 - 1][i];
+			dg_TRACK_mod_.ILB[2 - 1][index] = dg_SECTRACK_P_.ILB[2 - 1][i];
+			dg_TRACK_mod_.ILB[3 - 1][index] = dg_SECTRACK_P_.ILB[3 - 1][i];
+			dg_TRACK_mod_.ILB[4 - 1][index] = dg_SECTRACK_P_.ILB[4 - 1][i];
+			dg_TRACK_mod_.ILB[5 - 1][index] = dg_SECTRACK_P_.ILB[5 - 1][i];
+
+			dg_TRACK_mod_.N[index] = dg_SECTRACK_P_.N[i];
+			dg_TRACK_mod_.INDEX[index] = dg_SECTRACK_P_.INDEX[i];
+			dg_TRACK_mod_.IEXIT[index] = dg_SECTRACK_P_.IEXIT[i];
+			dg_TRACK_mod_.STEP[index] = dg_SECTRACK_P_.STEP[i];
+
+			if (d_wIPOLI == 1)
+			{
+				dg_TRACK_mod_.SP1[index] = dg_SECTRACK_P_.SP1[i];
+				dg_TRACK_mod_.SP2[index] = dg_SECTRACK_P_.SP2[i];
+				dg_TRACK_mod_.SP3[index] = dg_SECTRACK_P_.SP3[i];
+				dg_TRACK_mod_.IPOL[index] = dg_SECTRACK_P_.IPOL[i];
+			}
+			else
+			{
+				dg_TRACK_mod_.SP1[index] = 0.0e0;
+				dg_TRACK_mod_.SP2[index] = 0.0e0;
+				dg_TRACK_mod_.SP3[index] = 0.0e0;
+				dg_TRACK_mod_.IPOL[index] = 0;
+			}
+			dg_TRACK_mod_.PAGE[index] = dg_SECTRACK_P_.PAGE[i];
+		}
+		else
+		{
+			atomicAdd2(&dg_nTRACKS_.nFINISH, -1);
+			atomicAdd2(&dg_nTRACKS_.nSECTRACK_P, 1);
+		}
+	}  else if ((KPAR == 2) && (dg_TRACK_mod_.STEP[index] == 99))
+	{
+		int i = atomicAdd2(&dg_nTRACKS_.nSECTRACK_G, -1);
+		if (i > 0)
+		{
+			//atomicAdd2(&dg_nTRACKS_.nFINISH, 1);
+			dg_TRACK_mod_.E[index] = dg_SECTRACK_G_.E[i];
+			dg_TRACK_mod_.X[index] = dg_SECTRACK_G_.X[i];
+			dg_TRACK_mod_.Y[index] = dg_SECTRACK_G_.Y[i];
+			dg_TRACK_mod_.Z[index] = dg_SECTRACK_G_.Z[i];
+			dg_TRACK_mod_.U[index] = dg_SECTRACK_G_.U[i];
+			dg_TRACK_mod_.V[index] = dg_SECTRACK_G_.V[i];
+			dg_TRACK_mod_.W[index] = dg_SECTRACK_G_.W[i];
+			dg_TRACK_mod_.WGHT[index] = dg_SECTRACK_G_.WGHT[i];
+			dg_TRACK_mod_.KPAR[index] = dg_SECTRACK_G_.KPAR[i];
+			dg_TRACK_mod_.IBODY[index] = dg_SECTRACK_G_.IBODY[i];
+			dg_TRACK_mod_.MAT[index] = dg_SECTRACK_G_.MAT[i];
+
+			dg_TRACK_mod_.ILB[1 - 1][index] = dg_SECTRACK_G_.ILB[1 - 1][i];
+			dg_TRACK_mod_.ILB[2 - 1][index] = dg_SECTRACK_G_.ILB[2 - 1][i];
+			dg_TRACK_mod_.ILB[3 - 1][index] = dg_SECTRACK_G_.ILB[3 - 1][i];
+			dg_TRACK_mod_.ILB[4 - 1][index] = dg_SECTRACK_G_.ILB[4 - 1][i];
+			dg_TRACK_mod_.ILB[5 - 1][index] = dg_SECTRACK_G_.ILB[5 - 1][i];
+
+			dg_TRACK_mod_.N[index] = dg_SECTRACK_G_.N[i];
+			dg_TRACK_mod_.INDEX[index] = dg_SECTRACK_G_.INDEX[i];
+			dg_TRACK_mod_.IEXIT[index] = dg_SECTRACK_G_.IEXIT[i];
+			dg_TRACK_mod_.STEP[index] = dg_SECTRACK_G_.STEP[i];
+
+			if (d_wIPOLI == 1)
+			{
+				dg_TRACK_mod_.SP1[index] = dg_SECTRACK_G_.SP1[i];
+				dg_TRACK_mod_.SP2[index] = dg_SECTRACK_G_.SP2[i];
+				dg_TRACK_mod_.SP3[index] = dg_SECTRACK_G_.SP3[i];
+				dg_TRACK_mod_.IPOL[index] = dg_SECTRACK_G_.IPOL[i];
+			}
+			else
+			{
+				dg_TRACK_mod_.SP1[index] = 0.0e0;
+				dg_TRACK_mod_.SP2[index] = 0.0e0;
+				dg_TRACK_mod_.SP3[index] = 0.0e0;
+				dg_TRACK_mod_.IPOL[index] = 0;
+			}
+			dg_TRACK_mod_.PAGE[index] = dg_SECTRACK_G_.PAGE[i];
+		}
+		else
+		{
+			atomicAdd2(&dg_nTRACKS_.nFINISH, -1);
+			atomicAdd2(&dg_nTRACKS_.nSECTRACK_G, 1);
+		}
+	}
+	
 }
