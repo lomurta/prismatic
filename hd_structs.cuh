@@ -42,8 +42,8 @@ static const int NDXM = 201;
 static const int NDYM = 201;
 static const int NDZM = 201;
 
-static const int pilhaPart = 4096; //64*64
-static const int pilhaSec = 4096; //64*64
+static const int pilhaPart = 3072; //64*64
+static const int pilhaSec = 3072; //64*64
 
 
 #define MAX_THREADS_PER_BLOCK 128
@@ -1266,8 +1266,8 @@ __device__ int d_wIPOLI = 0;
 //__device__ double d_S[pilhaPart*NS2M/100];
 //__device__ int d_IS[pilhaPart*NS2M/100];
 
-__device__ double d_S[NS2M/100][pilhaPart];
-__device__ int d_IS[NS2M/100][pilhaPart];
+__device__ double d_S[(NS2M/100)+48][pilhaPart]; //matrix (2048,4096)
+__device__ int d_IS[(NS2M/100)+48][pilhaPart];
 
 
 

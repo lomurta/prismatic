@@ -125,15 +125,6 @@ int main() {
 			}
 		}
 
-		//Zerando particulas segundarias
-		/*while ((nTRACKS_.nSECTRACK_E > 0) || (nTRACKS_.nSECTRACK_G > 0) || (nTRACKS_.nSECTRACK_P > 0 )){
-			if (nTRACKS_.nSECTRACK_E > 0)
-				simSecTrack_E();
-			if (nTRACKS_.nSECTRACK_G > 0)
-				simSecTrack_G();
-			if (nTRACKS_.nSECTRACK_P > 0)
-				simSecTrack_P();
-		}*/
 
 L202:;
 		

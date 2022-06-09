@@ -23254,7 +23254,7 @@ void pmwrt2_(int ICLOSE) {
 			exit(0);
 		}
 
-		fprintf(IWR, "	%.16f		%.16f\n", *CNTRL_.SHN, *CNTRL_.TSIM);
+		fprintf(IWR, "	%.15f		%.15f\n", *CNTRL_.SHN, *CNTRL_.TSIM);
 		fprintf(IWR, "%s\n", CTITLE_.TITLE);
 		fprintf(IWR, "	%d		%d\n", *RSEED_.ISEED1, *RSEED_.ISEED2);
 		fprintf(IWR, "	%d		%.16f\n", *CSOUR4_.NPSN, *CSOUR4_.RLREAD);
@@ -27999,9 +27999,9 @@ void simSecTrack_E(){
 
 	int sizeTrack = 0;
 	//while (nTRACKS_.nSECTRACK_E > 0){
-		if (nTRACKS_.nSECTRACK_E > pilhaPart)
+	//	if (nTRACKS_.nSECTRACK_E > pilhaPart)
 			sizeTrack = pilhaPart;
-		else sizeTrack = nTRACKS_.nSECTRACK_E;
+	//	else sizeTrack = nTRACKS_.nSECTRACK_E;
 
 		//transfSecTracksGPU_to_CPU();
 
@@ -28101,9 +28101,9 @@ void simSecTrack_G(){
 
 		int sizeTrack = 0;
 //	while (nTRACKS_.nSECTRACK_G > 0){
-		if (nTRACKS_.nSECTRACK_G > pilhaPart)
+	//	if (nTRACKS_.nSECTRACK_G > pilhaPart)
 			sizeTrack = pilhaPart;
-		else sizeTrack = nTRACKS_.nSECTRACK_G;
+	//	else sizeTrack = nTRACKS_.nSECTRACK_G;
 
 		//transfSecTracksGPU_to_CPU();
 
@@ -28195,9 +28195,9 @@ void simSecTrack_P(){
 transfnTRACKSGPU_to_CPU();
 	int sizeTrack = 0;
 //	while (nTRACKS_.nSECTRACK_P > 0){
-		if (nTRACKS_.nSECTRACK_P > pilhaPart)
+	//	if (nTRACKS_.nSECTRACK_P > pilhaPart)
 			sizeTrack = pilhaPart;
-		else sizeTrack = nTRACKS_.nSECTRACK_P;
+	//	else sizeTrack = nTRACKS_.nSECTRACK_P;
 
 		//transfSecTracksGPU_to_CPU();
 

@@ -1653,7 +1653,6 @@ __device__ void d_step2_(double &DS, double &DSEF, int &NCROSS)
 		DSRES = DS; // comprimento do camimho residual
 	}
 
-	//		printf("3\n");
 	// A partícula entra de fora do recinto.
 
 	if (dg_TRACK_mod_.IBODY[index] > dg_QTREE_.NBODYS)
