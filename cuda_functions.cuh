@@ -136,6 +136,14 @@ __global__ void g_showers_step20_G(int size); // particulas secundarias
 
 __device__ void d_cpySecTrack(int size, int KPAR);
 
+__device__ void d_prestep2_(double &DS, double &DSEF, int &NCROSS);
+
+__device__ void d_stepsi2_prox(int &KB, double &proxSURF);
+
+__device__ void d_step2_7(double &DS, double &DSEF, int &NCROSS);
+
+__device__ void cpyTRACK_MOD_SHARED(int direction);
+
 
 __global__ void g_showers_step1_G(int size)
 {
@@ -156,10 +164,6 @@ __global__ void g_showers_step2_G(int size)
 
 	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 2))
 	{
-
-		if (dg_TRACK_mod_.ILB[1 - 1][index] != 1)
-			printf("ILB %d index %d\n\n", dg_TRACK_mod_.ILB[1 - 1][index] , index);
-
 		//  Verifique se a trajetória cruza o sistema de materiais.
 		// L302:;
 
@@ -267,7 +271,9 @@ __global__ void g_showers_step3_G(int size)
 
 	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 3))
 	{
-		d_step2_(dg_wSHOWERS_.DS[index], dg_wSHOWERS_.DSEF[index], dg_wSHOWERS_.NCROSS[index]);
+		cpyTRACK_MOD_SHARED(1);
+		d_step2_7(dg_wSHOWERS_.DS[index], dg_wSHOWERS_.DSEF[index], dg_wSHOWERS_.NCROSS[index]);
+		cpyTRACK_MOD_SHARED(2);
 		dg_TRACK_mod_.STEP[index] = 4;
 	}
 }
@@ -406,15 +412,71 @@ __global__ void g_showers_step6_P(int size)
 	}
 }
 
-__global__ void g_showers_step7_G(int size)
+__device__ void cpyTRACK_MOD_SHARED(int direction){
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+	
+	if (direction == 1){
+	//	TRACK_MOD_SHARED.E[threadIdx.x] = dg_TRACK_mod_.E[index];
+		TRACK_MOD_SHARED.X[threadIdx.x] = dg_TRACK_mod_.X[index];
+		TRACK_MOD_SHARED.Y[threadIdx.x] = dg_TRACK_mod_.Y[index];
+		TRACK_MOD_SHARED.Z[threadIdx.x] = dg_TRACK_mod_.Z[index];
+		TRACK_MOD_SHARED.U[threadIdx.x] = dg_TRACK_mod_.U[index];
+		TRACK_MOD_SHARED.V[threadIdx.x] = dg_TRACK_mod_.V[index];
+		TRACK_MOD_SHARED.W[threadIdx.x] = dg_TRACK_mod_.W[index];
+	} else{
+	//	 dg_TRACK_mod_.E[index] = TRACK_MOD_SHARED.E[threadIdx.x];
+		 dg_TRACK_mod_.X[index] = TRACK_MOD_SHARED.X[threadIdx.x];
+		 dg_TRACK_mod_.Y[index] = TRACK_MOD_SHARED.Y[threadIdx.x];
+		 dg_TRACK_mod_.Z[index] = TRACK_MOD_SHARED.Z[threadIdx.x];
+		 dg_TRACK_mod_.U[index] = TRACK_MOD_SHARED.U[threadIdx.x];
+		 dg_TRACK_mod_.V[index] = TRACK_MOD_SHARED.V[threadIdx.x];
+		 dg_TRACK_mod_.W[index] = TRACK_MOD_SHARED.W[threadIdx.x];
+
+	}
+
+	
+
+
+	__syncthreads();
+}
+
+
+
+__global__ void  g_showers_step70_G(int size){
+
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+		
+	
+	
+	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 7)){
+		cpyTRACK_MOD_SHARED(1);
+		d_prestep2_(dg_wSHOWERS_.DS[index], dg_wSHOWERS_.DSEF[index], dg_wSHOWERS_.NCROSS[index]);
+		cpyTRACK_MOD_SHARED(2);
+		
+	}
+	
+	
+}
+
+
+
+
+__global__ void   g_showers_step7_G(int size)
 {
 
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
+	
+	
 	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 7))
+
 	{
-		d_step2_(dg_wSHOWERS_.DS[index], dg_wSHOWERS_.DSEF[index], dg_wSHOWERS_.NCROSS[index]);
+		cpyTRACK_MOD_SHARED(1);
+		d_step2_7(dg_wSHOWERS_.DS[index], dg_wSHOWERS_.DSEF[index], dg_wSHOWERS_.NCROSS[index]);
+		cpyTRACK_MOD_SHARED(2);
+		
 		dg_TRACK_mod_.STEP[index] = 8;
 	}
+	
 }
 
 __global__ void g_showers_step8_G(int size)
@@ -1540,6 +1602,512 @@ __global__ void showers_sec(int size)
 	}
 }
 
+__device__ void d_prestep2_(double &DS, double &DSEF, int &NCROSS)
+{
+
+	int index =  blockDim.x * blockIdx.x + threadIdx.x;
+//	if ((index < size) && (dg_TRACK_mod_.STEP[index] == 7)){
+		if ((dg_TRACK_mod_.MAT[index] != 0) && (dg_TRACK_mod_.IBODY[index] <= dg_QTREE_.NBODYS)){
+			double proxSURF = 0.0e0;
+			dg_PENGEOM_mod_.DSTOT[index] = 0.0e0;
+			dg_PENGEOM_mod_.KSLAST[index] = 0;
+		
+			DSEF = 0.0e0;
+			NCROSS = 0;
+			double DSRES = dg_wSHOWERS_.DS[index];
+			d_stepsi2_prox(dg_TRACK_mod_.IBODY[index], proxSURF);
+			if (proxSURF > (DSRES + 1.0e-10)){
+				DSEF = DSEF + DSRES;
+				/*dg_TRACK_mod_.X[index] = dg_TRACK_mod_.X[index] + DSRES * dg_TRACK_mod_.U[index];
+				dg_TRACK_mod_.Y[index] = dg_TRACK_mod_.Y[index] + DSRES * dg_TRACK_mod_.V[index];
+				dg_TRACK_mod_.Z[index]  = dg_TRACK_mod_.Z[index] + DSRES * dg_TRACK_mod_.W[index];*/
+				TRACK_MOD_SHARED.X[threadIdx.x] = TRACK_MOD_SHARED.X[threadIdx.x] + DSRES * TRACK_MOD_SHARED.U[threadIdx.x];
+				TRACK_MOD_SHARED.Y[threadIdx.x] = TRACK_MOD_SHARED.Y[threadIdx.x] + DSRES * TRACK_MOD_SHARED.V[threadIdx.x];
+				TRACK_MOD_SHARED.Z[threadIdx.x] = TRACK_MOD_SHARED.Z[threadIdx.x] + DSRES * TRACK_MOD_SHARED.W[threadIdx.x];
+
+				dg_PENGEOM_mod_.DSTOT[index] =  DSRES;
+				dg_TRACK_mod_.STEP[index] = 8;
+			}
+		}
+//	}
+
+}
+
+__device__ void d_step2_7(double &DS, double &DSEF, int &NCROSS)
+{
+	/*
+	Esta sub-rotina lida com a parte geom�trica da simulacao de pista
+   ��o A particula come�a no ponto (X, Y, Z) e percorre um comprimento
+   DS na dire��o (U, V, W) dentro do material para onde se move. Quando
+   a trilha deixa o material inicial, a part�cula � parada apenas
+   depois de entrar no pr�ximo corpo material (regi�es vazias com MAT = 0 s�o
+   cruzado automaticamente). Al�m disso, quando a part�cula chega de
+   uma regi�o vazia, ele � interrompido logo ap�s entrar no primeiro material
+   corpo.
+
+   Valores de entrada (m�dulo TRACK_mod):
+	  X, Y, Z ... coordenadas do ponto inicial,
+	  U, V, W ... cossenos de dire��o do deslocamento,
+	  IBODY ..... corpo onde o ponto inicial est� localizado,
+	  MAT ....... material no corpo IBODY.
+   NB: Quando uma trilha de part�culas � iniciada, as vari�veis ??IBODY e MAT
+   deve ser definido chamando a sub-rotina LOCATE.
+
+   Argumento de entrada:
+	  DS ........ comprimento do caminho a percorrer.
+
+   Argumentos de sa�da:
+	  DSEF ....... percorreu o comprimento do caminho antes de deixar o inicial
+				  material ou completar o salto (menos do que DS se o
+				  a trilha atravessa uma interface),
+	  NCROSS .... = 0 se toda a etapa estiver contida no inicial
+					material,
+				  .gt.0 se a part�cula cruzou uma interface, ou seja,
+					se entrou em um novo material.
+
+   Valores de sa�da (m�dulo TRACK_mod):
+	  X, Y, Z ... coordenadas da posi��o final,
+	  IBODY ..... corpo onde o ponto final est� localizado,
+	  MAT ....... material em IBODY. O valor MAT = 0 indica que o
+				  part�cula escapou do sistema.
+
+   Valores de sa�da (m�dulo dg_PENGEOM_mod):
+	  DSTOT ..... comprimento do caminho percorrido, incluindo segmentos de caminho no vazio
+				  volumes.
+	  KSLAST .... quando NCROSS.ne.0, o valor de sa�da de KSLAST � o
+		 r�tulo da �ltima superf�cie cruzada pela part�cula antes
+		 entrar em um corpo material. KSLAST � usado para renderiza��o em 3D.
+	*/
+
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+
+	DSEF = 0.0e0;
+	dg_PENGEOM_mod_.DSTOT[index] = 0.0e0;
+	NCROSS = 0;
+	dg_PENGEOM_mod_.KSLAST[index] = 0;
+	double DSRES;
+	int KB1;
+	// double d_S[NS2M];
+	// int d_ISNS2M];
+
+	// double *d_S;
+	// int *d_IS;
+
+	//__host__​__device__​cudaError_t cudaMalloc ( void** devPtr, size_t size )
+	// gpuErrchk(cudaMalloc(&d_S, sizeof(double)*NS2M));
+	// gpuErrchk(cudaMalloc(&d_IS, sizeof(int)*NS2M));
+
+	// double *d_S = (double *)malloc(dg_QSURF_.NSURF*2*sizeof(double));
+	// int *d_IS = (int *)malloc(dg_QSURF_.NSURF*2*sizeof(int));
+
+	/*	if (index == 0){
+
+			printf("\n step2 aqui %lf\n", dg_TRACK_mod_[0].E);
+
+		}*/
+
+	int NST;
+	double DSP;
+	int KS1;
+	int KF;
+	int IERR;
+	int IBODYL;
+	int NERR;
+	int KS;
+	int KFLO;
+	double SW;
+	int MATL;
+	double A, B, C;
+
+	int NSC = 0; // Número de cruzamentos da superfície à frente da partícula.
+	int NSCT;
+	int MAT0;
+
+
+	for (int I = 1; I <= dg_QSURF_.NSURF; I++)
+	{
+		dg_QTREE_.KSP[I - 1][index] = 0; // Ponteiros laterais das superfícies avaliadas.
+	}
+
+	//	printf("2\n");
+
+	MAT0 = dg_TRACK_mod_.MAT[index]; // Material Inicial
+
+	if (dg_TRACK_mod_.MAT[index] == 0)
+	{
+	
+		DSRES = 1.0e35; // No vácuo, as partículas voam livremente.
+	}
+	else
+	{
+		DSRES = DS; // comprimento do camimho residual
+	}
+
+	// A partícula entra de fora do recinto.
+
+	if (dg_TRACK_mod_.IBODY[index] > dg_QTREE_.NBODYS)
+	{
+		KB1 = dg_QTREE_.NBODYS;
+		d_stepsi2_(KB1, NSC);
+		// d_stepsi2_(KB1, NSC);
+		if (NSC == 0)
+			goto L300;
+		NSCT = NSC;
+		NST = dg_QTREE_.KSURF[NXG - 1][KB1 - 1];
+
+		for (int KI = NSCT; KI >= 1; KI--)
+		{
+			// a particula atravessa uma superficie
+			dg_PENGEOM_mod_.KSLAST[index] = d_IS[KI - 1][index];
+			if (dg_QTREE_.KSP[dg_PENGEOM_mod_.KSLAST[index] - 1][index] == 1)
+				dg_QTREE_.KSP[dg_PENGEOM_mod_.KSLAST[index] - 1][index] = 2;
+			else
+				dg_QTREE_.KSP[dg_PENGEOM_mod_.KSLAST[index] - 1][index] = 1;
+
+			DSP = d_S[KI - 1][index];
+			DSEF = DSEF + DSP;
+			dg_PENGEOM_mod_.DSTOT[index] = dg_PENGEOM_mod_.DSTOT[index] + DSP;
+			TRACK_MOD_SHARED.X[threadIdx.x] = TRACK_MOD_SHARED.X[threadIdx.x] + DSP * TRACK_MOD_SHARED.U[threadIdx.x];
+			TRACK_MOD_SHARED.Y[threadIdx.x] = TRACK_MOD_SHARED.Y[threadIdx.x] + DSP * TRACK_MOD_SHARED.V[threadIdx.x];
+			TRACK_MOD_SHARED.Z[threadIdx.x] = TRACK_MOD_SHARED.Z[threadIdx.x] + DSP * TRACK_MOD_SHARED.W[threadIdx.x];
+			/*dg_TRACK_mod_.X[index] = dg_TRACK_mod_.X[index] + DSP * dg_TRACK_mod_.U[index];
+			dg_TRACK_mod_.Y[index] = dg_TRACK_mod_.Y[index] + DSP * dg_TRACK_mod_.V[index];
+			dg_TRACK_mod_.Z[index] = dg_TRACK_mod_.Z[index] + DSP * dg_TRACK_mod_.W[index];*/
+			NSC = NSC - 1;
+
+			if (NSC > 0)
+			{
+				for (int I = 1; I <= NSC; I++)
+				{
+					d_S[I - 1][index] = d_S[I - 1][index] - DSP;
+				}
+			}
+
+			for (int KSS = 1; KSS <= NST; KSS++)
+			{
+				KS1 = dg_QTREE_.KSURF[KSS - 1][KB1 - 1];
+				KF = dg_QTREE_.KFLAG[KSS - 1][KB1 - 1];
+				if ((KF < 3) && (dg_QTREE_.KSP[KS1 - 1][index] != KF))
+					goto L101;
+			}
+			// A partícula entra no invólucro.
+		L100:;
+			d_steplb2_(KB1, IERR);
+			// A partícula entra em um submódulo.
+			if (IERR == -1)
+			{
+				KB1 = dg_TRACK_mod_.IBODY[index];
+				d_stepsi2_(KB1, NSC);
+				// d_stepsi2_(KB1, NSC);
+				goto L100;
+			}
+			else
+			{
+				// A particula entrou em um corpo material
+				if (dg_TRACK_mod_.MAT[index] != 0)
+				{
+					NCROSS = 1;
+					//	free(d_S);
+					//	free(d_IS);
+					return;
+				}
+				else
+				{
+					KB1 = dg_TRACK_mod_.IBODY[index];
+					d_stepsi2_(KB1, NSC);
+					// d_stepsi2_(KB1, NSC);
+					goto L200;
+				}
+			}
+
+			// Neste ponto, o programa saiu do ciclo DO.
+		L101:;
+		}
+		//	printf("6\n");
+		goto L300;
+	}
+
+	// Cruzamentos de superfície.
+
+	IBODYL = dg_TRACK_mod_.IBODY[index];
+	if (dg_PENGEOM_mod_.LVERB)
+		NERR = 0;
+L102:;
+	KB1 = dg_TRACK_mod_.IBODY[index];
+	d_stepsi2_(KB1, NSC);
+	// d_stepsi2_(KB1, NSC);
+	d_steplb2_(KB1, IERR);
+
+	// Evidência de erros de arredondamento.
+	if (IERR != 0)
+	{
+		if (NSC > 0)
+		{
+			// Quando uma superfície está muito próxima, movemos a partícula além dela.
+			if (d_S[NSC - 1][index] < 1e-10)
+			{
+				dg_PENGEOM_mod_.KSLAST[index] = d_IS[NSC - 1][index];
+				if (dg_QTREE_.KSP[dg_PENGEOM_mod_.KSLAST[index] - 1][index] == 1)
+				{
+					dg_QTREE_.KSP[dg_PENGEOM_mod_.KSLAST[index] - 1][index] = 2;
+				}
+				else
+				{
+					dg_QTREE_.KSP[dg_PENGEOM_mod_.KSLAST[index] - 1][index] = 1;
+				}
+
+				DSP = d_S[NSC - 1][index];
+				/*dg_TRACK_mod_.X[index] = dg_TRACK_mod_.X[index] + DSP * dg_TRACK_mod_.U[index];
+				dg_TRACK_mod_.Y[index] = dg_TRACK_mod_.Y[index] + DSP * dg_TRACK_mod_.V[index];
+				dg_TRACK_mod_.Z[index] = dg_TRACK_mod_.Z[index] + DSP * dg_TRACK_mod_.W[index];*/
+				TRACK_MOD_SHARED.X[threadIdx.x] = TRACK_MOD_SHARED.X[threadIdx.x] + DSP * TRACK_MOD_SHARED.U[threadIdx.x];
+				TRACK_MOD_SHARED.Y[threadIdx.x] = TRACK_MOD_SHARED.Y[threadIdx.x] + DSP * TRACK_MOD_SHARED.V[threadIdx.x];
+				TRACK_MOD_SHARED.Z[threadIdx.x] = TRACK_MOD_SHARED.Z[threadIdx.x] + DSP * TRACK_MOD_SHARED.W[threadIdx.x];
+				if (dg_TRACK_mod_.MAT[index] == MAT0)
+				{
+					DSEF = DSEF + DSP;
+					DSRES = DSRES - DSP;
+				}
+
+				dg_PENGEOM_mod_.DSTOT[index] = dg_PENGEOM_mod_.DSTOT[index] + DSP;
+				NSC = NSC - 1;
+
+				if (dg_TRACK_mod_.IBODY[index] <= dg_QTREE_.NBODYS)
+					goto L102;
+			}
+		}
+		if (dg_PENGEOM_mod_.LVERB)
+		{
+
+			NERR = NERR + 1;
+			if ((dg_QTREE_.NWARN[index] < 100) && (dg_TRACK_mod_.MAT[index] != 0))
+			{
+
+				printf("WARNING, STEP: Accidental undershot or r");
+
+				for (int KSS = 1; KSS <= dg_QTREE_.KSURF[NXG - 1][KB1 - 1]; KSS++)
+				{
+					KS = dg_QTREE_.KSURF[KSS - 1][KB1 - 1];
+					KFLO = dg_QTREE_.KFLAG[KSS - 1][KB1 - 1];
+					if (KFLO < 3)
+					{
+						for (int KI = NSC; KI >= 1; KI--)
+						{
+							if (KS == d_IS[KI - 1][index])
+							{
+								SW = d_S[KI - 1][index];
+								goto L103;
+							}
+						}
+
+						SW = 0.0e0;
+					L103:;
+						d_fsurf2_(KS, A, B, C);
+						if (KFLO == dg_QTREE_.KSP[KS - 1][index])
+						{
+							printf("KS, KFLO, KSP, SW %lf", SW);
+						}
+						else
+						{
+							printf("KS, KFLO, KSP, SW %lf", SW);
+							dg_PENGEOM_mod_.KSLAST[index] = KS;
+						}
+					}
+				}
+				dg_QTREE_.NWARN[index] = dg_QTREE_.NWARN[index] + 1;
+			}
+		}
+		if (dg_TRACK_mod_.IBODY[index] <= dg_QTREE_.NBODYS)
+			goto L102;
+	}
+
+	if ((dg_PENGEOM_mod_.KDET[dg_TRACK_mod_.IBODY[index] - 1] != dg_PENGEOM_mod_.KDET[IBODYL - 1]) || (dg_TRACK_mod_.MAT[index] != MAT0))
+	{
+		NCROSS = 1;
+		DSEF = 0.0e0;
+		//	free(d_S);
+		//	free(d_IS);
+		return;
+	}
+
+	// A particula permanece no mesmo material
+
+	if ((dg_TRACK_mod_.MAT[index] != 0) && (DSRES < d_S[NSC - 1][index]))
+	{
+		if (dg_TRACK_mod_.MAT[index] == MAT0)
+			DSEF = DSEF + DSRES;
+		dg_PENGEOM_mod_.DSTOT[index] = dg_PENGEOM_mod_.DSTOT[index] + DSRES;
+		/*dg_TRACK_mod_.X[index] = dg_TRACK_mod_.X[index] + DSRES * dg_TRACK_mod_.U[index];
+		dg_TRACK_mod_.Y[index] = dg_TRACK_mod_.Y[index] + DSRES * dg_TRACK_mod_.V[index];
+		dg_TRACK_mod_.Z[index] = dg_TRACK_mod_.Z[index] + DSRES * dg_TRACK_mod_.W[index];*/
+		TRACK_MOD_SHARED.X[threadIdx.x] = TRACK_MOD_SHARED.X[threadIdx.x] + DSRES * TRACK_MOD_SHARED.U[threadIdx.x];
+		TRACK_MOD_SHARED.Y[threadIdx.x] = TRACK_MOD_SHARED.Y[threadIdx.x] + DSRES * TRACK_MOD_SHARED.V[threadIdx.x];
+		TRACK_MOD_SHARED.Z[threadIdx.x] = TRACK_MOD_SHARED.Z[threadIdx.x] + DSRES * TRACK_MOD_SHARED.W[threadIdx.x];
+		//	free(d_S);
+		//	free(d_IS);
+		return;
+	}
+
+	// Nova posição
+
+L200:;
+	if (NSC == 0)
+	{
+		if (dg_TRACK_mod_.MAT[index] == MAT0)
+			DSEF = DSEF + DSRES;
+		dg_PENGEOM_mod_.DSTOT[index] = dg_PENGEOM_mod_.DSTOT[index] + DSRES;
+		/*dg_TRACK_mod_.X[index] = dg_TRACK_mod_.X[index] + DSRES * dg_TRACK_mod_.U[index];
+		dg_TRACK_mod_.Y[index] = dg_TRACK_mod_.Y[index] + DSRES * dg_TRACK_mod_.V[index];
+		dg_TRACK_mod_.Z[index] = dg_TRACK_mod_.Z[index] + DSRES * dg_TRACK_mod_.W[index];*/
+			TRACK_MOD_SHARED.X[threadIdx.x] = TRACK_MOD_SHARED.X[threadIdx.x] + DSRES * TRACK_MOD_SHARED.U[threadIdx.x];
+		TRACK_MOD_SHARED.Y[threadIdx.x] = TRACK_MOD_SHARED.Y[threadIdx.x] + DSRES * TRACK_MOD_SHARED.V[threadIdx.x];
+		TRACK_MOD_SHARED.Z[threadIdx.x] = TRACK_MOD_SHARED.Z[threadIdx.x] + DSRES * TRACK_MOD_SHARED.W[threadIdx.x];
+		return;
+	}
+	NSCT = NSC;
+	MATL = dg_TRACK_mod_.MAT[index];
+	IBODYL = dg_TRACK_mod_.IBODY[index];
+	for (int KI = NSCT; KI >= 1; KI--)
+	{
+		// A etapa termina dentro do corpo
+		if (DSRES < d_S[KI - 1][index])
+		{
+			if (dg_TRACK_mod_.MAT[index] == MAT0)
+				DSEF = DSEF + DSRES;
+			dg_PENGEOM_mod_.DSTOT[index] = dg_PENGEOM_mod_.DSTOT[index] + DSRES;
+			/*dg_TRACK_mod_.X[index] = dg_TRACK_mod_.X[index] + DSRES * dg_TRACK_mod_.U[index];
+			dg_TRACK_mod_.Y[index] = dg_TRACK_mod_.Y[index] + DSRES * dg_TRACK_mod_.V[index];
+			dg_TRACK_mod_.Z[index] = dg_TRACK_mod_.Z[index] + DSRES * dg_TRACK_mod_.W[index];*/
+				TRACK_MOD_SHARED.X[threadIdx.x] = TRACK_MOD_SHARED.X[threadIdx.x] + DSRES * TRACK_MOD_SHARED.U[threadIdx.x];
+		TRACK_MOD_SHARED.Y[threadIdx.x] = TRACK_MOD_SHARED.Y[threadIdx.x] + DSRES * TRACK_MOD_SHARED.V[threadIdx.x];
+		TRACK_MOD_SHARED.Z[threadIdx.x] = TRACK_MOD_SHARED.Z[threadIdx.x] + DSRES * TRACK_MOD_SHARED.W[threadIdx.x];
+			//	free(d_S);
+			//	free(d_IS);
+			return;
+		}
+
+		// A particula atravessa uma superfice
+		dg_PENGEOM_mod_.KSLAST[index] = d_IS[KI - 1][index];
+		if (dg_QTREE_.KSP[dg_PENGEOM_mod_.KSLAST[index] - 1][index] == 1)
+			dg_QTREE_.KSP[dg_PENGEOM_mod_.KSLAST[index] - 1][index] = 2;
+		else
+			dg_QTREE_.KSP[dg_PENGEOM_mod_.KSLAST[index] - 1][index] = 1;
+
+		DSP = d_S[KI - 1][index];
+		/*dg_TRACK_mod_.X[index] = dg_TRACK_mod_.X[index] + DSP * dg_TRACK_mod_.U[index];
+		dg_TRACK_mod_.Y[index] = dg_TRACK_mod_.Y[index] + DSP * dg_TRACK_mod_.V[index];
+		dg_TRACK_mod_.Z[index] = dg_TRACK_mod_.Z[index] + DSP * dg_TRACK_mod_.W[index];*/
+			TRACK_MOD_SHARED.X[threadIdx.x] = TRACK_MOD_SHARED.X[threadIdx.x] + DSP * TRACK_MOD_SHARED.U[threadIdx.x];
+		TRACK_MOD_SHARED.Y[threadIdx.x] = TRACK_MOD_SHARED.Y[threadIdx.x] + DSP * TRACK_MOD_SHARED.V[threadIdx.x];
+		TRACK_MOD_SHARED.Z[threadIdx.x] = TRACK_MOD_SHARED.Z[threadIdx.x] + DSP * TRACK_MOD_SHARED.W[threadIdx.x];
+		if (dg_TRACK_mod_.MAT[index] == MAT0)
+		{
+			DSEF = DSEF + DSP;
+			DSRES = DSRES - DSP;
+		}
+		dg_PENGEOM_mod_.DSTOT[index] = dg_PENGEOM_mod_.DSTOT[index] + DSP;
+		NSC = NSC - 1;
+		if (NSC > 0)
+		{
+			for (int I = 1; I <= NSC; I++)
+			{
+				d_S[I - 1][index] = d_S[I - 1][index] - DSP;
+			}
+		}
+		d_steplb2_(KB1, IERR);
+
+	L201:;
+		KB1 = dg_TRACK_mod_.IBODY[index];
+		if (IERR == -1)
+		{
+			// A particula entrou em um submodulo
+			d_stepsi2_(KB1, NSC);
+			// d_stepsi2_(KB1, NSC);
+			d_steplb2_(KB1, IERR);
+			goto L201;
+		}
+		else if (IERR == 1)
+		{
+			// A partícula deixa o corpo ou módulo.
+			if (dg_TRACK_mod_.IBODY[index] <= dg_QTREE_.NBODYS)
+			{
+				d_stepsi2_(KB1, NSC);
+				// d_stepsi2_(KB1, NSC);
+				d_steplb2_(KB1, IERR);
+				goto L201;
+			}
+			else
+			{
+				// A partícula sai do recinto.
+				if (dg_TRACK_mod_.MAT[index] != MATL)
+					NCROSS = NCROSS + 1;
+				goto L300;
+			}
+		}
+
+		// A partícula continua voando quando entra em uma região vazia
+		if (dg_TRACK_mod_.MAT[index] == 0)
+		{
+			if (MATL == MAT0)
+				NCROSS = NCROSS + 1;
+			MATL = 0;
+			DSRES = 1.0e35;
+			goto L202;
+			// A partícula continua voando quando entra em um novo corpo do
+			// mesmo material que não faz parte de um detector diferente ...
+		}
+		else if (dg_TRACK_mod_.MAT[index] == MATL)
+		{
+			if (dg_PENGEOM_mod_.KDET[dg_TRACK_mod_.IBODY[index] - 1] == dg_PENGEOM_mod_.KDET[IBODYL - 1])
+			{
+				goto L202;
+			}
+			else
+			{
+				NCROSS = NCROSS + 1;
+				// free(d_S);
+				// free(d_IS);
+				return;
+			}
+			//.. e para quando penetra um novo corpo material ou umDetector
+		}
+		else
+		{
+			NCROSS = NCROSS + 1;
+			// free(d_S);
+			// free(d_IS);
+			return;
+		}
+	L202:;
+		d_stepsi2_(KB1, NSC);
+		// d_stepsi2_(KB1, NSC);
+		goto L200;
+		// Neste ponto, o programa saiu do ciclo DO.
+		// L203:; indica o final do loop
+	}
+	// A particula sai do recinto.
+L300:;
+
+	DSP = 1.0e36;
+	dg_TRACK_mod_.IBODY[index] = dg_QTREE_.NBODYS + 1;
+	dg_TRACK_mod_.MAT[index] = 0;
+	// printf("STEP2 setou para MAT 0\n\n");
+	if (dg_TRACK_mod_.MAT[index] == MAT0)
+		DSEF = DSEF + DSP;
+	dg_PENGEOM_mod_.DSTOT[index] = dg_PENGEOM_mod_.DSTOT[index] + DSP;
+	/*dg_TRACK_mod_.X[index] = dg_TRACK_mod_.X[index] + DSP * dg_TRACK_mod_.U[index];
+	dg_TRACK_mod_.Y[index] = dg_TRACK_mod_.Y[index] + DSP * dg_TRACK_mod_.V[index];
+	dg_TRACK_mod_.Z[index] = dg_TRACK_mod_.Z[index] + DSP * dg_TRACK_mod_.W[index];*/
+	TRACK_MOD_SHARED.X[threadIdx.x] = TRACK_MOD_SHARED.X[threadIdx.x] + DSP * TRACK_MOD_SHARED.U[threadIdx.x];
+		TRACK_MOD_SHARED.Y[threadIdx.x] = TRACK_MOD_SHARED.Y[threadIdx.x] + DSP * TRACK_MOD_SHARED.V[threadIdx.x];
+		TRACK_MOD_SHARED.Z[threadIdx.x] = TRACK_MOD_SHARED.Z[threadIdx.x] + DSP * TRACK_MOD_SHARED.W[threadIdx.x];
+	// free(d_S);
+	// free(d_IS);
+}
+
+
+
+
 __device__ void d_step2_(double &DS, double &DSEF, int &NCROSS)
 {
 	/*
@@ -1630,10 +2198,7 @@ __device__ void d_step2_(double &DS, double &DSEF, int &NCROSS)
 	int NSCT;
 	int MAT0;
 
-	//	printf("1\n");
 
-	//	printf("LVERB %d\n", dg_PENGEOM_mod_.LVERB);
-	//	printf(dg_PENGEOM_mod_.LVERB ? "true\n" : "false\n")
 	for (int I = 1; I <= dg_QSURF_.NSURF; I++)
 	{
 		dg_QTREE_.KSP[I - 1][index] = 0; // Ponteiros laterais das superfícies avaliadas.
@@ -1645,7 +2210,7 @@ __device__ void d_step2_(double &DS, double &DSEF, int &NCROSS)
 
 	if (dg_TRACK_mod_.MAT[index] == 0)
 	{
-		// printf("index %d Step2 Particula no vacuo voa livrimento\n\n", index);
+	
 		DSRES = 1.0e35; // No vácuo, as partículas voam livremente.
 	}
 	else
@@ -1994,6 +2559,189 @@ L300:;
 	// free(d_IS);
 }
 
+__device__ void d_stepsi2_prox(int &KB, double &proxSURF){
+
+/*Calcula as interseções da trajetória com o limite
+		Superfícies do corpo KB. Os cruzamentos são adicionados à lista e
+		classificados em ordem decrescente.
+		Esta sub-rotina funciona apenas quando chamada de dentro da sub-rotina STEP.*/
+
+	// stepsi_(KB, S, IS, NSC);
+	// return;
+
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+	//int trackIndex = dg_TRACK_mod_.INDEX[index];
+	////int trackIndex = dg_TRACK_mod_.INDEX[index];
+	int KFL;
+	int KS;
+	double ABSA;
+	double ABSB;
+	double A, B, C;
+	double FUZZL = 1.0e-12;
+	double T1;
+	double DISCR;
+	double FUZZ;
+	int IAMBIG;
+	double R2A;
+	double DELTA;
+	double SH;
+	double T2;
+//	int KMAX;
+//	double SMAX;
+//	int KKMAX;
+
+	proxSURF = 1.0e35;
+
+
+
+	for (int I = 1; I <= dg_QSURF_.NSURF; I++)
+	{
+		dg_QTREE_.KSP[I - 1][index] = 0; // Ponteiros laterais das superfícies avaliadas.
+	}
+
+
+	// Determine cruzamentos de superfície.
+
+	for (int KSS = 1; KSS <= dg_QTREE_.KSURF[NXG - 1][KB - 1]; KSS++)
+	{
+		// printf("\nKSURF: %d\n",  dg_QTREE_.KSURF[NXG - 1][KB -1]);
+
+		/*As interseções com uma determinada superfície são calculadas apenas uma vez.
+		O ponteiro lateral de uma superfície deve ser alterado cada vez que o a superfície está cruzada.*/
+
+		KFL = dg_QTREE_.KFLAG[KSS - 1][KB - 1];
+		if (KFL > 4)
+			goto L100;
+		KS = dg_QTREE_.KSURF[KSS - 1][KB - 1];
+		if (dg_QTREE_.KSP[KS - 1][index] != 0)
+			goto L100;
+		d_fsurf2_(KS, A, B, C);
+		ABSA = fabs(A); 
+		ABSB = fabs(B);
+
+		// Plano, unica raiz
+		if (ABSA < 1.0e-36)
+		{
+			if (ABSB > 0.0e0)
+			{
+				if (C < -FUZZL)
+				{
+					dg_QTREE_.KSP[KS - 1][index] = 1;
+				}
+				else if (C > FUZZL)
+				{
+					dg_QTREE_.KSP[KS - 1][index] = 2;
+				}
+				else
+				{
+					if (B < 0.0e0)
+					{
+						dg_QTREE_.KSP[KS - 1][index] = 1;
+					}
+					else
+					{
+						dg_QTREE_.KSP[KS - 1][index] = 2;
+					}
+					goto L100;
+				}
+				T1 = -C / B;
+				if ((T1 > 0.0e0) && (T1 < proxSURF))
+				{
+					proxSURF = T1;
+					/*NSC = NSC + 1;
+					d_IS[index*d_NS2M/100  + NSC - 1] = KS;
+					d_S[index*d_NS2M/100  + NSC - 1] = T1;*/
+
+				}
+			}
+			else
+			{
+				if (C < 0.0e0)
+				{
+					dg_QTREE_.KSP[KS - 1][index] = 1;
+				}
+				else
+				{
+					dg_QTREE_.KSP[KS - 1][index] = 2;
+				}
+			}
+
+			// Superficie não plana, duas raizes
+		}
+		else
+		{
+			DISCR = B * B - 4.0e0 * A * C;
+			FUZZ = FUZZL * DISCR / ABSA;
+			if (C < -FUZZ)
+			{
+				IAMBIG = 0;
+				dg_QTREE_.KSP[KS - 1][index] = 1;
+			}
+			else if (C > FUZZ)
+			{
+				IAMBIG = 0;
+				dg_QTREE_.KSP[KS - 1][index] = 2;
+			}
+			else
+			{
+				IAMBIG = 1;
+				if (B < 0.0e0)
+				{
+					dg_QTREE_.KSP[KS - 1][index] = 1;
+				}
+				else
+				{
+					dg_QTREE_.KSP[KS - 1][index] = 2;
+				}
+			}
+
+			if (DISCR < 1.0e-36)
+				goto L100;
+
+			if (IAMBIG == 0)
+			{
+				R2A = 0.5e0 / A;
+				DELTA = sqrt(DISCR) * fabs(R2A);
+				SH = -B * R2A;
+				T1 = SH - DELTA;
+				if ((T1 > 0.0e0) && (T1 < proxSURF))
+				{
+					/*NSC = NSC + 1;
+					d_IS[index*d_NS2M/100  + NSC - 1] = KS;
+					d_S[index*d_NS2M/100  + NSC - 1] = T1;*/
+					proxSURF = T1;
+				}
+				T2 = SH + DELTA;
+				if ((T2 > 0.0e0) && (T2 < proxSURF))
+				{
+					/*NSC = NSC + 1;
+					d_IS[index*d_NS2M/100  + NSC - 1] = KS;
+					d_S[index*d_NS2M/100  + NSC - 1] = T2;*/
+					proxSURF = T2;
+				}
+			}
+			else
+			{
+				if (B * A < 0.0e0)
+				{
+					R2A = 0.5e0 / A;
+					DELTA = sqrt(DISCR) * fabs(R2A);
+					SH = -B * R2A;
+					T2 = SH + DELTA;
+					if ((T2 > 0.0e0) && (T2 < proxSURF))
+						proxSURF = T2;
+					/*NSC = NSC + 1;
+					d_IS[index*d_NS2M/100  + NSC - 1] = KS;
+					d_S[index*d_NS2M/100  + NSC - 1] = fmax(T2, 0.0e0);*/
+				}
+			}
+		}
+	L100:;
+	}
+}
+
+
+
 __device__ void d_stepsi2_(int &KB, int &NSC)
 {
 	/*Calcula as interseções da trajetória com o limite
@@ -2301,24 +3049,52 @@ __device__ void d_fsurf2_(int &KS, double &A, double &B, double &C)
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
 	double XXX, YYY, ZZZ;
 
-	if (dg_QSURF_.KPLANE[KS - 1] == 0)
+	if ((dg_TRACK_mod_.STEP[index] == 7) || (dg_TRACK_mod_.STEP[index] == 3))
 	{
-		A = dg_TRACK_mod_.U[index] * (dg_QSURF_.AXX[KS - 1] * dg_TRACK_mod_.U[index] + dg_QSURF_.AXY[KS - 1] * dg_TRACK_mod_.V[index] + dg_QSURF_.AXZ[KS - 1] * dg_TRACK_mod_.W[index]) +
-			dg_TRACK_mod_.V[index] * (dg_QSURF_.AYY[KS - 1] * dg_TRACK_mod_.V[index] + dg_QSURF_.AYZ[KS - 1] * dg_TRACK_mod_.W[index]) + dg_TRACK_mod_.W[index] * dg_QSURF_.AZZ[KS - 1] * dg_TRACK_mod_.W[index];
-		XXX = dg_QSURF_.AXX[KS - 1] * dg_TRACK_mod_.X[index] + dg_QSURF_.AXY[KS - 1] * dg_TRACK_mod_.Y[index] + dg_QSURF_.AXZ[KS - 1] * dg_TRACK_mod_.Z[index] + dg_QSURF_.AX[KS - 1];
-		YYY = dg_QSURF_.AYY[KS - 1] * dg_TRACK_mod_.Y[index] + dg_QSURF_.AYZ[KS - 1] * dg_TRACK_mod_.Z[index] + dg_QSURF_.AY[KS - 1];
-		ZZZ = dg_QSURF_.AZZ[KS - 1] * dg_TRACK_mod_.Z[index] + dg_QSURF_.AZ[KS - 1];
 
-		B = dg_TRACK_mod_.U[index] * (dg_QSURF_.AXX[KS - 1] * dg_TRACK_mod_.X[index] + XXX) + dg_TRACK_mod_.V[index] * (dg_QSURF_.AXY[KS - 1] * dg_TRACK_mod_.X[index] + dg_QSURF_.AYY[KS - 1] * dg_TRACK_mod_.Y[index] + YYY) +
-			dg_TRACK_mod_.W[index] * (dg_QSURF_.AXZ[KS - 1] * dg_TRACK_mod_.X[index] + dg_QSURF_.AYZ[KS - 1] * dg_TRACK_mod_.Y[index] + dg_QSURF_.AZZ[KS - 1] * dg_TRACK_mod_.Z[index] + ZZZ);
 
-		C = dg_TRACK_mod_.X[index] * XXX + dg_TRACK_mod_.Y[index] * YYY + dg_TRACK_mod_.Z[index] * ZZZ + dg_QSURF_.A0[KS - 1];
+		if (dg_QSURF_.KPLANE[KS - 1] == 0)
+		{
+			A = TRACK_MOD_SHARED.U[threadIdx.x] * (dg_QSURF_.AXX[KS - 1] * TRACK_MOD_SHARED.U[threadIdx.x] + dg_QSURF_.AXY[KS - 1] * TRACK_MOD_SHARED.V[threadIdx.x] + dg_QSURF_.AXZ[KS - 1] * TRACK_MOD_SHARED.W[threadIdx.x]) +
+				TRACK_MOD_SHARED.V[threadIdx.x] * (dg_QSURF_.AYY[KS - 1] * TRACK_MOD_SHARED.V[threadIdx.x] + dg_QSURF_.AYZ[KS - 1] * TRACK_MOD_SHARED.W[threadIdx.x]) + TRACK_MOD_SHARED.W[threadIdx.x] * dg_QSURF_.AZZ[KS - 1] * TRACK_MOD_SHARED.W[threadIdx.x];
+			XXX = dg_QSURF_.AXX[KS - 1] * TRACK_MOD_SHARED.X[threadIdx.x] + dg_QSURF_.AXY[KS - 1] * TRACK_MOD_SHARED.Y[threadIdx.x] + dg_QSURF_.AXZ[KS - 1] * TRACK_MOD_SHARED.Z[threadIdx.x] + dg_QSURF_.AX[KS - 1];
+			YYY = dg_QSURF_.AYY[KS - 1] * TRACK_MOD_SHARED.Y[threadIdx.x] + dg_QSURF_.AYZ[KS - 1] * TRACK_MOD_SHARED.Z[threadIdx.x] + dg_QSURF_.AY[KS - 1];
+			ZZZ = dg_QSURF_.AZZ[KS - 1] * TRACK_MOD_SHARED.Z[threadIdx.x] + dg_QSURF_.AZ[KS - 1];
+
+			B = TRACK_MOD_SHARED.U[threadIdx.x] * (dg_QSURF_.AXX[KS - 1] * TRACK_MOD_SHARED.X[threadIdx.x] + XXX) + TRACK_MOD_SHARED.V[threadIdx.x] * (dg_QSURF_.AXY[KS - 1] * TRACK_MOD_SHARED.X[threadIdx.x] + dg_QSURF_.AYY[KS - 1] * TRACK_MOD_SHARED.Y[threadIdx.x] + YYY) +
+				TRACK_MOD_SHARED.W[threadIdx.x] * (dg_QSURF_.AXZ[KS - 1] * TRACK_MOD_SHARED.X[threadIdx.x] + dg_QSURF_.AYZ[KS - 1] * TRACK_MOD_SHARED.Y[threadIdx.x] + dg_QSURF_.AZZ[KS - 1] * TRACK_MOD_SHARED.Z[threadIdx.x] + ZZZ);
+
+			C = TRACK_MOD_SHARED.X[threadIdx.x] * XXX + TRACK_MOD_SHARED.Y[threadIdx.x] * YYY + TRACK_MOD_SHARED.Z[threadIdx.x] * ZZZ + dg_QSURF_.A0[KS - 1];
+		}
+		else
+		{
+			A = 0.0e0;
+			B = TRACK_MOD_SHARED.U[threadIdx.x] * dg_QSURF_.AX[KS - 1] + TRACK_MOD_SHARED.V[threadIdx.x] * dg_QSURF_.AY[KS - 1] + TRACK_MOD_SHARED.W[threadIdx.x] * dg_QSURF_.AZ[KS - 1];
+			C = TRACK_MOD_SHARED.X[threadIdx.x] * dg_QSURF_.AX[KS - 1] + TRACK_MOD_SHARED.Y[threadIdx.x] * dg_QSURF_.AY[KS - 1] + TRACK_MOD_SHARED.Z[threadIdx.x] * dg_QSURF_.AZ[KS - 1] + dg_QSURF_.A0[KS - 1];
+		}
 	}
 	else
 	{
-		A = 0.0e0;
-		B = dg_TRACK_mod_.U[index] * dg_QSURF_.AX[KS - 1] + dg_TRACK_mod_.V[index] * dg_QSURF_.AY[KS - 1] + dg_TRACK_mod_.W[index] * dg_QSURF_.AZ[KS - 1];
-		C = dg_TRACK_mod_.X[index] * dg_QSURF_.AX[KS - 1] + dg_TRACK_mod_.Y[index] * dg_QSURF_.AY[KS - 1] + dg_TRACK_mod_.Z[index] * dg_QSURF_.AZ[KS - 1] + dg_QSURF_.A0[KS - 1];
+
+		if (dg_QSURF_.KPLANE[KS - 1] == 0)
+		{
+			A = dg_TRACK_mod_.U[index] * (dg_QSURF_.AXX[KS - 1] * dg_TRACK_mod_.U[index] + dg_QSURF_.AXY[KS - 1] * dg_TRACK_mod_.V[index] + dg_QSURF_.AXZ[KS - 1] * dg_TRACK_mod_.W[index]) +
+				dg_TRACK_mod_.V[index] * (dg_QSURF_.AYY[KS - 1] * dg_TRACK_mod_.V[index] + dg_QSURF_.AYZ[KS - 1] * dg_TRACK_mod_.W[index]) + dg_TRACK_mod_.W[index] * dg_QSURF_.AZZ[KS - 1] * dg_TRACK_mod_.W[index];
+			XXX = dg_QSURF_.AXX[KS - 1] * dg_TRACK_mod_.X[index] + dg_QSURF_.AXY[KS - 1] * dg_TRACK_mod_.Y[index] + dg_QSURF_.AXZ[KS - 1] * dg_TRACK_mod_.Z[index] + dg_QSURF_.AX[KS - 1];
+			YYY = dg_QSURF_.AYY[KS - 1] * dg_TRACK_mod_.Y[index] + dg_QSURF_.AYZ[KS - 1] * dg_TRACK_mod_.Z[index] + dg_QSURF_.AY[KS - 1];
+			ZZZ = dg_QSURF_.AZZ[KS - 1] * dg_TRACK_mod_.Z[index] + dg_QSURF_.AZ[KS - 1];
+
+			B = dg_TRACK_mod_.U[index] * (dg_QSURF_.AXX[KS - 1] * dg_TRACK_mod_.X[index] + XXX) + dg_TRACK_mod_.V[index] * (dg_QSURF_.AXY[KS - 1] * dg_TRACK_mod_.X[index] + dg_QSURF_.AYY[KS - 1] * dg_TRACK_mod_.Y[index] + YYY) +
+				dg_TRACK_mod_.W[index] * (dg_QSURF_.AXZ[KS - 1] * dg_TRACK_mod_.X[index] + dg_QSURF_.AYZ[KS - 1] * dg_TRACK_mod_.Y[index] + dg_QSURF_.AZZ[KS - 1] * dg_TRACK_mod_.Z[index] + ZZZ);
+
+			C = dg_TRACK_mod_.X[index] * XXX + dg_TRACK_mod_.Y[index] * YYY + dg_TRACK_mod_.Z[index] * ZZZ + dg_QSURF_.A0[KS - 1];
+		}
+		else
+		{
+			A = 0.0e0;
+			B = dg_TRACK_mod_.U[index] * dg_QSURF_.AX[KS - 1] + dg_TRACK_mod_.V[index] * dg_QSURF_.AY[KS - 1] + dg_TRACK_mod_.W[index] * dg_QSURF_.AZ[KS - 1];
+			C = dg_TRACK_mod_.X[index] * dg_QSURF_.AX[KS - 1] + dg_TRACK_mod_.Y[index] * dg_QSURF_.AY[KS - 1] + dg_TRACK_mod_.Z[index] * dg_QSURF_.AZ[KS - 1] + dg_QSURF_.A0[KS - 1];
+		}
 	}
 }
 
@@ -2430,7 +3206,6 @@ d100:
 	}
 	dg_TRACK_mod_.IBODY[index] = dg_QTREE_.NBODYS + 1;
 	dg_TRACK_mod_.MAT[index] = 0;
-	// printf("LCOATE setou para MAT 0\n\n");
 }
 
 __device__ void d_sendet2_(double &ED, int &ID)

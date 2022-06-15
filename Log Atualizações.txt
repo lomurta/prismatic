@@ -1,3 +1,6 @@
+15/06/2022
+- Ajuste para uso de Memoria compartilhada para a funcao step2, com chamada para a funcao fsurf2 - Correto
+
 09/08/2022
 - Ajustes e simulacao para todas as particulas correto
 - Reaproveitamento dos threads para execucao de particulas secundarias.

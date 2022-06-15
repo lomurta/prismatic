@@ -62,7 +62,8 @@ int wIPOLI = 0;
 int h_N = 0; //mesma funcionalidade do CNTRL_.N
 int h_vetN[pilhaPart];
 
-int blockSize = 128;
+int const blockSize = 128;
+int tamMemShared = 8*blockSize*7;
 
 
 __constant__ double d_PI = 3.1415926535897932e0;
@@ -78,6 +79,11 @@ __constant__ int d_NS2M = 2 * NS;
 
 
 clock_t start, end;
+
+typedef struct
+{
+	double X[blockSize],Y[blockSize],Z[blockSize],U[blockSize],V[blockSize], W[blockSize];
+} hd_TRACK_MOD_SHARED;
 
 
 typedef struct
@@ -1061,6 +1067,10 @@ hd_TRACK_MOD_SEC SECTRACK_P;
 hd_TRACK_MOD vTrack_Simular;
 
 __device__ hd_wSHOWERS dg_wSHOWERS_;
+
+__shared__ hd_TRACK_MOD_SHARED TRACK_MOD_SHARED;
+
+
 
 
 //DECLARACOES PARA COPIA NA GPU

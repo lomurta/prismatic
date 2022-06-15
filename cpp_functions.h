@@ -28059,6 +28059,13 @@ void simSecTrack_E(){
 			g_showers_step6_E<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
 
+			gpuErrchk(cudaFuncSetSharedMemConfig(g_showers_step70_G, cudaSharedMemBankSizeEightByte));
+
+			g_showers_step70_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			gpuErrchk(cudaFuncSetSharedMemConfig(g_showers_step7_G, cudaSharedMemBankSizeEightByte));
+
 			g_showers_step7_G<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
 
@@ -28150,6 +28157,13 @@ void simSecTrack_G(){
 			
 			g_showers_step6_G<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
+
+			gpuErrchk(cudaFuncSetSharedMemConfig(g_showers_step70_G, cudaSharedMemBankSizeEightByte));
+
+			g_showers_step70_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			gpuErrchk(cudaFuncSetSharedMemConfig(g_showers_step7_G, cudaSharedMemBankSizeEightByte));
 
 			g_showers_step7_G<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
@@ -28245,6 +28259,13 @@ transfnTRACKSGPU_to_CPU();
 
 			g_showers_step6_P<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
+
+			gpuErrchk(cudaFuncSetSharedMemConfig(g_showers_step70_G, cudaSharedMemBankSizeEightByte));
+
+			g_showers_step70_G<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+			gpuErrchk(cudaFuncSetSharedMemConfig(g_showers_step7_G, cudaSharedMemBankSizeEightByte));
 
 			g_showers_step7_G<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
@@ -28665,6 +28686,14 @@ void simPriTrack_G(){
 
 		g_showers_step6_G<<<grid, block>>>(sizeTrack);
 		gpuErrchk(cudaDeviceSynchronize());
+
+		gpuErrchk(cudaFuncSetSharedMemConfig(g_showers_step70_G, cudaSharedMemBankSizeEightByte));
+	
+
+		g_showers_step70_G<<<grid, block>>>(sizeTrack);
+		gpuErrchk(cudaDeviceSynchronize());
+
+		gpuErrchk(cudaFuncSetSharedMemConfig(g_showers_step7_G, cudaSharedMemBankSizeEightByte));
 
 		g_showers_step7_G<<<grid, block>>>(sizeTrack);
 		gpuErrchk(cudaDeviceSynchronize());
