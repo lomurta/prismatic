@@ -956,7 +956,8 @@ __global__ void g_showers_step20_G(int size)
 		{ // Fonte da particula primaria
 			KEn = int(dg_TRACK_mod_.E[index] * dg_CNT3_.RDSDE + 1.0e0);
 			dg_CNT3_.SEDS[KEn - 1][dg_TRACK_mod_.KPAR[index] - 1][index] = dg_CNT3_.SEDS[KEn - 1][dg_TRACK_mod_.KPAR[index] - 1][index] + dg_TRACK_mod_.WGHT[index];
-			dg_CNT3_.SEDS2[KEn - 1][dg_TRACK_mod_.KPAR[index] - 1][index] = dg_CNT3_.SEDS2[KEn - 1][dg_TRACK_mod_.KPAR[index] - 1][index] + pow(dg_TRACK_mod_.WGHT[index], 2);
+			dg_CNT3_.SEDS2[KEn - 1][dg_TRACK_mod_.KPAR[index] - 1][index] = dg_CNT3_.SEDS2[KEn - 1][dg_TRACK_mod_.KPAR[index] - 1][index] + (dg_TRACK_mod_.WGHT[index] * dg_TRACK_mod_.WGHT[index]);
+			//dg_CNT3_.SEDS2[KEn - 1][dg_TRACK_mod_.KPAR[index] - 1][index] = dg_CNT3_.SEDS2[KEn - 1][dg_TRACK_mod_.KPAR[index] - 1][index] + pow(dg_TRACK_mod_.WGHT[index], 2);
 			// if (dg_TRACK_mod_.LAGE[index]) //nao irá contabilizar a idade da particula
 			//	page02_();
 			// goto L302; //A energia não é removida do local.
@@ -1466,7 +1467,8 @@ __global__ void showers_cont(int size)
 			// dg_CNT1_.TDEBO[KB - 1] = dg_CNT1_.TDEBO[KB - 1] + dg_CNT1_.DEBO[KB - 1][index];
 			// dg_CNT1_.TDEBO2[KB - 1] = dg_CNT1_.TDEBO2[KB - 1] + pow(dg_CNT1_.DEBO[KB - 1][index], 2);
 			atomicAdd2(&dg_CNT1_.TDEBO[KB - 1], dg_CNT1_.DEBO[KB - 1][index]);
-			atomicAdd2(&dg_CNT1_.TDEBO2[KB - 1], pow(dg_CNT1_.DEBO[KB - 1][index], 2));
+			atomicAdd2(&dg_CNT1_.TDEBO2[KB - 1], (dg_CNT1_.DEBO[KB - 1][index] * dg_CNT1_.DEBO[KB - 1][index]));
+			//atomicAdd2(&dg_CNT1_.TDEBO2[KB - 1], pow(dg_CNT1_.DEBO[KB - 1][index], 2));
 			//	printf("TDBEBO: %f\n", dg_CNT1_.TDEBO[KB-1]);
 			//	printf("TDBEBO2: %f\n\n", dg_CNT1_.TDEBO2[KB-1]);
 
@@ -1477,13 +1479,15 @@ __global__ void showers_cont(int size)
 		for (int I = 1; I <= 3; I++)
 		{
 			atomicAdd2(&dg_CNT0_.PRIM[I - 1], dg_CNT0_.DPRIM[I - 1][index]);
-			atomicAdd2(&dg_CNT0_.PRIM2[I - 1], pow(dg_CNT0_.DPRIM[I - 1][index], 2));
+			atomicAdd2(&dg_CNT0_.PRIM2[I - 1], (dg_CNT0_.DPRIM[I - 1][index] * dg_CNT0_.DPRIM[I - 1][index] ));
+			//atomicAdd2(&dg_CNT0_.PRIM2[I - 1], pow(dg_CNT0_.DPRIM[I - 1][index], 2));
 			// dg_CNT0_.PRIM[I - 1] = dg_CNT0_.PRIM[I - 1] + dg_CNT0_.DPRIM[index][I - 1];
 			// dg_CNT0_.PRIM2[I - 1] = dg_CNT0_.PRIM2[I - 1] + pow(dg_CNT0_.DPRIM[index][I - 1], 2);
 			for (int K = 1; K <= 3; K++)
 			{
 				atomicAdd2(&dg_CNT0_.SEC[I - 1][K - 1], dg_CNT0_.DSEC[I - 1][K - 1][index]);
-				atomicAdd2(&dg_CNT0_.SEC2[I - 1][K - 1], pow(dg_CNT0_.DSEC[I - 1][K - 1][index], 2));
+				atomicAdd2(&dg_CNT0_.SEC2[I - 1][K - 1], (dg_CNT0_.DSEC[I - 1][K - 1][index] * dg_CNT0_.DSEC[I - 1][K - 1][index]));
+				//atomicAdd2(&dg_CNT0_.SEC2[I - 1][K - 1], pow(dg_CNT0_.DSEC[I - 1][K - 1][index], 2));
 				// dg_CNT0_.SEC[I - 1][K - 1] = dg_CNT0_.SEC[I - 1][K - 1] + dg_CNT0_.DSEC[index][I - 1][K - 1];
 				// dg_CNT0_.SEC2[I - 1][K - 1] = dg_CNT0_.SEC2[I - 1][K - 1] + pow(dg_CNT0_.DSEC[index][I - 1][K - 1], 2);
 			}
@@ -1492,15 +1496,18 @@ __global__ void showers_cont(int size)
 		for (int I = 1; I <= 2; I++)
 		{
 			atomicAdd2(&dg_CNT0_.AVW[I - 1], dg_CNT0_.DAVW[I - 1][index]);
-			atomicAdd2(&dg_CNT0_.AVW2[I - 1], pow(dg_CNT0_.DAVW[I - 1][index], 2));
+			atomicAdd2(&dg_CNT0_.AVW2[I - 1], (dg_CNT0_.DAVW[I - 1][index] * dg_CNT0_.DAVW[I - 1][index]));
+			//atomicAdd2(&dg_CNT0_.AVW2[I - 1], pow(dg_CNT0_.DAVW[I - 1][index], 2));
 			// dg_CNT0_.AVW[I - 1] = dg_CNT0_.AVW[I - 1] + dg_CNT0_.DAVW[index][I - 1];
 			// dg_CNT0_.AVW2[I - 1] = dg_CNT0_.AVW2[I - 1] + pow(dg_CNT0_.DAVW[index][I - 1], 2);
 			atomicAdd2(&dg_CNT0_.AVA[I - 1], dg_CNT0_.DAVA[I - 1][index]);
-			atomicAdd2(&dg_CNT0_.AVA2[I - 1], pow(dg_CNT0_.DAVA[I - 1][index], 2));
+			atomicAdd2(&dg_CNT0_.AVA2[I - 1], (dg_CNT0_.DAVA[I - 1][index] * dg_CNT0_.DAVA[I - 1][index] ));
+			//atomicAdd2(&dg_CNT0_.AVA2[I - 1], pow(dg_CNT0_.DAVA[I - 1][index], 2));
 			// dg_CNT0_.AVA[I - 1] = dg_CNT0_.AVA[I - 1] + dg_CNT0_.DAVA[index][I - 1];
 			// dg_CNT0_.AVA2[I - 1] = dg_CNT0_.AVA2[I - 1] + pow(dg_CNT0_.DAVA[index][I - 1], 2);
 			atomicAdd2(&dg_CNT0_.AVE[I - 1], dg_CNT0_.DAVE[I - 1][index]);
-			atomicAdd2(&dg_CNT0_.AVE2[I - 1], pow(dg_CNT0_.DAVE[I - 1][index], 2));
+			atomicAdd2(&dg_CNT0_.AVE2[I - 1], (dg_CNT0_.DAVE[I - 1][index] * dg_CNT0_.DAVE[I - 1][index]));
+			//atomicAdd2(&dg_CNT0_.AVE2[I - 1], pow(dg_CNT0_.DAVE[I - 1][index], 2));
 			// dg_CNT0_.AVE[I - 1] = dg_CNT0_.AVE[I - 1] + dg_CNT0_.DAVE[index][I - 1];
 			// dg_CNT0_.AVE2[I - 1] = dg_CNT0_.AVE2[I - 1] + pow(dg_CNT0_.DAVE[index].INDEX][I - 1], 2);
 		}
@@ -1539,7 +1546,8 @@ __global__ void showers_sec(int size)
 		{ // Fonte da particula primaria
 			KEn = int(dg_TRACK_mod_.E[index] * dg_CNT3_.RDSDE + 1.0e0);
 			dg_CNT3_.SEDS[KEn - 1][dg_TRACK_mod_.KPAR[index] - 1][index] = dg_CNT3_.SEDS[KEn - 1][dg_TRACK_mod_.KPAR[index] - 1][index] + dg_TRACK_mod_.WGHT[index];
-			dg_CNT3_.SEDS2[KEn - 1][dg_TRACK_mod_.KPAR[index] - 1][index] = dg_CNT3_.SEDS2[KEn - 1][dg_TRACK_mod_.KPAR[index] - 1][index] + pow(dg_TRACK_mod_.WGHT[index], 2);
+			dg_CNT3_.SEDS2[KEn - 1][dg_TRACK_mod_.KPAR[index] - 1][index] = dg_CNT3_.SEDS2[KEn - 1][dg_TRACK_mod_.KPAR[index] - 1][index] + (dg_TRACK_mod_.WGHT[index] * dg_TRACK_mod_.WGHT[index]);
+			//dg_CNT3_.SEDS2[KEn - 1][dg_TRACK_mod_.KPAR[index] - 1][index] = dg_CNT3_.SEDS2[KEn - 1][dg_TRACK_mod_.KPAR[index] - 1][index] + pow(dg_TRACK_mod_.WGHT[index], 2);
 			// if (dg_TRACK_mod_.LAGE[index]) //nao irá contabilizar a idade da particula
 			//	page02_();
 			// goto L302; //A energia não é removida do local.
@@ -3217,7 +3225,8 @@ __device__ void d_sendet2_(double &ED, int &ID)
 	int IE;
 
 	dg_CENDET_.EDEP[ID - 1] = dg_CENDET_.EDEP[ID - 1] + ED;
-	dg_CENDET_.EDEP2[ID - 1] = dg_CENDET_.EDEP2[ID - 1] + pow(ED, 2);
+	dg_CENDET_.EDEP2[ID - 1] = dg_CENDET_.EDEP2[ID - 1] + (ED * ED);
+	//dg_CENDET_.EDEP2[ID - 1] = dg_CENDET_.EDEP2[ID - 1] + pow(ED, 2);
 	if (ED > 1.0e-5)
 	{
 		if (dg_CENDET_.LLE[ID - 1] == 1)
@@ -3364,7 +3373,8 @@ __device__ void d_tenang2_(int &IEXIT, int &N)
 		if (N != dg_CENANG_.LPDE[KEn - 1][IEXIT - 1][dg_TRACK_mod_.KPAR[index] - 1])
 		{
 			dg_CENANG_.PDE[KEn - 1][IEXIT - 1][dg_TRACK_mod_.KPAR[index] - 1] = dg_CENANG_.PDE[KEn - 1][IEXIT - 1][dg_TRACK_mod_.KPAR[index] - 1] + dg_CENANG_.PDEP[KEn - 1][IEXIT - 1][dg_TRACK_mod_.KPAR[index] - 1];
-			dg_CENANG_.PDE2[KEn - 1][IEXIT - 1][dg_TRACK_mod_.KPAR[index] - 1] = dg_CENANG_.PDE2[KEn - 1][IEXIT - 1][dg_TRACK_mod_.KPAR[index] - 1] + pow(dg_CENANG_.PDEP[KEn - 1][IEXIT - 1][dg_TRACK_mod_.KPAR[index] - 1], 2);
+			dg_CENANG_.PDE2[KEn - 1][IEXIT - 1][dg_TRACK_mod_.KPAR[index] - 1] = dg_CENANG_.PDE2[KEn - 1][IEXIT - 1][dg_TRACK_mod_.KPAR[index] - 1] + (dg_CENANG_.PDEP[KEn - 1][IEXIT - 1][dg_TRACK_mod_.KPAR[index] - 1] * dg_CENANG_.PDEP[KEn - 1][IEXIT - 1][dg_TRACK_mod_.KPAR[index] - 1]);
+			//dg_CENANG_.PDE2[KEn - 1][IEXIT - 1][dg_TRACK_mod_.KPAR[index] - 1] = dg_CENANG_.PDE2[KEn - 1][IEXIT - 1][dg_TRACK_mod_.KPAR[index] - 1] + pow(dg_CENANG_.PDEP[KEn - 1][IEXIT - 1][dg_TRACK_mod_.KPAR[index] - 1], 2);
 			dg_CENANG_.PDEP[KEn - 1][IEXIT - 1][dg_TRACK_mod_.KPAR[index] - 1] = dg_TRACK_mod_.WGHT[index];
 			dg_CENANG_.LPDE[KEn - 1][IEXIT - 1][dg_TRACK_mod_.KPAR[index] - 1] = N;
 		}
@@ -3404,7 +3414,8 @@ __device__ void d_tenang2_(int &IEXIT, int &N)
 	if (N != dg_CENANG_.LPDA[KPH - 1][KTH - 1][dg_TRACK_mod_.KPAR[index] - 1])
 	{
 		dg_CENANG_.PDA[KPH - 1][KTH - 1][dg_TRACK_mod_.KPAR[index] - 1] = dg_CENANG_.PDA[KPH - 1][KTH - 1][dg_TRACK_mod_.KPAR[index] - 1] + dg_CENANG_.PDAP[KPH - 1][KTH - 1][dg_TRACK_mod_.KPAR[index] - 1];
-		dg_CENANG_.PDA2[KPH - 1][KTH - 1][dg_TRACK_mod_.KPAR[index] - 1] = dg_CENANG_.PDA2[KPH - 1][KTH - 1][dg_TRACK_mod_.KPAR[index] - 1] + pow(dg_CENANG_.PDAP[KPH - 1][KTH - 1][dg_TRACK_mod_.KPAR[index] - 1], 2);
+		dg_CENANG_.PDA2[KPH - 1][KTH - 1][dg_TRACK_mod_.KPAR[index] - 1] = dg_CENANG_.PDA2[KPH - 1][KTH - 1][dg_TRACK_mod_.KPAR[index] - 1] + (dg_CENANG_.PDAP[KPH - 1][KTH - 1][dg_TRACK_mod_.KPAR[index] - 1] * dg_CENANG_.PDAP[KPH - 1][KTH - 1][dg_TRACK_mod_.KPAR[index] - 1] );
+		//dg_CENANG_.PDA2[KPH - 1][KTH - 1][dg_TRACK_mod_.KPAR[index] - 1] = dg_CENANG_.PDA2[KPH - 1][KTH - 1][dg_TRACK_mod_.KPAR[index] - 1] + pow(dg_CENANG_.PDAP[KPH - 1][KTH - 1][dg_TRACK_mod_.KPAR[index] - 1], 2);
 		dg_CENANG_.PDAP[KPH - 1][KTH - 1][dg_TRACK_mod_.KPAR[index] - 1] = dg_TRACK_mod_.WGHT[index];
 		dg_CENANG_.LPDA[KPH - 1][KTH - 1][dg_TRACK_mod_.KPAR[index] - 1] = N;
 	}
@@ -3745,12 +3756,15 @@ L1:;
 	GAM = 1.0e0 + E * RREV;
 	GAM2 = GAM * GAM;
 	BETA2 = (GAM2 - 1.0e0) / GAM2;
-	G12 = pow((GAM + 1.0e0), 2);
-	AMOL = pow(((GAM - 1.0e0) / GAM), 2);
+	G12 = ((GAM + 1.0e0) * (GAM + 1.0e0) );
+	//G12 = pow((GAM + 1.0e0), 2);
+	AMOL = (((GAM - 1.0e0) / GAM) * ((GAM - 1.0e0) / GAM) );
+	//AMOL = pow(((GAM - 1.0e0) / GAM), 2);
 	BHA1 = AMOL * (2.0e0 * G12 - 1.0e0) / (GAM2 - 1.0e0);
 	BHA2 = AMOL * (3.0e0 + 1.0e0 / G12);
 	BHA3 = AMOL * 2.0e0 * GAM * (GAM - 1.0e0) / G12;
-	BHA4 = AMOL * pow((GAM - 1.0e0), 2) / G12;
+	BHA4 = AMOL * ((GAM - 1.0e0) * (GAM - 1.0e0) ) / G12;
+	//BHA4 = AMOL * pow((GAM - 1.0e0), 2) / G12;
 	CPS = E * RB;
 	CP = sqrt(CPS);
 
@@ -3762,11 +3776,13 @@ L1:;
 		CPP = sqrt(CPPS);
 		if (WKP > 1.0e-6 * E)
 		{
-			QM = sqrt(pow((CP - CPP), 2) + REV * REV) - REV;
+			QM = sqrt(((CP - CPP) * (CP - CPP)) + REV * REV) - REV;
+			//QM = sqrt(pow((CP - CPP), 2) + REV * REV) - REV;
 		}
 		else
 		{
-			QM = pow(WKP, 2) / (BETA2 * TREV);
+			QM = (WKP * WKP) / (BETA2 * TREV);
+			//QM = pow(WKP, 2) / (BETA2 * TREV);
 			QM = QM * (1.0e0 - QM * RTREV);
 		}
 		if (QM < QKP)
@@ -3776,7 +3792,8 @@ L1:;
 			XHDT = fmax(log(GAM2) - BETA2 - DELTA, 0.0e0) * RWKP;
 			if (UK > 1.0e-3)
 			{
-				F0 = (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR) / pow((WM - UK), 2);
+				F0 = (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR) / ((WM - UK) * (WM - UK));
+				//F0 = (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR) / pow((WM - UK), 2);
 				XHDL = F0 * XHDL;
 				XHDT = F0 * XHDT;
 			}
@@ -3799,7 +3816,8 @@ L1:;
 	// Colisoes Fechadas
 	RCL = WTHR / E;
 	RL1 = 1.0e0 - RCL;
-	XHC = ((1.0e0 / RCL - 1.0e0) + BHA1 * log(RCL) + BHA2 * RL1 + (BHA3 / 2.0e0) * (pow(RCL, 2) - 1.0e0) + (BHA4 / 3.0e0) * (1.0e0 - pow(RCL, 3))) / E;
+	XHC = ((1.0e0 / RCL - 1.0e0) + BHA1 * log(RCL) + BHA2 * RL1 + (BHA3 / 2.0e0) * ((RCL * RCL) - 1.0e0) + (BHA4 / 3.0e0) * (1.0e0 - (RCL * RCL * RCL))) / E;
+	//XHC = ((1.0e0 / RCL - 1.0e0) + BHA1 * log(RCL) + BHA2 * RL1 + (BHA3 / 2.0e0) * (pow(RCL, 2) - 1.0e0) + (BHA4 / 3.0e0) * (1.0e0 - pow(RCL, 3))) / E;
 
 	XHTOT = XHC + XHDL + XHDT;
 	if (XHTOT < 1.0e-35)
@@ -3855,7 +3873,8 @@ L1:;
 	TS1 = TS1 + XHDL;
 	if (UK > 1.0e-3)
 	{
-		DE = WM - sqrt(pow((WM - WTHR), 2) - d_rand2_(7.0e0) * (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR));
+		DE = WM - sqrt(((WM - WTHR) * (WM - WTHR)) - d_rand2_(7.0e0) * (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR));
+		//DE = WM - sqrt(pow((WM - WTHR), 2) - d_rand2_(7.0e0) * (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR));
 	}
 	else
 	{
@@ -4031,12 +4050,15 @@ L1:;
 	GAM = 1.0e0 + E * RREV;
 	GAM2 = GAM * GAM;
 	BETA2 = (GAM2 - 1.0e0) / GAM2;
-	G12 = pow((GAM + 1.0e0), 2);
-	AMOL = pow(((GAM - 1.0e0) / GAM), 2);
+	G12 = ((GAM + 1.0e0) * (GAM + 1.0e0));
+	//G12 = pow((GAM + 1.0e0), 2);
+	AMOL = (((GAM - 1.0e0) / GAM) * ((GAM - 1.0e0) / GAM) );
+	//AMOL = pow(((GAM - 1.0e0) / GAM), 2);
 	BHA1 = AMOL * (2.0e0 * G12 - 1.0e0) / (GAM2 - 1.0e0);
 	BHA2 = AMOL * (3.0e0 + 1.0e0 / G12);
 	BHA3 = AMOL * 2.0e0 * GAM * (GAM - 1.0e0) / G12;
-	BHA4 = AMOL * pow((GAM - 1.0e0), 2) / G12;
+	BHA4 = AMOL * ((GAM - 1.0e0) * (GAM - 1.0e0)) / G12;
+	//BHA4 = AMOL * pow((GAM - 1.0e0), 2) / G12;
 	CPS = E * RB;
 	CP = sqrt(CPS);
 
@@ -4049,11 +4071,13 @@ L1:;
 
 	if (WKP > 1.0e-6 * E)
 	{
-		QM = sqrt(pow((CP - CPP), 2) + REV * REV) - REV;
+		QM = sqrt(((CP - CPP) * (CP - CPP)  ) + REV * REV) - REV;
+		//QM = sqrt(pow((CP - CPP), 2) + REV * REV) - REV;
 	}
 	else
 	{
-		QM = pow(WKP, 2) / (BETA2 * TREV);
+		QM = (WKP * WKP) / (BETA2 * TREV);
+		//QM = pow(WKP, 2) / (BETA2 * TREV);
 		QM = QM * (1.0e0 - QM * RTREV);
 	}
 
@@ -4062,7 +4086,8 @@ L1:;
 		RWKP = 1.0e0 / WKP;
 		XHDL = log(QKP * (QM + TREV) / (QM * (QKP + TREV))) * RWKP;
 		XHDT = fmax(log(GAM2) - BETA2 - DELTA, 0.0e0) * RWKP;
-		F0 = (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR) / pow((WM - UK), 2);
+		F0 = (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR) / ((WM - UK) * (WM - UK));
+		//F0 = (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR) / pow((WM - UK), 2);
 		XHDL = F0 * XHDL;
 		XHDT = F0 * XHDT;
 	}
@@ -4076,7 +4101,8 @@ L1:;
 	RCL = WTHR / E;
 	RL1 = 1.0e0 - RCL;
 
-	XHC = ((1.0e0 / RCL - 1.0e0) + BHA1 * log(RCL) + BHA2 * RL1 + (BHA3 / 2.0e0) * (pow(RCL, 2) - 1.0e0) + (BHA4 / 3.0e0) * (1.0e0 - pow(RCL, 3))) / E;
+	XHC = ((1.0e0 / RCL - 1.0e0) + BHA1 * log(RCL) + BHA2 * RL1 + (BHA3 / 2.0e0) * ((RCL * RCL) - 1.0e0) + (BHA4 / 3.0e0) * (1.0e0 - (RCL * RCL * RCL))) / E;
+	//XHC = ((1.0e0 / RCL - 1.0e0) + BHA1 * log(RCL) + BHA2 * RL1 + (BHA3 / 2.0e0) * (pow(RCL, 2) - 1.0e0) + (BHA4 / 3.0e0) * (1.0e0 - pow(RCL, 3))) / E;
 
 	XHTOT = XHC + XHDL + XHDT;
 
@@ -4116,7 +4142,8 @@ L1:;
 
 	// Interação longitudinal dura distante.
 	TS1 = TS1 + XHDL;
-	DE = WM - sqrt(pow((WM - WTHR), 2) - d_rand2_(7.0e0) * (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR));
+	DE = WM - sqrt(((WM - WTHR) * (WM - WTHR)) - d_rand2_(7.0e0) * (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR));
+	//DE = WM - sqrt(pow((WM - WTHR), 2) - d_rand2_(7.0e0) * (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR));
 	EP = E - DE;
 
 	if (TST < TS1)
@@ -4366,14 +4393,17 @@ __device__ void d_gppa2_(double &EE, double &CDTE, double &EP, double &CDTP, int
 	// Low-energy and Coulomb corrections.
 	ALZ = dg_CGPP00_.ZEQPP[dg_TRACK_mod_.MAT[index] - 1] / SL;
 	T = sqrt(2.0e0 * EKI);
-	F00 = (-1.774e0 - 1.210e1 * ALZ + 1.118e1 * ALZ * ALZ) * T + (8.523e0 + 7.326e1 * ALZ - 4.441e1 * ALZ * ALZ) * pow(T, 2) - (1.352e1 + 1.211e2 * ALZ - 9.641e1 * ALZ * ALZ) * pow(T, 3) + (8.946e0 + 6.205e1 * ALZ - 6.341e1 * ALZ * ALZ) * pow(T, 4);
+	F00 = (-1.774e0 - 1.210e1 * ALZ + 1.118e1 * ALZ * ALZ) * T + (8.523e0 + 7.326e1 * ALZ - 4.441e1 * ALZ * ALZ) * (T * T) - (1.352e1 + 1.211e2 * ALZ - 9.641e1 * ALZ * ALZ) * (T * T * T) + (8.946e0 + 6.205e1 * ALZ - 6.341e1 * ALZ * ALZ) * (T * T * T * T);
+	//F00 = (-1.774e0 - 1.210e1 * ALZ + 1.118e1 * ALZ * ALZ) * T + (8.523e0 + 7.326e1 * ALZ - 4.441e1 * ALZ * ALZ) * pow(T, 2) - (1.352e1 + 1.211e2 * ALZ - 9.641e1 * ALZ * ALZ) * pow(T, 3) + (8.946e0 + 6.205e1 * ALZ - 6.341e1 * ALZ * ALZ) * pow(T, 4);
+
 	G0 = dg_CGPP00_.F0[2 - 1][dg_TRACK_mod_.MAT[index] - 1] + F00;
 	BMIN = 4.0e0 * EKI / dg_CGPP00_.BCB[dg_TRACK_mod_.MAT[index] - 1];
 	d_schiff2_(BMIN, G1, G2);
 	G1MIN = G1 + G0;
 	G2MIN = G2 + G0;
 	XR = 0.5e0 - EKI;
-	A1 = 6.666666666666666e-1 * G1MIN * pow(XR, 2);
+	A1 = 6.666666666666666e-1 * G1MIN * (XR * XR);
+	//A1 = 6.666666666666666e-1 * G1MIN * pow(XR, 2);
 	P1 = A1 / (A1 + G2MIN);
 
 	// Amostragem aleatória de EPS.
@@ -4726,11 +4756,14 @@ __device__ void d_gcoa2_(double &E, double &DE, double &EP, double &CDT, double 
 		if (dg_CGCO_.UICO[I - 1][M - 1] < E)
 		{
 			AUX = E * (E - dg_CGCO_.UICO[I - 1][M - 1]) * 2.0e0;
-			PZOMC = dg_CGCO_.FJ0[I - 1][M - 1] * (AUX - REV * dg_CGCO_.UICO[I - 1][M - 1]) / (REV * sqrt(AUX + AUX + pow(dg_CGCO_.UICO[I - 1][M - 1], 2)));
+			PZOMC = dg_CGCO_.FJ0[I - 1][M - 1] * (AUX - REV * dg_CGCO_.UICO[I - 1][M - 1]) / (REV * sqrt(AUX + AUX + (dg_CGCO_.UICO[I - 1][M - 1] * dg_CGCO_.UICO[I - 1][M - 1])));
+			//PZOMC = dg_CGCO_.FJ0[I - 1][M - 1] * (AUX - REV * dg_CGCO_.UICO[I - 1][M - 1]) / (REV * sqrt(AUX + AUX + pow(dg_CGCO_.UICO[I - 1][M - 1], 2)));
 			if (PZOMC > 0.0e0)
-				RNI = 1.0e0 - 0.5e0 * exp(D12 - pow((D1 + D2 * PZOMC), 2));
+				RNI = 1.0e0 - 0.5e0 * exp(D12 - ((D1 + D2 * PZOMC) * (D1 + D2 * PZOMC)));
+				//RNI = 1.0e0 - 0.5e0 * exp(D12 - pow((D1 + D2 * PZOMC), 2));
 			else
-				RNI = 0.5e0 * exp(D12 - pow((D1 - D2 * PZOMC), 2));
+				RNI = 0.5e0 * exp(D12 - ((D1 - D2 * PZOMC) * (D1 - D2 * PZOMC) ));
+				//RNI = 0.5e0 * exp(D12 - pow((D1 - D2 * PZOMC), 2));
 			S0 = S0 + dg_CGCO_.FCO[I - 1][M - 1] * RNI;
 		}
 	}
@@ -4751,11 +4784,14 @@ L1:;
 		if (dg_CGCO_.UICO[I - 1][M - 1] < E)
 		{
 			AUX = E * (E - dg_CGCO_.UICO[I - 1][M - 1]) * CDT1;
-			PZOMC = dg_CGCO_.FJ0[I - 1][M - 1] * (AUX - REV * dg_CGCO_.UICO[I - 1][M - 1]) / (REV * sqrt(AUX + AUX + pow(dg_CGCO_.UICO[I - 1][M - 1], 2)));
+			PZOMC = dg_CGCO_.FJ0[I - 1][M - 1] * (AUX - REV * dg_CGCO_.UICO[I - 1][M - 1]) / (REV * sqrt(AUX + AUX + (dg_CGCO_.UICO[I - 1][M - 1] * dg_CGCO_.UICO[I - 1][M - 1] )));
+			//PZOMC = dg_CGCO_.FJ0[I - 1][M - 1] * (AUX - REV * dg_CGCO_.UICO[I - 1][M - 1]) / (REV * sqrt(AUX + AUX + pow(dg_CGCO_.UICO[I - 1][M - 1], 2)));
 			if (PZOMC > 0.0e0)
-				RN[I - 1] = 1.0e0 - 0.5e0 * exp(D12 - pow((D1 + D2 * PZOMC), 2));
+				RN[I - 1] = 1.0e0 - 0.5e0 * exp(D12 - ((D1 + D2 * PZOMC) * (D1 + D2 * PZOMC)));
+				//RN[I - 1] = 1.0e0 - 0.5e0 * exp(D12 - pow((D1 + D2 * PZOMC), 2));
 			else
-				RN[I - 1] = 0.5e0 * exp(D12 - pow((D1 - D2 * PZOMC), 2));
+				RN[I - 1] = 0.5e0 * exp(D12 - ((D1 - D2 * PZOMC) * (D1 - D2 * PZOMC)));
+				//RN[I - 1] = 0.5e0 * exp(D12 - pow((D1 - D2 * PZOMC), 2));
 			S = S + dg_CGCO_.FCO[I - 1][M - 1] * RN[I - 1];
 			PAC[I - 1] = S;
 		}
@@ -4818,7 +4854,8 @@ L2:
 		goto L2;
 
 	// Energia do fóton espalhado
-	T = pow(PZOMC, 2);
+	T = (PZOMC * PZOMC);
+	//T = pow(PZOMC, 2);
 	B1 = 1.0e0 - T * TAU * TAU;
 	B2 = 1.0e0 - T * TAU * CDT;
 	if (PZOMC > 0.0e0)
@@ -5128,7 +5165,8 @@ L1:;
 	GAM = 1.0e0 + E * RREV;
 	GAM2 = GAM * GAM;
 	BETA2 = (GAM2 - 1.0e0) / GAM2;
-	AMOL = pow(((GAM - 1.0e0) / GAM), 2);
+	AMOL = (((GAM - 1.0e0) / GAM) * ((GAM - 1.0e0) / GAM) );
+	//AMOL = pow(((GAM - 1.0e0) / GAM), 2);
 	CPS = E * RB;
 	CP = sqrt(CPS);
 
@@ -5141,11 +5179,13 @@ L1:;
 
 	if (WKP > (1.0e-6 * E))
 	{
-		QM = sqrt(pow((CP - CPP), 2) + REV * REV) - REV;
+		QM = sqrt(((CP - CPP) * (CP - CPP)) + REV * REV) - REV;
+		//QM = sqrt(pow((CP - CPP), 2) + REV * REV) - REV;
 	}
 	else
 	{
-		QM = pow(WKP, 2) / (BETA2 * TREV);
+		QM = (WKP * WKP) / (BETA2 * TREV);
+		//QM = pow(WKP, 2) / (BETA2 * TREV);
 		QM = QM * (1.0e0 - QM * RTREV);
 	}
 
@@ -5154,7 +5194,8 @@ L1:;
 		RWKP = 1.0e0 / WKP;
 		XHDL = log(QKP * (QM + TREV) / (QM * (QKP + TREV))) * RWKP;
 		XHDT = fmax(log(GAM2) - BETA2 - DELTA, 0.0e0) * RWKP;
-		F0 = (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR) / pow((WM - UK), 2);
+		F0 = (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR) / ((WM - UK) * (WM - UK) );
+		//F0 = (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR) / pow((WM - UK), 2);
 		XHDL = F0 * XHDL;
 		XHDT = F0 * XHDT;
 	}
@@ -5205,7 +5246,8 @@ L1:;
 		}
 		RK2 = RK * RK;
 		RKF = RK / (1.0e0 - RK);
-		PHI = 1.0e0 + pow(RKF, 2) - RKF + AMOL * (RK2 + RKF);
+		PHI = 1.0e0 + (RKF * RKF) - RKF + AMOL * (RK2 + RKF);
+		//PHI = 1.0e0 + pow(RKF, 2) - RKF + AMOL * (RK2 + RKF);
 		if (d_rand2_(5.0e0) * (1.0e0 + A * RK2) > PHI)
 			goto L2;
 		// Energia e ângulo de espalhamento (elétron primário).
@@ -5220,7 +5262,8 @@ L1:;
 
 	// Interação longitudinal dura distante.
 	TS1 = TS1 + XHDL;
-	DE = WM - sqrt(pow((WM - WTHR), 2) - d_rand2_(7.0e0) * (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR));
+	DE = WM - sqrt(((WM - WTHR) * (WM - WTHR) ) - d_rand2_(7.0e0) * (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR));
+	//DE = WM - sqrt(pow((WM - WTHR), 2) - d_rand2_(7.0e0) * (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR));
 	EP = E - DE;
 
 	if (TST < TS1)
@@ -5991,7 +6034,8 @@ L1:;
 	GAM = 1.0e0 + E * RREV;
 	GAM2 = GAM * GAM;
 	BETA2 = (GAM2 - 1.0e0) / GAM2;
-	AMOL = pow(((GAM - 1.0e0) / GAM), 2);
+	AMOL = (((GAM - 1.0e0) / GAM) * ((GAM - 1.0e0) / GAM));
+	//AMOL = pow(((GAM - 1.0e0) / GAM), 2);
 	CPS = E * RB;
 	CP = sqrt(CPS);
 
@@ -6003,11 +6047,13 @@ L1:;
 		CPP = sqrt(CPPS);
 		if (WKP > 1.0e-6 * E)
 		{
-			QM = sqrt(pow((CP - CPP), 2) + REV * REV) - REV;
+			QM = sqrt(((CP - CPP) * (CP - CPP) ) + REV * REV) - REV;
+			//QM = sqrt(pow((CP - CPP), 2) + REV * REV) - REV;
 		}
 		else
 		{
-			QM = pow(WKP, 2) / (BETA2 * TREV);
+			QM = (WKP * WKP) / (BETA2 * TREV);
+			//QM = pow(WKP, 2) / (BETA2 * TREV);
 			QM = QM * (1.0e0 - QM * RTREV);
 		}
 		if (QM < QKP)
@@ -6017,7 +6063,8 @@ L1:;
 			XHDT = fmax(log(GAM2) - BETA2 - DELTA, 0.0e0) * RWKP;
 			if (UK > 1.0e-3)
 			{
-				F0 = (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR) / pow((WM - UK), 2);
+				F0 = (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR) / ((WM - UK) * (WM - UK));
+				//F0 = (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR) / pow((WM - UK), 2);
 				XHDL = F0 * XHDL;
 				XHDT = F0 * XHDT;
 			}
@@ -6086,7 +6133,8 @@ L1:;
 		}
 		RK2 = RK * RK;
 		RKF = RK / (1.0e0 - RK);
-		PHI = 1.0e0 + pow(RKF, 2) - RKF + AMOL * (RK2 + RKF);
+		PHI = 1.0e0 + (RKF * RKF) - RKF + AMOL * (RK2 + RKF);
+		//PHI = 1.0e0 + pow(RKF, 2) - RKF + AMOL * (RK2 + RKF);
 		if (d_rand2_(5.0e0) * (1.0e0 + A * RK2) > PHI)
 			goto L2;
 		// Energia e ângulo de espalhamento (elétron primário).
@@ -6117,7 +6165,8 @@ L1:;
 	TS1 = TS1 + XHDL;
 	if (UK > 1.0e-3)
 	{
-		DE = WM - sqrt(pow((WM - WTHR), 2) - d_rand2_(7.0e0) * (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR));
+		DE = WM - sqrt(((WM - WTHR) * (WM - WTHR) ) - d_rand2_(7.0e0) * (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR));
+		//DE = WM - sqrt(pow((WM - WTHR), 2) - d_rand2_(7.0e0) * (WDMAX - WTHR) * (WM + WM - WDMAX - WTHR));
 	}
 	else
 	{
@@ -6286,7 +6335,8 @@ __device__ void d_fimdet2_(int &N, int &ID, double &DSEF)
 		if (N != dg_CIMDET_.LFLT[IE - 1][ID - 1])
 		{
 			dg_CIMDET_.FLT[IE - 1][ID - 1] = dg_CIMDET_.FLT[IE - 1][ID - 1] + dg_CIMDET_.FLTP[IE - 1][ID - 1];
-			dg_CIMDET_.FLT2[IE - 1][ID - 1] = dg_CIMDET_.FLT2[IE - 1][ID - 1] + pow(dg_CIMDET_.FLTP[IE - 1][ID - 1], 2);
+			dg_CIMDET_.FLT2[IE - 1][ID - 1] = dg_CIMDET_.FLT2[IE - 1][ID - 1] + (dg_CIMDET_.FLTP[IE - 1][ID - 1] * dg_CIMDET_.FLTP[IE - 1][ID - 1] );
+			//dg_CIMDET_.FLT2[IE - 1][ID - 1] = dg_CIMDET_.FLT2[IE - 1][ID - 1] + pow(dg_CIMDET_.FLTP[IE - 1][ID - 1], 2);
 			dg_CIMDET_.FLTP[IE - 1][ID - 1] = dg_TRACK_mod_.WGHT[index] * DSEF;
 			dg_CIMDET_.LFLT[IE - 1][ID - 1] = N;
 		}
@@ -6298,7 +6348,8 @@ __device__ void d_fimdet2_(int &N, int &ID, double &DSEF)
 		if (N != dg_CIMDET_.LFLP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1])
 		{
 			dg_CIMDET_.FLP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] = dg_CIMDET_.FLP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] + dg_CIMDET_.FLPP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1];
-			dg_CIMDET_.FLP2[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] = dg_CIMDET_.FLP2[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] + pow(dg_CIMDET_.FLPP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1], 2);
+			dg_CIMDET_.FLP2[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] = dg_CIMDET_.FLP2[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] + (dg_CIMDET_.FLPP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] * dg_CIMDET_.FLPP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1]);
+			//dg_CIMDET_.FLP2[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] = dg_CIMDET_.FLP2[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] + pow(dg_CIMDET_.FLPP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1], 2);
 			dg_CIMDET_.FLPP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] = dg_TRACK_mod_.WGHT[index] * DSEF;
 			dg_CIMDET_.LFLP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] = N;
 		}
@@ -6356,7 +6407,8 @@ __device__ void d_fimdes2_(int &N, int &ID, double &EI, double &DECSD, double &D
 		if (N != dg_CIMDET_.LFLT[IE - 1][ID - 1])
 		{
 			dg_CIMDET_.FLT[IE - 1][ID - 1] = dg_CIMDET_.FLT[IE - 1][ID - 1] + dg_CIMDET_.FLTP[IE - 1][ID - 1];
-			dg_CIMDET_.FLT2[IE - 1][ID - 1] = dg_CIMDET_.FLT2[IE - 1][ID - 1] + pow(dg_CIMDET_.FLTP[IE - 1][ID - 1], 2);
+			dg_CIMDET_.FLT2[IE - 1][ID - 1] = dg_CIMDET_.FLT2[IE - 1][ID - 1] + (dg_CIMDET_.FLTP[IE - 1][ID - 1] * dg_CIMDET_.FLTP[IE - 1][ID - 1]);
+			//dg_CIMDET_.FLT2[IE - 1][ID - 1] = dg_CIMDET_.FLT2[IE - 1][ID - 1] + pow(dg_CIMDET_.FLTP[IE - 1][ID - 1], 2);
 			dg_CIMDET_.FLTP[IE - 1][ID - 1] = dg_TRACK_mod_.WGHT[index] * TLBIN;
 			dg_CIMDET_.LFLT[IE - 1][ID - 1] = N;
 		}
@@ -6368,7 +6420,8 @@ __device__ void d_fimdes2_(int &N, int &ID, double &EI, double &DECSD, double &D
 		if (N != dg_CIMDET_.LFLP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1])
 		{
 			dg_CIMDET_.FLP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] = dg_CIMDET_.FLP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] + dg_CIMDET_.FLPP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1];
-			dg_CIMDET_.FLP2[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] = dg_CIMDET_.FLP2[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] + pow(dg_CIMDET_.FLPP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1], 2);
+			dg_CIMDET_.FLP2[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] = dg_CIMDET_.FLP2[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] + (dg_CIMDET_.FLPP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] * dg_CIMDET_.FLPP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] );
+			//dg_CIMDET_.FLP2[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] = dg_CIMDET_.FLP2[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] + pow(dg_CIMDET_.FLPP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1], 2);
 			dg_CIMDET_.FLPP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] = dg_TRACK_mod_.WGHT[index] * TLBIN;
 			dg_CIMDET_.LFLP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] = N;
 		}
@@ -9489,7 +9542,8 @@ __device__ void d_simdet2_(int &N, int &ID)
 	if (N != dg_CIMDET_.LEDEP[ID - 1])
 	{
 		dg_CIMDET_.EDEP[ID - 1] = dg_CIMDET_.EDEP[ID - 1] + dg_CIMDET_.EDEPP[ID - 1];
-		dg_CIMDET_.EDEP2[ID - 1] = dg_CIMDET_.EDEP2[ID - 1] + pow(dg_CIMDET_.EDEPP[ID - 1], 2);
+		dg_CIMDET_.EDEP2[ID - 1] = dg_CIMDET_.EDEP2[ID - 1] + (dg_CIMDET_.EDEPP[ID - 1] * dg_CIMDET_.EDEPP[ID - 1]  );
+		//dg_CIMDET_.EDEP2[ID - 1] = dg_CIMDET_.EDEP2[ID - 1] + pow(dg_CIMDET_.EDEPP[ID - 1], 2);
 		dg_CIMDET_.EDEPP[ID - 1] = dg_TRACK_mod_.E[index] * dg_TRACK_mod_.WGHT[index];
 		dg_CIMDET_.LEDEP[ID - 1] = N;
 	}
@@ -9503,7 +9557,8 @@ __device__ void d_simdet2_(int &N, int &ID)
 		if (N != dg_CIMDET_.LDIT[IE - 1][ID - 1])
 		{
 			dg_CIMDET_.DIT[IE - 1][ID - 1] = dg_CIMDET_.DIT[IE - 1][ID - 1] + dg_CIMDET_.DITP[IE - 1][ID - 1];
-			dg_CIMDET_.DIT2[IE - 1][ID - 1] = dg_CIMDET_.DIT2[IE - 1][ID - 1] + pow(dg_CIMDET_.DITP[IE - 1][ID - 1], 2);
+			dg_CIMDET_.DIT2[IE - 1][ID - 1] = dg_CIMDET_.DIT2[IE - 1][ID - 1] + (dg_CIMDET_.DITP[IE - 1][ID - 1] * dg_CIMDET_.DITP[IE - 1][ID - 1]);
+			//dg_CIMDET_.DIT2[IE - 1][ID - 1] = dg_CIMDET_.DIT2[IE - 1][ID - 1] + pow(dg_CIMDET_.DITP[IE - 1][ID - 1], 2);
 			dg_CIMDET_.DITP[IE - 1][ID - 1] = dg_TRACK_mod_.WGHT[index];
 			dg_CIMDET_.LDIT[IE - 1][ID - 1] = N;
 		}
@@ -9515,7 +9570,8 @@ __device__ void d_simdet2_(int &N, int &ID)
 		if (N != dg_CIMDET_.LDIP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1])
 		{
 			dg_CIMDET_.DIP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] = dg_CIMDET_.DIP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] + dg_CIMDET_.DIPP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1];
-			dg_CIMDET_.DIP2[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] = dg_CIMDET_.DIP2[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] + pow(dg_CIMDET_.DIPP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1], 2);
+			dg_CIMDET_.DIP2[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] = dg_CIMDET_.DIP2[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] + (dg_CIMDET_.DIPP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] * dg_CIMDET_.DIPP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1]);
+			//dg_CIMDET_.DIP2[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] = dg_CIMDET_.DIP2[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] + pow(dg_CIMDET_.DIPP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1], 2);
 			dg_CIMDET_.DIPP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] = dg_TRACK_mod_.WGHT[index];
 			dg_CIMDET_.LDIP[dg_TRACK_mod_.KPAR[index] - 1][IE - 1][ID - 1] = N;
 		}
@@ -9540,7 +9596,8 @@ __device__ void d_simdet2_(int &N, int &ID)
 				if (N != dg_CIMDET_.LAGEA[IT - 1][ID - 1])
 				{
 					dg_CIMDET_.AGE[IT - 1][ID - 1] = dg_CIMDET_.AGE[IT - 1][ID - 1] + dg_CIMDET_.AGEP[IT - 1][ID - 1];
-					dg_CIMDET_.AGE2[IT - 1][ID - 1] = dg_CIMDET_.AGE2[IT - 1][ID - 1] + pow(dg_CIMDET_.AGEP[IT - 1][ID - 1], 2);
+					dg_CIMDET_.AGE2[IT - 1][ID - 1] = dg_CIMDET_.AGE2[IT - 1][ID - 1] + (dg_CIMDET_.AGEP[IT - 1][ID - 1] * dg_CIMDET_.AGEP[IT - 1][ID - 1]);
+					//dg_CIMDET_.AGE2[IT - 1][ID - 1] = dg_CIMDET_.AGE2[IT - 1][ID - 1] + pow(dg_CIMDET_.AGEP[IT - 1][ID - 1], 2);
 					dg_CIMDET_.AGEP[IT - 1][ID - 1] = dg_TRACK_mod_.WGHT[index];
 					dg_CIMDET_.LAGEA[IT - 1][ID - 1] = N;
 				}
@@ -9575,7 +9632,8 @@ __device__ void d_sdose2_(double &DEP, double &XD, double &YD, double &ZD, int &
 			if (N != dg_CDOSE2_.LDDOSE[I3 - 1])
 			{
 				atomicAdd2(&dg_CDOSE2_.DDOSE[I3 - 1], dg_CDOSE2_.DDOSEP[I3 - 1]);
-				atomicAdd2(&dg_CDOSE2_.DDOSE2[I3 - 1], pow(dg_CDOSE2_.DDOSEP[I3 - 1], 2));
+				atomicAdd2(&dg_CDOSE2_.DDOSE2[I3 - 1], (dg_CDOSE2_.DDOSEP[I3 - 1] * dg_CDOSE2_.DDOSEP[I3 - 1]));
+				//atomicAdd2(&dg_CDOSE2_.DDOSE2[I3 - 1], pow(dg_CDOSE2_.DDOSEP[I3 - 1], 2));
 				// dg_CDOSE2_.DDOSE[I3 - 1] = dg_CDOSE2_.DDOSE[I3 - 1] + dg_CDOSE2_.DDOSEP[I3 - 1];
 				// dg_CDOSE2_.DDOSE2[I3 - 1] = dg_CDOSE2_.DDOSE2[I3 - 1] + pow(dg_CDOSE2_.DDOSEP[I3 - 1], 2);
 				dg_CDOSE2_.DDOSEP[I3 - 1] = DEP * dg_PENELOPE_mod_.RDEN[MATC - 1];
@@ -9594,7 +9652,8 @@ __device__ void d_sdose2_(double &DEP, double &XD, double &YD, double &ZD, int &
 				if (N != dg_CDOSE1_.LDOSE[I3 - 1][I2 - 1][I1 - 1])
 				{
 					atomicAdd2(&dg_CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1], dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1]);
-					atomicAdd2(&dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1], pow(dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1], 2));
+					atomicAdd2(&dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1], (dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1] * dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1]));
+					//atomicAdd2(&dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1], pow(dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1], 2));
 					// dg_CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1] + dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1];
 					// dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] + pow(dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1], 2);
 					dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1] = DEP;
@@ -9616,7 +9675,8 @@ __device__ void d_sdose2_(double &DEP, double &XD, double &YD, double &ZD, int &
 			if (N != dg_CDOSE2_.LDDOSE[I3 - 1])
 			{
 				dg_CDOSE2_.DDOSE[I3 - 1] = dg_CDOSE2_.DDOSE[I3 - 1] + dg_CDOSE2_.DDOSEP[I3 - 1];
-				dg_CDOSE2_.DDOSE2[I3 - 1] = dg_CDOSE2_.DDOSE2[I3 - 1] + pow(dg_CDOSE2_.DDOSEP[I3 - 1], 2);
+				dg_CDOSE2_.DDOSE2[I3 - 1] = dg_CDOSE2_.DDOSE2[I3 - 1] + (dg_CDOSE2_.DDOSEP[I3 - 1] * dg_CDOSE2_.DDOSEP[I3 - 1] );
+				//dg_CDOSE2_.DDOSE2[I3 - 1] = dg_CDOSE2_.DDOSE2[I3 - 1] + pow(dg_CDOSE2_.DDOSEP[I3 - 1], 2);
 				dg_CDOSE2_.DDOSEP[I3 - 1] = DEP * dg_PENELOPE_mod_.RDEN[MATC - 1];
 				dg_CDOSE2_.LDDOSE[I3 - 1] = N;
 			}
@@ -9633,7 +9693,8 @@ __device__ void d_sdose2_(double &DEP, double &XD, double &YD, double &ZD, int &
 				if (N != dg_CDOSE1_.LDOSE[I3 - 1][I2 - 1][I1 - 1])
 				{
 					dg_CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1] + dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1];
-					dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] + pow(dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1], 2);
+					dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] + (dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1] * dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1] );
+					//dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] + pow(dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1], 2);
 					dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1] = DEP;
 					dg_CDOSE1_.LDOSE[I3 - 1][I2 - 1][I1 - 1] = N;
 				}
@@ -9655,7 +9716,8 @@ __device__ void d_sdose2_(double &DEP, double &XD, double &YD, double &ZD, int &
 			if (N != dg_CDOSE1_.LDOSE[I3 - 1][I2 - 1][I1 - 1])
 			{
 				dg_CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSE[I3 - 1][I2 - 1][I1 - 1] + dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1];
-				dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] + pow(dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1], 2);
+				dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] + (dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1] * dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1] );
+				//dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] = dg_CDOSE1_.DOSE2[I3 - 1][I2 - 1][I1 - 1] + pow(dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1], 2);
 				dg_CDOSE1_.DOSEP[I3 - 1][I2 - 1][I1 - 1] = DEP;
 				dg_CDOSE1_.LDOSE[I3 - 1][I2 - 1][I1 - 1] = N;
 			}
