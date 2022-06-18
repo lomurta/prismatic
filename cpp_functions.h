@@ -28092,10 +28092,10 @@ void simSecTrack_E(){
 				
 	
 		}
-		printf("\nsimulacao de eletrons secundarios\n");
-		printf("NFINISH: %d\n", nTRACKS_.nFINISH);
+		//printf("\nsimulacao de eletrons secundarios\n");
+		//printf("NFINISH: %d\n", nTRACKS_.nFINISH);
 		//printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
-		printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
+		//printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
 		//printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
 
 	
@@ -28192,9 +28192,9 @@ void simSecTrack_G(){
 
 
 		}
-			printf("\nsimulacao de fotons secundarios\n");
-		printf("NFINISH: %d\n", nTRACKS_.nFINISH);
-		printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
+		//	printf("\nsimulacao de fotons secundarios\n");
+		//printf("NFINISH: %d\n", nTRACKS_.nFINISH);
+		//printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
 	//	printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
 	//	printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
 
@@ -28293,11 +28293,11 @@ transfnTRACKSGPU_to_CPU();
 
 		}
 			//transfSecTracksGPU_to_CPU();
-		printf("\nsimulacao de positrons secundarios\n");
-		printf("NFINISH: %d\n", nTRACKS_.nFINISH);
+		//printf("\nsimulacao de positrons secundarios\n");
+		//printf("NFINISH: %d\n", nTRACKS_.nFINISH);
 		//printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
 		//printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
-		printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
+		//printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
 		//exit(0);
 
 
@@ -28715,7 +28715,7 @@ void simPriTrack_G(){
 
 		transfnTRACKSGPU_to_CPU();
 	
-		printf("Particulas Primarias nFINISH: %d\n", nTRACKS_.nFINISH);
+		//printf("Particulas Primarias nFINISH: %d\n", nTRACKS_.nFINISH);
 	
 
 

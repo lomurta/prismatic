@@ -957,7 +957,7 @@ typedef struct {
 } hd_CHIST;
 
 typedef struct{
-	int nPRITRACK, nSECTRACK_E, nSECTRACK_G, nSECTRACK_P, nFINISH, TIPO;
+	int nPRITRACK, nSECTRACK_E, nSECTRACK_G, nSECTRACK_P, nFINISH, TIPO, knock_e_eela, knock_e_eina, knock_e_ebra, knock_e_esia, knock_e_eaux;
 } hd_nTRACKS;
 
 PENELOPE_MOD PENELOPE_mod_;
@@ -1069,6 +1069,15 @@ hd_TRACK_MOD vTrack_Simular;
 __device__ hd_wSHOWERS dg_wSHOWERS_;
 
 __shared__ hd_TRACK_MOD_SHARED TRACK_MOD_SHARED;
+
+__device__ int dg_knock_e_eela[pilhaPart];
+__device__ int dg_knock_e_eina[pilhaPart];
+__device__ int dg_knock_e_ebra[pilhaPart];
+__device__ int dg_knock_e_esia[pilhaPart];
+__device__ int dg_knock_e_eaux[pilhaPart];
+
+
+
 
 
 

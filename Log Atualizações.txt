@@ -1,3 +1,6 @@
+18/06/2022
+- Correto antes da implementacao do KNOCK por eventos
+
 15/06/2022
 - Remocao da funcao pow() onde foi possivel. 
 - Ajuste para uso de Memoria compartilhada para a funcao step2, com chamada para a funcao fsurf2 - Correto

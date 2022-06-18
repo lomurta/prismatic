@@ -74,9 +74,9 @@ int main() {
 			//Zerando particulas segundarias esssa é a parte correta
 			while ((nTRACKS_.nSECTRACK_E > 0) || (nTRACKS_.nSECTRACK_G > 0) || (nTRACKS_.nSECTRACK_P > 0)){
 
-				printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
-					printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
-					printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
+			//	printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
+			//		printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
+			//		printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
 			if (nTRACKS_.nSECTRACK_E > 0){
 				simSecTrack_E();
 				//nTRACKS_.nSECTRACK_E = 0;
@@ -91,6 +91,7 @@ int main() {
 			}
 			}
 			gpuErrchk(cudaDeviceSynchronize());
+			
 
 			sizeTrack = pilhaPart;
 			//Quantidade de blocos no grid e de threads nos blocos

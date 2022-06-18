@@ -1580,6 +1580,7 @@ __global__ void showers_sec(int size)
 								DF = TWOPI * d_rand2_(10.0e0);
 								US = cos(DF) * SDTS;
 								VS = sin(DF) * SDTS;
+								
 								d_stores2_(dg_TRACK_mod_.E[index], dg_TRACK_mod_.X[index], dg_TRACK_mod_.Y[index], dg_TRACK_mod_.Z[index], US, VS, WS, dg_TRACK_mod_.WGHT[index], dg_TRACK_mod_.KPAR[index], dg_CXRSPL_.ILBA[index], d_wIPOLI);
 							}
 						}
@@ -3443,18 +3444,19 @@ __device__ double d_rand2_(double DUMMY)
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
 	double USCALE = 1.0e0 / 2.147483563e9;
 	int I1, I2, IZ;
+	int idx = index % 1000;
 
-	I1 = dg_RSEED2_[index % 1000].ISEED1 / 53668;
-	dg_RSEED2_[index % 1000].ISEED1 = 40014 * (dg_RSEED2_[index % 1000].ISEED1 - I1 * 53668) - I1 * 12211;
-	if (dg_RSEED2_[index % 1000].ISEED1 < 0)
-		dg_RSEED2_[index % 1000].ISEED1 = dg_RSEED2_[index % 1000].ISEED1 + 2147483563;
+	I1 = dg_RSEED2_[idx].ISEED1 / 53668;
+	dg_RSEED2_[idx].ISEED1 = 40014 * (dg_RSEED2_[idx].ISEED1 - I1 * 53668) - I1 * 12211;
+	if (dg_RSEED2_[idx].ISEED1 < 0)
+		dg_RSEED2_[idx].ISEED1 = dg_RSEED2_[idx].ISEED1 + 2147483563;
 
-	I2 = dg_RSEED2_[index % 1000].ISEED2 / 52774;
-	dg_RSEED2_[index % 1000].ISEED2 = 40692 * (dg_RSEED2_[index % 1000].ISEED2 - I2 * 52774) - I2 * 3791;
-	if (dg_RSEED2_[index % 1000].ISEED2 < 0)
-		dg_RSEED2_[index % 1000].ISEED2 = dg_RSEED2_[index % 1000].ISEED2 + 2147483399;
+	I2 = dg_RSEED2_[idx].ISEED2 / 52774;
+	dg_RSEED2_[idx].ISEED2 = 40692 * (dg_RSEED2_[idx].ISEED2 - I2 * 52774) - I2 * 3791;
+	if (dg_RSEED2_[idx].ISEED2 < 0)
+		dg_RSEED2_[idx].ISEED2 = dg_RSEED2_[idx].ISEED2 + 2147483399;
 
-	IZ = dg_RSEED2_[index % 1000].ISEED1 - dg_RSEED2_[index % 1000].ISEED2;
+	IZ = dg_RSEED2_[idx].ISEED1 - dg_RSEED2_[idx].ISEED2;
 	if (IZ < 1)
 		IZ = IZ + 2147483562;
 
@@ -5547,9 +5549,10 @@ __device__ void d_stores2_(double &EI, double &XI, double &YI, double &ZI, doubl
 		}
 		else
 		{
-			/*IE = dg_nTRACKS_.nSECTRACK_E;
-			dg_nTRACKS_.nSECTRACK_E = dg_nTRACKS_.nSECTRACK_E + 1;*/
-			IE = atomicAdd2(&dg_nTRACKS_.nSECTRACK_E, 1) + 1;
+			/*dg_nTRACKS_.nSECTRACK_E = dg_nTRACKS_.nSECTRACK_E + 1;
+			IE = dg_nTRACKS_.nSECTRACK_E;*/
+			
+		    IE = atomicAdd2(&dg_nTRACKS_.nSECTRACK_E, 1) + 1;
 		}
 
 		dg_SECTRACK_E_.E[IE] = EI;
@@ -5606,8 +5609,9 @@ __device__ void d_stores2_(double &EI, double &XI, double &YI, double &ZI, doubl
 		}
 		else
 		{
-			/*IG = dg_nTRACKS_.nSECTRACK_G;
-			dg_nTRACKS_.nSECTRACK_G = dg_nTRACKS_.nSECTRACK_G + 1;*/
+			/*dg_nTRACKS_.nSECTRACK_G = dg_nTRACKS_.nSECTRACK_G + 1;
+			IG = dg_nTRACKS_.nSECTRACK_G;*/
+			
 			IG = atomicAdd2(&dg_nTRACKS_.nSECTRACK_G, 1) + 1;
 		}
 
@@ -5664,8 +5668,9 @@ __device__ void d_stores2_(double &EI, double &XI, double &YI, double &ZI, doubl
 		}
 		else
 		{
-			/*IP = dg_nTRACKS_.nSECTRACK_P;
-			dg_nTRACKS_.nSECTRACK_P = dg_nTRACKS_.nSECTRACK_P + 1;*/
+			/*dg_nTRACKS_.nSECTRACK_P = dg_nTRACKS_.nSECTRACK_P + 1;
+			IP = dg_nTRACKS_.nSECTRACK_P;*/
+			
 			IP = atomicAdd2(&dg_nTRACKS_.nSECTRACK_P, 1) + 1;
 		}
 
