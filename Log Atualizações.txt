@@ -1,3 +1,6 @@
+23/06/2022
+- Correcao do bug NAN em alguns contadores de dosagem em corpos.
+
 18/06/2022
 - Correto antes da implementacao do KNOCK por eventos
 

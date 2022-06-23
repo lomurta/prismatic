@@ -957,7 +957,10 @@ typedef struct {
 } hd_CHIST;
 
 typedef struct{
-	int nPRITRACK, nSECTRACK_E, nSECTRACK_G, nSECTRACK_P, nFINISH, TIPO, knock_e_eela, knock_e_eina, knock_e_ebra, knock_e_esia, knock_e_eaux;
+	int nPRITRACK, nSECTRACK_E, nSECTRACK_G, nSECTRACK_P, nFINISH, TIPO, 
+		knock_e_eela, knock_e_eina, knock_e_ebra, knock_e_esia, knock_e_eaux,
+		knock_g_graa, knock_g_gcoa, knock_g_gpha, knock_g_gppa, knock_g_gaux,
+		knock_p_eela, knock_p_pina, knock_p_ebra, knock_p_psia, knock_p_pana, knock_p_paux;
 } hd_nTRACKS;
 
 PENELOPE_MOD PENELOPE_mod_;
@@ -1070,11 +1073,30 @@ __device__ hd_wSHOWERS dg_wSHOWERS_;
 
 __shared__ hd_TRACK_MOD_SHARED TRACK_MOD_SHARED;
 
+__shared__ int knock_e_eela;
+__shared__ int knock_e_eina;
+__shared__ int knock_e_ebra;
+__shared__ int knock_e_esia;
+__shared__ int knock_e_eaux;
+
 __device__ int dg_knock_e_eela[pilhaPart];
 __device__ int dg_knock_e_eina[pilhaPart];
 __device__ int dg_knock_e_ebra[pilhaPart];
 __device__ int dg_knock_e_esia[pilhaPart];
 __device__ int dg_knock_e_eaux[pilhaPart];
+
+__device__ int dg_knock_g_graa[pilhaPart];
+__device__ int dg_knock_g_gcoa[pilhaPart];
+__device__ int dg_knock_g_gpha[pilhaPart];
+__device__ int dg_knock_g_gppa[pilhaPart];
+__device__ int dg_knock_g_gaux[pilhaPart];
+
+__device__ int dg_knock_p_eela[pilhaPart];
+__device__ int dg_knock_p_pina[pilhaPart];
+__device__ int dg_knock_p_ebra[pilhaPart];
+__device__ int dg_knock_p_psia[pilhaPart];
+__device__ int dg_knock_p_pana[pilhaPart];
+__device__ int dg_knock_p_paux[pilhaPart];
 
 
 

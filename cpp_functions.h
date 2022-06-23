@@ -14371,7 +14371,7 @@ L31:;
 
 	//Inicializando o PENELOPE
 
-	printf("  Initialising PENELOPE 2...\n");
+	printf("  Initialising PRISMATIC ...\n");
 
 	FILE* MATERIAL2 = fopen("material2.dat", "w");
 	if (MATERIAL2 == NULL) {
@@ -14388,7 +14388,7 @@ L31:;
 
 	// Definicão da Geometria
 
-	printf("  Initialising PENGEOM 2...\n");
+	//printf("  Initialising PENGEOM 2...\n");
 	if (!strcmp(KWORD, KWGEOM)) {
 		PCH = strtok(BUFFER, " ");
 		strcpy(PFILE, PCH);
@@ -14618,6 +14618,15 @@ L31:;
 				PADRÃO: sem divisão de raios-x
 
 	*/
+
+	for (int I = 1; I <= NBV; I++){
+		CXRSPL_.IXRSPL[I - 1] = 1;
+		CXRSPL_.LXRSPL[I - 1] = false;
+
+	}
+
+
+	
 
 
 
@@ -19084,7 +19093,7 @@ void sdose2_(double& DEP, double& XD, double& YD, double& ZD, int& MATC, int& N)
 	/*
 		Registra a distribuição de dose dentro da caixa de dose, grava e carrega
 		despeja arquivos, acumula arquivos de despejo de diferentes execuções e grava
-		Resultados .
+		Resultados .f
 	*/
 
 	int I1, I2, I3;
@@ -23403,7 +23412,7 @@ void pmwrt2_(int ICLOSE) {
 	double TAVS = *CNTRL_.SHN / *CNTRL_.TSIM;
 	fprintf(IWR2, "   Simulation speed ........................ %.6E showers/sec\n\n\n", TAVS);
 
-	fprintf(IWR2, "   Simulated primary particles ............. %.6E sec\n\n", *CNTRL_.SHN);
+	fprintf(IWR2, "   Simulated primary particles ............. %.6E \n\n", *CNTRL_.SHN);
 	if (*CSOUR0_.KPARP == 1)
 		fprintf(IWR2, "   Primary particles: electrons\n\n");
 	if (*CSOUR0_.KPARP == 2)
@@ -23445,7 +23454,7 @@ void pmwrt2_(int ICLOSE) {
 
 	fprintf(IWR2, "   Secondary-particle generation probabilities:\n");
 	fprintf(IWR2, "                   ----------------------------------------------\n");
-	fprintf(IWR2, "                   |  electrons    |   photons     |  positrons  |\n");
+	fprintf(IWR2, "                   |  electrons   |   photons     |  positrons  |\n");
 	fprintf(IWR2, "   --------------------------------------------------------------\n");
 	fprintf(IWR2, "   |   upbound     | %.6E | %.6E | %.6E |\n", WSEC[1 - 1][1 - 1], WSEC[1 - 1][2 - 1], WSEC[1 - 1][3 - 1]);
 	fprintf(IWR2, "   |               |  +- %.1E  |  +- %.1E  |  +- %.1E  |\n", WSEC2[1 - 1][1 - 1], WSEC2[1 - 1][2 - 1], WSEC2[1 - 1][3 - 1]);
@@ -23483,7 +23492,7 @@ void pmwrt2_(int ICLOSE) {
 
 	DF = 1.0e0 / *CNTRL_.SHN;
 
-	fprintf(IWR2, "Average deposited energies (bodies):\n");
+	fprintf(IWR2, "   Average deposited energies (bodies):\n");
 	for (int KB = 1; KB <= *PENGEOM_mod_.NBODY; KB++) {
 		if (PENGEOM_mod_.MATER[KB - 1] != 0) {
 			QER = 3.0e0 * DF * sqrt(fabs(CNT1_.TDEBO2[KB - 1] - pow(CNT1_.TDEBO[KB - 1], 2) * DF));
@@ -27749,7 +27758,7 @@ void iniPRITRACK() {
 	//A simulação da particula começa aqui.
 
 	//Contadores de particulas primarias
-	transfCNT0_GPU_to_CPU();
+/*	transfCNT0_GPU_to_CPU();
 	transfCNT1_GPU_to_CPU();
 
 //L101:;
@@ -27776,11 +27785,9 @@ void iniPRITRACK() {
 		}
 	}
 
-	//h_CNT1_.DEBO[0][0] = 100.00;
-	//h_CNT1_.DEBO[0][1] = 200.00;
 
 	transfCNT0_CPU_to_GPU();
-	transfCNT1_CPU_to_GPU();
+	transfCNT1_CPU_to_GPU();*/
 
 
 
@@ -27856,6 +27863,9 @@ void iniPRITRACK() {
 
 			PRITRACK.IEXIT[I] = 0;
 			PRITRACK.STEP[I] = 1;
+
+			PRITRACK.LAGE[I] = false;
+			PRITRACK.PAGE[I] = 0.0e0;
 	
 
 
@@ -28075,8 +28085,54 @@ void simSecTrack_E(){
 			g_showers_step9_G<<<grid, block>>>(sizeTrack);
 			gpuErrchk(cudaDeviceSynchronize());
 
+			transfnTRACKSGPU_to_CPU();
+			nTRACKS_.knock_e_eela = 0;
+			nTRACKS_.knock_e_eina = 0;
+			nTRACKS_.knock_e_ebra = 0;
+			nTRACKS_.knock_e_esia = 0;
+			nTRACKS_.knock_e_eaux = 0;
+			transfnTRACKSCPU_to_GPU();
+
 			g_showers_step10_E<<<grid, block>>>(sizeTrack);
+			
 			gpuErrchk(cudaDeviceSynchronize());
+			transfnTRACKSGPU_to_CPU();
+			/*printf("nTRACKS_.knock_e_eela %d\n", nTRACKS_.knock_e_eela );
+			printf("nTRACKS_.knock_e_eina  %d\n", nTRACKS_.knock_e_eina );
+			printf("nTRACKS_.knock_e_ebra %d\n", nTRACKS_.knock_e_ebra );
+			printf("nTRACKS_.knock_e_esia %d\n", nTRACKS_.knock_e_esia );
+			printf("nTRACKS_.knock_e_eaux %d\n", nTRACKS_.knock_e_eaux );*/
+			//exit(0);
+
+			//if (nTRACKS_.knock_e_eela > 0){
+				g_showers_step11_E<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+		//	}
+			//gpuErrchk(cudaDeviceSynchronize());
+		//	if (nTRACKS_.knock_e_eina > 0){
+				g_showers_step12_E<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+		//	}
+			//gpuErrchk(cudaDeviceSynchronize());
+		//	if (nTRACKS_.knock_e_ebra > 0){
+				g_showers_step13_E<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+	//	}
+			//gpuErrchk(cudaDeviceSynchronize());
+		//	if (nTRACKS_.knock_e_esia > 0){
+				g_showers_step14_E<<<grid, block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
+
+		//	}
+			//gpuErrchk(cudaDeviceSynchronize());
+		//	if (nTRACKS_.knock_e_eaux > 0){
+				g_showers_step15_E<<<grid, block>>>(sizeTrack);
+		//	}
+			gpuErrchk(cudaDeviceSynchronize());
+		//	exit(0);
 
 
 			g_showers_step18_G<<<grid, block>>>(sizeTrack);
@@ -28646,6 +28702,7 @@ void simPriTrack_G(){
 
 	// transfere as particulas a serem simuladas para a GPU
 	gpuErrchk(cudaMemcpyToSymbol(dg_TRACK_mod_, &PRITRACK, sizeof(hd_TRACK_MOD)));
+	gpuErrchk(cudaDeviceSynchronize());
 
 	// Quantidade de blocos no grid e de threads nos blocos
 	dim3 block(blockSize);
@@ -28664,11 +28721,14 @@ void simPriTrack_G(){
 
 //	exit(0);
 
+	
+
 	while (nTRACKS_.nFINISH > 0)
 	{
-		
 		g_showers_step1_G<<<grid, block>>>(sizeTrack);
 		gpuErrchk(cudaDeviceSynchronize());
+		
+	
 		
 
 		g_showers_step2_G<<<grid, block>>>(sizeTrack);
@@ -28715,60 +28775,8 @@ void simPriTrack_G(){
 
 		transfnTRACKSGPU_to_CPU();
 	
-		//printf("Particulas Primarias nFINISH: %d\n", nTRACKS_.nFINISH);
-	
-
-
-	/*	g_showers_step3_G<<<grid, block>>>(sizeTrack);
-		gpuErrchk(cudaDeviceSynchronize());
-
-		g_jump2_G<<<grid, block>>>(sizeTrack);
-		gpuErrchk(cudaDeviceSynchronize());
-
-		// printf("g_jump2_G\n");
-
-		//g_preStep2_G<<<grid, block>>>(sizeTrack);
-		//gpuErrchk(cudaDeviceSynchronize());
-
-		g_step2_<<<grid, block>>>(sizeTrack);
-		gpuErrchk(cudaDeviceSynchronize());
-
-		// printf("g_step2\n");
-
-		g_showers_step4_G<<<grid, block>>>(sizeTrack);
-		gpuErrchk(cudaDeviceSynchronize());
-
-		// printf("g_step4_G\n");
-
-		g_knock2_G<<<grid, block>>>(sizeTrack);
-		gpuErrchk(cudaDeviceSynchronize());
-
-		// printf("g_knock2_G\n");
-
-		g_showers_step5_G<<<grid, block>>>(sizeTrack);
-		gpuErrchk(cudaDeviceSynchronize());
-
-		// chama o contador de particulas passo 4
-		g_showers_step6<<<grid, block>>>(sizeTrack);
-		// Aguarda o termino da simulação das particulas primarias enviadas
-		gpuErrchk(cudaDeviceSynchronize());
-
-		g_showers_step8<<<grid, block>>>(sizeTrack);
-		// Aguarda o termino da simulação das particulas primarias enviadas
-		gpuErrchk(cudaDeviceSynchronize());
-
-		// printf("g_step5_G\n");
-
-		transfnTRACKSGPU_to_CPU();
-	//		printf("DEPOIS nFINISH: %d    nSECTRACK_E: %d \n", nTRACKS_.nFINISH, nTRACKS_.nSECTRACK_E);
-		// printf("nFINISH: %d\n", nTRACKS_.nFINISH);*/
+		
 	}
-
-
-
-	// resgata as particulas secundarias geradas pela simulacao
-	//transfSecTracksGPU_to_CPU();
-	//transfnTRACKSGPU_to_CPU();
 
 }
 
