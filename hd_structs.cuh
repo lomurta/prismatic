@@ -42,11 +42,12 @@ static const int NDXM = 201;
 static const int NDYM = 201;
 static const int NDZM = 201;
 
+int panar2 = 0;
+
 static const int pilhaPart = 3072; //64*64
 static const int pilhaSec = 3072; //64*64
 
-
-#define MAX_THREADS_PER_BLOCK 128
+#define MAX_THREADS_PER_BLOCK 1024
 #define MIN_BLOCKS_PER_MP 16
 
 char LINHA[200];
@@ -62,6 +63,11 @@ int wIPOLI = 0;
 int h_N = 0; //mesma funcionalidade do CNTRL_.N
 int h_vetN[pilhaPart];
 
+static const int tamISEEDs = 10001;
+
+int IS1[tamISEEDs];
+int IS2[tamISEEDs];
+
 int const blockSize = 128;
 int tamMemShared = 8*blockSize*7;
 
@@ -76,6 +82,8 @@ __constant__ double d_RTREV = 1.0e0 / (2.0e0 * 5.10998928e5);
 __constant__ double d_FUZZL = 1.0e-12;
 
 __constant__ int d_NS2M = 2 * NS;
+
+__constant__ int ROLL = 4;
 
 
 clock_t start, end;
@@ -122,10 +130,28 @@ typedef struct {
 } TRACK_MOD;
 
 typedef struct {
-	double E[pilhaPart], X[pilhaPart], Y[pilhaPart], Z[pilhaPart], U[pilhaPart], V[pilhaPart], W[pilhaPart], WGHT[pilhaPart], SP1[pilhaPart], SP2[pilhaPart], SP3[pilhaPart], PAGE[pilhaPart];
-	int KPAR[pilhaPart], IBODY[pilhaPart], MAT[pilhaPart], ILB[5][pilhaPart], IPOL[pilhaPart], INDEX[pilhaPart], N[pilhaPart], STEP[pilhaPart], IEXIT[pilhaPart];
-	bool LAGE[pilhaPart];
+	double X,  Y,  Z,  U,  V,  W;
+	int IBODY,  MAT;
+} preTRACK_MOD;
+
+typedef struct {
+	double E[pilhaPart], 
+	X[pilhaPart], Y[pilhaPart], Z[pilhaPart], 
+	U[pilhaPart], V[pilhaPart], W[pilhaPart], WGHT[pilhaPart], 							SP1[pilhaPart], SP2[pilhaPart], SP3[pilhaPart], PAGE[pilhaPart];
+	int KPAR[pilhaPart], IBODY[pilhaPart], MAT[pilhaPart], ILB[5][pilhaPart], 			IPOL[pilhaPart], INDEX[pilhaPart], N[pilhaPart], STEP[pilhaPart], IEXIT[pilhaPart];
+																					bool LAGE[pilhaPart];
 } hd_TRACK_MOD;
+
+typedef struct {
+	double E[pilhaPart], 
+		   X[pilhaPart], Y[pilhaPart], Z[pilhaPart], 
+		   U[pilhaPart], V[pilhaPart], W[pilhaPart], 
+		   WGHT[pilhaPart], 							
+	int KPAR[pilhaPart], IBODY[pilhaPart],
+		MAT[pilhaPart], ILB[5][pilhaPart], 																							
+} TRACK_MOD;
+
+
 
 static const int sec = 100;
 
@@ -294,11 +320,6 @@ typedef struct {
 	double STF[30][MAXMAT], ZT[MAXMAT], AT[MAXMAT], RHO[MAXMAT], VMOL[MAXMAT];
 	int IZ[30][MAXMAT], NELEM[MAXMAT];
 } hd_COMPOS;
-
-
-
-
-
 
 typedef struct {
 
@@ -613,7 +634,7 @@ typedef struct {
 }RSEED;
 
 typedef struct {
-	int ISEED1, ISEED2;
+	int ISEED1[tamISEEDs], ISEED2[tamISEEDs];
 } hd_RSEED;
 
 
@@ -957,11 +978,15 @@ typedef struct {
 } hd_CHIST;
 
 typedef struct{
-	int nPRITRACK, nSECTRACK_E, nSECTRACK_G, nSECTRACK_P, nFINISH, TIPO, 
-		knock_e_eela, knock_e_eina, knock_e_ebra, knock_e_esia, knock_e_eaux,
-		knock_g_graa, knock_g_gcoa, knock_g_gpha, knock_g_gppa, knock_g_gaux,
-		knock_p_eela, knock_p_pina, knock_p_ebra, knock_p_psia, knock_p_pana, knock_p_paux;
+	int nPRITRACK, nSECTRACK_E, nSECTRACK_G, nSECTRACK_P, nFINISH, TIPO;
 } hd_nTRACKS;
+
+
+typedef struct{
+	int step1, step2, step3, step4, step5, step6, step7_0, step7_1, step7, step8, step9, step10, 
+		step11, step12, step13, step14, step15, step16, step17, step18, step19, step20;
+
+} hd_steps;
 
 PENELOPE_MOD PENELOPE_mod_;
 PENGEOM_MOD PENGEOM_mod_;
@@ -1071,9 +1096,16 @@ hd_TRACK_MOD vTrack_Simular;
 
 __device__ hd_wSHOWERS dg_wSHOWERS_;
 
-__shared__ hd_TRACK_MOD_SHARED TRACK_MOD_SHARED;
+extern __shared__ int shared[];
 
-__shared__ int knock_e_eela;
+int tam_sISEEDS = 2*blockSize*sizeof(int);
+
+//__shared__ hd_TRACK_MOD_SHARED TRACK_MOD_SHARED;
+
+/*__shared__ int ds_ISEED1[blockSize];
+__shared__ int ds_ISEED2[blockSize];*/
+
+/*__shared__ int knock_e_eela;
 __shared__ int knock_e_eina;
 __shared__ int knock_e_ebra;
 __shared__ int knock_e_esia;
@@ -1096,11 +1128,12 @@ __device__ int dg_knock_p_pina[pilhaPart];
 __device__ int dg_knock_p_ebra[pilhaPart];
 __device__ int dg_knock_p_psia[pilhaPart];
 __device__ int dg_knock_p_pana[pilhaPart];
-__device__ int dg_knock_p_paux[pilhaPart];
+__device__ int dg_knock_p_paux[pilhaPart];*/
 
 
-
-
+__device__ curandState_t dg_rand[pilhaPart];
+//__device__ curandStatePhilox4_32_10_t dg_rand[pilhaPart];
+//__device__ curandStateMRG32k3a_t dg_rand[pilhaPart];
 
 
 
@@ -1123,12 +1156,15 @@ hd_QSURF* d_QSURF;
 __device__ hd_QTREE dg_QTREE_;
 hd_QTREE* d_QTREE;
 
-__device__ hd_RSEED dg_RSEED_;
-hd_RSEED* d_RSEED;
+//__device__ hd_RSEED dg_RSEED_;
+//hd_RSEED* d_RSEED;
 
-__device__ hd_RSEED dg_RSEED2_[1000];
-hd_RSEED* d_RSEED2;
-hd_RSEED h_RSEED2_[1000];
+__device__ hd_RSEED dg_RSEED2_;
+hd_RSEED* d_RSEED2_;
+hd_RSEED h_RSEED2_;
+
+__device__ hd_steps dg_steps;
+hd_steps h_steps;
 
 __device__ hd_CIMDET dg_CIMDET_;
 hd_CIMDET* d_CIMDET;

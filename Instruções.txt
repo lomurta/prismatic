@@ -1,0 +1,11 @@
+O PRISMATIC (PaRtIcle matter SiMulATIon Cuda) está habilitado para executar simulações com os arquivos originais do PENELOPE-2014.
+
+Para execução da simulação sâo necessários o arquivo principal *.in, o arquivo de geometria *.geo e os arquivos de materiais *.mat que compÕe a geometria no layout do PENELOPE-2014.
+
+Basta colocar os arquivos junto do executavel e por meio do prompt de comando inserir a linha "./prismatic" para linux
+
+O PRISMATIC ira ler o arquivo principal.in, o arquivo de geometria.geo os arquivos de materiais para iniciar a simulação na GPU.
+
+Ao final da simulação, será disponibilizado os arquivos de resultados penmain-res2_XXXXXX.dat e plotdose2_XXXXX.dat. 
+
+O arquivo plotdose2_XXXXX.dat possui as coordenadas e dose nos voxel estipuladas pela caixa de distribuição de dose na geometria estudada.

@@ -10,28 +10,31 @@
 #include <fstream>
 #include <string>
 #include "cuda_runtime.h"
+#include <curand.h>
+#include <curand_kernel.h>
 #include "device_launch_parameters.h"
 using namespace std;
 #include "hd_structs.cuh"
+#include "ISEEDS.h"
 #include "cuda_common.cuh"
 #include "cuda_functions.cuh"
 #include "cpp_functions.h"
 
 
-
-
 int main() {
 
-	int sizeTrack = 0;
+	//Alocando memoria para atributos das structs
+	memoryAllocCPU();
+
+	
 	int simGPU = 1;
 
-    //Alocando memoria para atributos das structs
-	memoryAllocCPU();
-    
 	//Lendo os arquivos de entrada e inicializando os pacotes de simulação.
 	pmrdr2_();
 
 	if (simGPU){//Simulação na GPU
+
+		int sizeTrack = 0;
 
 		if (*CSOUR0_.JOBEND != 0)
 			goto L103;
@@ -39,151 +42,90 @@ int main() {
 		//alocando memooria na GPU
 		memoryAllocGPU();
 
-		bool btransfCPU_to_GPU = false;
+		//Inicializa as semnentes para GPU e par CPU
+		initializeISSEDS_();
+		*RSEED_.ISEED1 = IS1[0];
+		*RSEED_.ISEED2 = IS2[0];
 
-		
+		sizeTrack = pilhaPart;
+
+		dim3 block(blockSize);
+		dim3 grid(ceil(sizeTrack / block.x)+1);
+
+		//inicializa gerando de numeros aleatorios cuRand
+		initializeRand<<<grid, block>>>(sizeTrack);
+		gpuErrchk(cudaDeviceSynchronize());
+
+		//trasnferindo dados para GPU
+		transfCPU_to_GPU();
+
 		while ((*CNTRL_.TSEC < *CNTRL_.TSECA) && (*CNTRL_.SHN < *CNTRL_.DSHN)){
 			
-
-
-			//transferindo os structs da CPU para GPU
-			if (!btransfCPU_to_GPU)
-			{
-				for (int J = 0; J < pilhaPart; J++)
-				{
-					for (int I = 1; I <= 3; I++)
-					{
-						h_CNT0_.DPRIM[I - 1][J] = 0.0e0;
-						for (int K = 1; K <= 3; K++)
-						{
-							h_CNT0_.DSEC[I - 1][K - 1][J] = 0.0e0;
-						}
-					}
-				}
-
-				for (int J = 0; J < pilhaPart; J++)
-				{
-					for (int I = 1; I <= 2; I++)
-					{
-						h_CNT0_.DAVW[I - 1][J] = 0.0e0;
-						h_CNT0_.DAVA[I - 1][J] = 0.0e0;
-						h_CNT0_.DAVE[I - 1][J] = 0.0e0;
-					}
-				}
-
-				for (int J = 0; J < pilhaPart; J++)
-				{
-					for (int KB = 1; KB <= *PENGEOM_mod_.NBODY; KB++)
-					{
-						h_CNT1_.DEBO[KB - 1][J] = 0.0e0; // Energias depositadas nos diversos corpos KB
-					}
-				}
-
-			//	transfCNT0_CPU_to_GPU();
-			//	transfCNT1_CPU_to_GPU();
-				
-
-				transfCPU_to_GPU();
-				btransfCPU_to_GPU = true;
-			}
-			//seta o tamanho da pilha a ser simulada
-
+			cleans2GPU_();
 			simPriTrack_G();
-
-			sizeTrack = pilhaPart;
-
-
-			
-			//Quantidade de blocos no grid e de threads nos blocos
-			dim3 block(blockSize);
-			dim3 grid(ceil(sizeTrack / block.x)+1);
-
-	
 			transfnTRACKSGPU_to_CPU();
 
-			// Zerando particulas segundarias esssa é a parte correta
+			// simulação de particulas secundarias
 			while ((nTRACKS_.nSECTRACK_E > 0) || (nTRACKS_.nSECTRACK_G > 0) || (nTRACKS_.nSECTRACK_P > 0))
 			{
-
-				//	printf("Quantidade de parricula secundaria photon: %d\n", nTRACKS_.nSECTRACK_G);
-				//		printf("Quantidade de parricula secundaria eletron: %d\n", nTRACKS_.nSECTRACK_E);
-				//		printf("Quantidade de parricula secundaria positron: %d\n\n", nTRACKS_.nSECTRACK_P);
-
-				
-
 				if (nTRACKS_.nSECTRACK_E > 0)
 				{
 					simSecTrack_E();
-					// nTRACKS_.nSECTRACK_E = 0;
 				}
 
 				if (nTRACKS_.nSECTRACK_P > 0)
 				{
 					simSecTrack_P();
-					// nTRACKS_.nSECTRACK_P = 0;
 				}
 
 				if (nTRACKS_.nSECTRACK_G > 0)
 				{
 					simSecTrack_G();
-					//nTRACKS_.nSECTRACK_G = 0;
 				}
 			}
 			gpuErrchk(cudaDeviceSynchronize());
 
-			/*	sizeTrack = pilhaPart;
-				//Quantidade de blocos no grid e de threads nos blocos
-				dim3 blockCont(blockSize);
-				dim3 gridCont(ceil(sizeTrack / block.x)+1);
-
-				showers_cont<<<gridCont,blockCont>>>(sizeTrack);
-				//Aguarda o termino da simulação das particulas primarias enviadas
-				gpuErrchk(cudaDeviceSynchronize());*/
+			//contabilizacao da contribuição das particulas para a dose geral
+			showers_cont<<<grid,block>>>(sizeTrack);
+			gpuErrchk(cudaDeviceSynchronize());
 
 			printf("Simulado: %f\n", *CNTRL_.SHN);
 			
-
 			if (*CSOUR0_.JOBEND != 0)
 				goto L202;
 
 			timer2_(*CNTRL_.TSEC);
 
 			//verifica tempo do DUMP
-			/*if (*CDUMP_.LDUMP) {
-				if (*CNTRL_.TSEC - *CNTRL_.TSECAD > *CNTRL_.DUMPP) {
-					//retorna os dados da GPU para imprimir o DUMP
-					
+			//if (*CDUMP_.LDUMP) {
+				if ((*CNTRL_.TSEC - *CNTRL_.TSECAD > *CNTRL_.DUMPP) || (*CNTRL_.SHN == 1e4) || (*CNTRL_.SHN == 1e5) || (*CNTRL_.SHN == 1e6) || (*CNTRL_.SHN == 1e7) || (*CNTRL_.SHN == 1e8) || (*CNTRL_.SHN == 1e9)) {
+				
+					//retorna os dados da gpu para cpu
 					transfGPU_to_CPU();
 					gpuErrchk(cudaDeviceSynchronize());
+
 					*CNTRL_.TSIM = *CNTRL_.TSIM + cputim2_() - *CNTRL_.CPUT0;
-					pmwrt2_(-1);
-					printf("  Number of simulated showers = %.6E\n", *CNTRL_.SHN);
+
+					//imprime os resultados parciais da simulação
+					pmwrt2_(1);
+					plotdose2_();
+
 					*CNTRL_.TSECAD = *CNTRL_.TSEC;
 					*CNTRL_.CPUT0 = cputim2_();
+
+					printf("  Number of simulated showers = %.6E\n", *CNTRL_.SHN);
 				}
-			}*/
+			//}
 		}
 
 
 L202:;
-
-		sizeTrack = pilhaPart;
-			//Quantidade de blocos no grid e de threads nos blocos
-			dim3 blockCont(blockSize);
-			dim3 gridCont(ceil(sizeTrack / blockCont.x)+1);
-			
-			showers_cont<<<gridCont,blockCont>>>(sizeTrack);
-			//Aguarda o termino da simulação das particulas primarias enviadas
-			gpuErrchk(cudaDeviceSynchronize());
 	
-	
-		
 		*CNTRL_.TSIM = *CNTRL_.TSIM + cputim2_() - *CNTRL_.CPUT0;
 		
 		//retorna os dados da GPU para imprimir o DUMP
 		transfGPU_to_CPU();
 		
-
 	}else{ //Simulação na CPU
 
 		if (*CSOUR0_.JOBEND != 0)
@@ -218,18 +160,15 @@ L102:;
 
 L103:;//Imprimir resultados Finais
 	printf("  Number of simulated showers = %.6E\n", *CNTRL_.SHN);
-	pmwrt2_(1);
-	
-	plotdose2_();
-	
-	printf("  *** END ***\n");
-	memoryFreeCPU();
-	if (simGPU == 1){
+	if (simGPU == 0){
+		pmwrt2_(1);
+		plotdose2_();
+	}else{
 		memoryFreeGPU();
 		gpuErrchk(cudaDeviceReset());
 	}
-		
+	memoryFreeCPU();
+	printf("  *** END ***\n");
 	return 0;
-	
 }
 
